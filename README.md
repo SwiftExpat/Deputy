@@ -1,0 +1,2 @@
+# Deputy
+Delphi IDE plugin
