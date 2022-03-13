@@ -1,8 +1,6 @@
 # Deputy
 
-Delphi IDE plugin
-
-Depends on TOTAL https://github.com/DelphiWorlds/TOTAL
+Delphi IDE plugin created using TOTAL https://github.com/DelphiWorlds/TOTAL
 
 ## Terminate Running
 
@@ -14,3 +12,15 @@ The plugin identifies process to kill in the following order:
 
 1. Process that is a child of the IDE instance by PID and process name
 2. Process by image path to ensure process killed is the one that would be overwritten by the IDE ( this allows you to have another copy running from a second directory ie your release build)
+
+### Purpose
+
+The IDE does not check before running a compile, it runs a few seconds of precompile then prompts that it can not overwrite the target.  This expert watches before that compile starts and clears out the old process to save me some seconds.
+
+
+| Before       | After                 |   
+| -------------- | -----------------------  |
+| Precompile   | Expert clears process |  
+| prompt error | precompile     |  
+| User must close/ kill process | compile success  | 
+| compile success | compile success    | 
