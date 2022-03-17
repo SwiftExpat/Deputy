@@ -23,4 +23,7 @@ The IDE does not check before running a compile, it runs a few seconds of precom
 | Precompile   | Expert clears process |  
 | prompt error | precompile     |  
 | User must close/ kill process | compile success  | 
-| compile success | compile success    | 
+| compile success |     | 
+
+
+![Powered By Delphi](https://i1.wp.com/blogs.embarcadero.com/wp-content/uploads/2021/01/Powered-by-Delphi-white-175px-7388078.png?resize=175%2C82&ssl=1)  [Powered by Delphi](https://www.embarcadero.com/products/delphi)
