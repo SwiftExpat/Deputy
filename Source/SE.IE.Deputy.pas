@@ -22,6 +22,20 @@ type
     property KillProcActive: boolean read KillProcActiveGet write KillProcActiveSet;
   end;
 
+  TSECaddieCheck = class
+  strict private
+    FLicensed: boolean;
+    function CaddieAppExists: boolean;
+    function CaddieAppFolderExists(const ACreateFolder: boolean): boolean;
+    function CaddieAppFolder: string;
+    function CaddieIniFile: string;
+    function CaddieIniFileExists: boolean;
+  public
+    property Licensed: boolean read FLicensed write FLicensed;
+    function CaddieButtonText: string;
+    procedure OnClickCaddieRun(Sender: TObject);
+  end;
+
   TSEIAProcessManagerUtil = class
   strict private
     FBDSId: cardinal;
@@ -48,6 +62,8 @@ type
     FWizard: TSEIXDeputyWizard;
   strict private
     FProcMgr: TSEIAProcessManagerUtil;
+    FNagCount: cardinal;
+    procedure CheckNagCount;
   public
     function BeforeProgramLaunch(const Project: IOTAProject): boolean; override;
   public
@@ -60,10 +76,12 @@ type
     nm_tools_menuitem = 'miSEDeputyRoot';
     nm_message_group = 'SE Deputy';
     nm_mi_killprocnabled = 'killprocitem';
+    nm_mi_run_caddie = 'caddierunitem';
   strict private
     FProcMgr: TSEIAProcessManagerUtil;
     FToolsMenuRootItem: TMenuItem;
     FSettings: TSEIXSettings;
+    FCaddieCheck: TSECaddieCheck;
     FMenuItems: TDictionary<string, TMenuItem>;
     function MenuItemByName(const AItemName: string): TMenuItem;
     procedure MessageKillProcStatus;
@@ -83,6 +101,7 @@ type
     function GetWizardDescription: string; override;
     property Settings: TSEIXSettings read FSettings;
     procedure IDEStarted; override;
+    procedure NagCountReached;
   public
     constructor Create; override;
     destructor Destroy; override;
@@ -90,8 +109,8 @@ type
     // function GetMenuText: string;
   end;
 
-//function GetProcessImageFileName(hProcess: THandle; lpImageFileName: LPTSTR; nSize: DWORD): DWORD; stdcall;
-//  external 'PSAPI.dll' name 'GetProcessImageFileNameW';
+  // function GetProcessImageFileName(hProcess: THandle; lpImageFileName: LPTSTR; nSize: DWORD): DWORD; stdcall;
+  // external 'PSAPI.dll' name 'GetProcessImageFileNameW';
 function QueryFullProcessImageName(hProcess: THandle; dwFlags: cardinal; lpExeName: PWideChar; Var lpdwSize: cardinal)
   : boolean; StdCall; External 'Kernel32.dll' Name 'QueryFullProcessImageNameW';
 
@@ -103,6 +122,7 @@ begin
   FMenuItems := TDictionary<string, TMenuItem>.Create;
   FDebugNotifier := TSEIADebugNotifier.Create(self);
   FProcMgr := TSEIAProcessManagerUtil.Create;
+  FCaddieCheck := TSECaddieCheck.Create;
   FSettings := TSEIXSettings.Create('SOFTWARE\SwiftExpat\Deputy');
   InitToolsMenu;
 end;
@@ -113,6 +133,7 @@ begin
   FSettings.Free;
   FMenuItems.Free;
   FProcMgr.Free;
+  FCaddieCheck.Free;
   inherited;
 end;
 
@@ -132,7 +153,7 @@ end;
 
 function TSEIXDeputyWizard.GetIDString: string;
 begin
-  result := 'SE.IX.Deputy_2.0';
+  result := 'com.swiftexpat.deputy';
 end;
 
 // function TSEIXDeputyWizard.GetMenuText: string;
@@ -200,6 +221,10 @@ begin
   mi.Checked := FSettings.KillProcActive;
   mi.OnClick := OnClickMiKillProcEnabled;
   FToolsMenuRootItem.Add(mi);
+  mi := MenuItemByName(nm_mi_run_caddie);
+  mi.Caption := FCaddieCheck.CaddieButtonText;
+  mi.OnClick := FCaddieCheck.OnClickCaddieRun;
+  FToolsMenuRootItem.Add(mi);
 end;
 
 function TSEIXDeputyWizard.MenuItemByName(const AItemName: string): TMenuItem;
@@ -229,6 +254,11 @@ var
 begin
   for s in AMessageList do
     MessagesAdd(s)
+end;
+
+procedure TSEIXDeputyWizard.NagCountReached;
+begin
+
 end;
 
 procedure TSEIXDeputyWizard.OnClickMiKillProcEnabled(Sender: TObject);
@@ -267,6 +297,9 @@ exports
 
 function TSEIADebugNotifier.BeforeProgramLaunch(const Project: IOTAProject): boolean;
 begin
+{$IFDEF GITHUBEVAL}
+  CheckNagCount;
+{$ENDIF}
 {$IFDEF DEBUG}
   FWizard.MessagesAdd('Before Program Launch');
 {$ENDIF}
@@ -279,11 +312,22 @@ begin
     result := true;
 end;
 
+procedure TSEIADebugNotifier.CheckNagCount;
+begin
+  inc(FNagCount);
+  if FNagCount = 5 then
+  begin
+    FNagCount := 0;
+    FWizard.NagCountReached;
+  end;
+end;
+
 constructor TSEIADebugNotifier.Create(const AWizard: TSEIXDeputyWizard);
 begin
   inherited Create;
   FWizard := AWizard;
   FProcMgr := TSEIAProcessManagerUtil.Create;
+  FNagCount := 0;
 end;
 
 { TSEIAProcessManagerUtil }
@@ -301,7 +345,7 @@ begin
 end;
 
 function TSEIAProcessManagerUtil.ImageFileName(const PE: TProcessEntry32): string;
-var //https://stackoverflow.com/questions/59444919/delphi-how-can-i-get-list-of-running-applications-with-starting-path
+var // https://stackoverflow.com/questions/59444919/delphi-how-can-i-get-list-of-running-applications-with-starting-path
   // szImageFileName: array [0 .. MAX_PATH] of Char;
   hProcess: THandle;
   rLength: cardinal;
@@ -312,8 +356,8 @@ begin
     exit;
   // if (GetProcessImageFileName(hProcess, @szImageFileName[0], MAX_PATH) > 0) then
   // result := szImageFileName;
-  rLength:=512; // allocation buffer
-  SetLength(Result, rLength+1); // for trailing space
+  rLength := 512; // allocation buffer
+  SetLength(result, rLength + 1); // for trailing space
   if QueryFullProcessImageName(hProcess, 0, @result[1], rLength) then
     SetLength(result, rLength)
   else
@@ -434,6 +478,48 @@ end;
 procedure TSEIXSettings.KillProcActiveSet(const Value: boolean);
 begin
   self.WriteBool('KillProcess', 'Enabled', Value);
+end;
+
+{ TSECaddieNagCheck }
+
+function TSECaddieCheck.CaddieAppExists: boolean;
+begin
+  result := TFile.Exists(TPath.Combine(CaddieAppFolder, 'RT_Caddie.exe'))
+end;
+
+function TSECaddieCheck.CaddieAppFolder: string;
+begin
+  result := TPath.Combine(TPath.GetCachePath, 'Programs\RunTime_ToolKit');
+end;
+
+function TSECaddieCheck.CaddieAppFolderExists(const ACreateFolder: boolean): boolean;
+begin
+  result := TDirectory.Exists(CaddieAppFolder);
+  if not result and ACreateFolder then
+    TDirectory.CreateDirectory(CaddieAppFolder);
+end;
+
+function TSECaddieCheck.CaddieButtonText: string;
+begin
+  if not CaddieAppExists then
+    result := 'Download & Install Caddie'
+  else
+    result := 'Run Caddie'
+end;
+
+function TSECaddieCheck.CaddieIniFile: string;
+begin
+  result := TPath.Combine(TPath.GetHomePath, 'RTTK\RTTKCaddie.ini');
+end;
+
+function TSECaddieCheck.CaddieIniFileExists: boolean;
+begin
+  result := TFile.Exists(CaddieIniFile)
+end;
+
+procedure TSECaddieCheck.OnClickCaddieRun(Sender: TObject);
+begin
+
 end;
 
 initialization
