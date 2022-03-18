@@ -23,6 +23,7 @@ type
   end;
 
   TSECaddieCheckOnMessage = procedure(const AMessage: string) of object;
+  TSECaddieCheckOnDownloadDone = procedure(const AMessage: string) of object;
 
   TSECaddieCheck = class
   const
@@ -32,6 +33,7 @@ type
     FHTTPReqCaddie: TNetHTTPRequest;
     FHTTPClientCaddie: TNetHTTPClient;
     FOnMessage: TSECaddieCheckOnMessage;
+    FOnDownloadDone: TSECaddieCheckOnDownloadDone;
     function CaddieAppFile: string;
     function CaddieDownloadFile: string;
     function CaddieAppExists: boolean;
@@ -54,6 +56,17 @@ type
     function CaddieButtonText: string;
     procedure OnClickCaddieRun(Sender: TObject);
     property OnMessage: TSECaddieCheckOnMessage read FOnMessage write FOnMessage;
+    property OnDownloadDone: TSECaddieCheckOnDownloadDone read FOnDownloadDone write FOnDownloadDone;
+  end;
+
+  TSEIXNagCounter = class
+  strict private
+    FNagCount, FNagLevel: integer;
+    procedure NagCountReached;
+  public
+    constructor Create(const ANagCount: integer = 0; const ANagLevel: integer = 5);
+    function NagUser: boolean;
+    procedure NagLess(ANagCount: integer);
   end;
 
   TSEIAProcessManagerUtil = class
@@ -82,12 +95,14 @@ type
     FWizard: TSEIXDeputyWizard;
   strict private
     FProcMgr: TSEIAProcessManagerUtil;
-    FNagCount: cardinal;
+    FNagCounter: TSEIXNagCounter;
     procedure CheckNagCount;
   public
     function BeforeProgramLaunch(const Project: IOTAProject): boolean; override;
   public
     constructor Create(const AWizard: TSEIXDeputyWizard);
+    destructor Destroy; override;
+    procedure NagLess;
   end;
 
   TSEIXDeputyWizard = class(TIDENotifierOTAWizard)
@@ -103,9 +118,11 @@ type
     FSettings: TSEIXSettings;
     FCaddieCheck: TSECaddieCheck;
     FMenuItems: TDictionary<string, TMenuItem>;
+    FNagCounter: TSEIXNagCounter;
     function MenuItemByName(const AItemName: string): TMenuItem;
     procedure MessageKillProcStatus;
     procedure MessageCaddieCheck(const AMessage: string);
+    procedure CaddieCheckDownloaded(const AMessage: string);
   private
     FDebugNotifier: ITOTALNotifier;
     procedure InitToolsMenu;
@@ -137,6 +154,12 @@ function QueryFullProcessImageName(hProcess: THandle; dwFlags: cardinal; lpExeNa
 
 { TSEIAKillRunningAppWizard }
 
+procedure TSEIXDeputyWizard.CaddieCheckDownloaded(const AMessage: string);
+begin
+  MenuItemByName(nm_mi_run_caddie).Caption := FCaddieCheck.CaddieButtonText;
+  MessagesAdd('Caddie Downloaded' + AMessage);
+end;
+
 constructor TSEIXDeputyWizard.Create;
 begin
   inherited;
@@ -144,6 +167,7 @@ begin
   FDebugNotifier := TSEIADebugNotifier.Create(self);
   FProcMgr := TSEIAProcessManagerUtil.Create;
   FCaddieCheck := TSECaddieCheck.Create;
+  FNagCounter := TSEIXNagCounter.Create(0, 7);
   FSettings := TSEIXSettings.Create('SOFTWARE\SwiftExpat\Deputy');
   InitToolsMenu;
 end;
@@ -155,6 +179,7 @@ begin
   FMenuItems.Free;
   FProcMgr.Free;
   FCaddieCheck.Free;
+  FNagCounter.Free;
   inherited;
 end;
 
@@ -215,6 +240,10 @@ begin
   begin
     ACancel := Not(FProcMgr.ProcessContinue(AProject.ProjectOptions));
     MessagesAdd(FProcMgr.Actions);
+{$IFDEF GITHUBEVAL}
+    if FNagCounter.NagUser then
+      NagCountReached;
+{$ENDIF}
   end;
   inherited;
 end;
@@ -246,6 +275,7 @@ begin
   mi.Caption := FCaddieCheck.CaddieButtonText;
   mi.OnClick := FCaddieCheck.OnClickCaddieRun;
   FCaddieCheck.OnMessage := MessageCaddieCheck;
+  FCaddieCheck.OnDownloadDone := CaddieCheckDownloaded;
   FToolsMenuRootItem.Add(mi);
 end;
 
@@ -283,23 +313,29 @@ begin
 end;
 
 procedure TSEIXDeputyWizard.NagCountReached;
-var
-  i: integer;
-  mi : TMenuItem;
+const
+  m_dl_free = #13 + 'The download is free & is a demo of RunTime ToolKit.';
+  t_m_title = 'RunTime ToolKit Caddie not found!';
+  t_m_download = 'Are you ready to download RunTime ToolKit Caddie?' + m_dl_free;
+  t_m_nag = 'Visit http://swiftexpat.com for more information about RunTime ToolKit.' + m_dl_free;
 begin
   if FCaddieCheck.Downloaded then
     MessagesAdd('Ready to execute, please try RunTime ToolKit')
   else
-    case MessageDlg('Are you ready to download RunTime ToolKit Caddie?', mtConfirmation, [mbOK, mbCancel], 0) of
+    case TaskMessageDlg(t_m_title, t_m_download, mtConfirmation, [mbOK, mbCancel], 0) of
       mrOk:
-      begin
         FCaddieCheck.DownloadCaddie;
-        mi := MenuItemByName(nm_mi_run_caddie);
-        mi.Caption := FCaddieCheck.CaddieButtonText;
-      end;
       mrCancel:
         begin // Write code here for pressing button Cancel
-          ShowMessage('Don''t hesitate to contact us when you need more information.');
+          MessageDlg(t_m_nag, mtInformation, [mbOK, mbCancel, mbRetry], 0, mbOK,
+            ['Visit Site', 'Cancel', 'Later please']);
+          case TaskMessageDlg(t_m_title, t_m_download, mtConfirmation, [mbOK, mbCancel], 0) of
+            mrOk:
+              FCaddieCheck.DownloadCaddie;
+            mrRetry: // cast the interface refrence to get to the method
+              if FDebugNotifier is TSEIADebugNotifier then
+                TSEIADebugNotifier(FDebugNotifier).NagLess;
+          end;
         end;
     end;
 end;
@@ -354,14 +390,10 @@ end;
 
 procedure TSEIADebugNotifier.CheckNagCount;
 begin
-  inc(FNagCount);
-  if FNagCount = 5 then
-  begin
-    FNagCount := 0;
 {$IFDEF GITHUBEVAL}
+  if FNagCounter.NagUser then
     FWizard.NagCountReached;
 {$ENDIF}
-  end;
 end;
 
 constructor TSEIADebugNotifier.Create(const AWizard: TSEIXDeputyWizard);
@@ -369,7 +401,18 @@ begin
   inherited Create;
   FWizard := AWizard;
   FProcMgr := TSEIAProcessManagerUtil.Create;
-  FNagCount := 0;
+  FNagCounter := TSEIXNagCounter.Create(0, 4);
+end;
+
+destructor TSEIADebugNotifier.Destroy;
+begin
+  FNagCounter.Free;
+  inherited;
+end;
+
+procedure TSEIADebugNotifier.NagLess;
+begin
+  FNagCounter.NagLess(-4);
 end;
 
 { TSEIAProcessManagerUtil }
@@ -622,7 +665,15 @@ begin
       LogMessage('Zip File is valid');
       TZipFile.ExtractZipFile(CaddieDownloadFile, self.CaddieAppFolder);
       if TFile.Exists(CaddieAppFile) then
-        RunCaddie
+      begin
+        RunCaddie;
+        TThread.Queue(nil,
+          procedure
+          begin
+            if Assigned(OnDownloadDone) then
+              OnDownloadDone('Downloaded');
+          end);
+      end
       else // for file exists
         LogMessage('Caddie not found after');
     end
@@ -674,6 +725,34 @@ begin
   shi.nShow := SW_SHOWNORMAL;
   ShellExecuteEx(@shi);
   LogMessage('Caddie Running' + shi.lpFile);
+end;
+
+{ TSEIXNagCounter }
+
+constructor TSEIXNagCounter.Create(const ANagCount: integer = 0; const ANagLevel: integer = 5);
+begin
+  FNagCount := ANagCount;
+  FNagLevel := ANagLevel;
+end;
+
+procedure TSEIXNagCounter.NagCountReached;
+begin
+
+end;
+
+procedure TSEIXNagCounter.NagLess(ANagCount: integer);
+begin
+  FNagCount := ANagCount;
+end;
+
+function TSEIXNagCounter.NagUser: boolean;
+begin
+{$IFDEF GITHUBEVAL}
+  inc(FNagCount);
+{$ENDIF}
+  result := FNagLevel = FNagCount;
+  if result then
+    FNagCount := 0;
 end;
 
 initialization
