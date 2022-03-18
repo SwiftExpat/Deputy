@@ -8,9 +8,9 @@ implementation
 
 uses System.Classes, ToolsAPI, VCL.Dialogs, System.SysUtils, System.TypInfo, Winapi.Windows, Winapi.TlHelp32,
   System.IOUtils, Generics.Collections,
-  VCL.Forms, VCL.Menus, System.Win.Registry,
+  VCL.Forms, VCL.Menus, System.Win.Registry, ShellApi, VCL.Controls,
   DW.OTA.Wizard, DW.OTA.IDENotifierOTAWizard, DW.OTA.Helpers, DW.Menus.Helpers, DW.OTA.ProjectManagerMenu,
-  DW.OTA.Notifiers;
+  DW.OTA.Notifiers, System.Net.HttpClientComponent, System.Net.URLClient, System.Net.HttpClient, System.Zip;
 
 type
 
@@ -22,18 +22,38 @@ type
     property KillProcActive: boolean read KillProcActiveGet write KillProcActiveSet;
   end;
 
+  TSECaddieCheckOnMessage = procedure(const AMessage: string) of object;
+
   TSECaddieCheck = class
+  const
+    dl_fl_name = 'SERTTK_Caddie_dl.zip';
   strict private
     FLicensed: boolean;
+    FHTTPReqCaddie: TNetHTTPRequest;
+    FHTTPClientCaddie: TNetHTTPClient;
+    FOnMessage: TSECaddieCheckOnMessage;
+    function CaddieAppFile: string;
+    function CaddieDownloadFile: string;
     function CaddieAppExists: boolean;
     function CaddieAppFolderExists(const ACreateFolder: boolean): boolean;
     function CaddieAppFolder: string;
     function CaddieIniFile: string;
     function CaddieIniFileExists: boolean;
+    procedure LogMessage(AMessage: string);
+    procedure RunCaddie;
+
+    procedure DistServerAuthEvent(const Sender: TObject; AnAuthTarget: TAuthTargetType; const ARealm, AURL: string;
+      var AUserName, APassword: string; var AbortAuth: boolean; var Persistence: TAuthPersistenceType);
+    procedure HttpCaddieDLException(const Sender: TObject; const AError: Exception);
+    procedure HttpCaddieDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
   public
+    procedure DownloadCaddie;
+    property Downloaded: boolean read CaddieAppExists;
+    property Executed: boolean read CaddieIniFileExists;
     property Licensed: boolean read FLicensed write FLicensed;
     function CaddieButtonText: string;
     procedure OnClickCaddieRun(Sender: TObject);
+    property OnMessage: TSECaddieCheckOnMessage read FOnMessage write FOnMessage;
   end;
 
   TSEIAProcessManagerUtil = class
@@ -85,6 +105,7 @@ type
     FMenuItems: TDictionary<string, TMenuItem>;
     function MenuItemByName(const AItemName: string): TMenuItem;
     procedure MessageKillProcStatus;
+    procedure MessageCaddieCheck(const AMessage: string);
   private
     FDebugNotifier: ITOTALNotifier;
     procedure InitToolsMenu;
@@ -173,7 +194,7 @@ end;
 
 function TSEIXDeputyWizard.GetWizardDescription: string;
 begin
-  result := 'Expert provided by SwiftExpat.com .  Deputy works with RunTime ToolKit';
+  result := 'Expert provided by SwiftExpat.com .' + #13 + '  Deputy works with RunTime ToolKit';
 end;
 
 class function TSEIXDeputyWizard.GetWizardName: string;
@@ -224,6 +245,7 @@ begin
   mi := MenuItemByName(nm_mi_run_caddie);
   mi.Caption := FCaddieCheck.CaddieButtonText;
   mi.OnClick := FCaddieCheck.OnClickCaddieRun;
+  FCaddieCheck.OnMessage := MessageCaddieCheck;
   FToolsMenuRootItem.Add(mi);
 end;
 
@@ -239,13 +261,17 @@ begin
   end;
 end;
 
+procedure TSEIXDeputyWizard.MessageCaddieCheck(const AMessage: string);
+begin
+  MessagesAdd(AMessage);
+end;
+
 procedure TSEIXDeputyWizard.MessageKillProcStatus;
 begin
   if FSettings.KillProcActive then // if it is checked, then trun it false
     MessagesAdd('Deputy Kill Process Enabled')
   else
     MessagesAdd('Deputy Kill Process disabled');
-
 end;
 
 procedure TSEIXDeputyWizard.MessagesAdd(const AMessageList: TStringList);
@@ -257,8 +283,25 @@ begin
 end;
 
 procedure TSEIXDeputyWizard.NagCountReached;
+var
+  i: integer;
+  mi : TMenuItem;
 begin
-
+  if FCaddieCheck.Downloaded then
+    MessagesAdd('Ready to execute, please try RunTime ToolKit')
+  else
+    case MessageDlg('Are you ready to download RunTime ToolKit Caddie?', mtConfirmation, [mbOK, mbCancel], 0) of
+      mrOk:
+      begin
+        FCaddieCheck.DownloadCaddie;
+        mi := MenuItemByName(nm_mi_run_caddie);
+        mi.Caption := FCaddieCheck.CaddieButtonText;
+      end;
+      mrCancel:
+        begin // Write code here for pressing button Cancel
+          ShowMessage('Don''t hesitate to contact us when you need more information.');
+        end;
+    end;
 end;
 
 procedure TSEIXDeputyWizard.OnClickMiKillProcEnabled(Sender: TObject);
@@ -274,7 +317,6 @@ begin
   // read the settings
   mi.Checked := FSettings.KillProcActive;
   MessageKillProcStatus;
-
 end;
 
 procedure TSEIXDeputyWizard.MessagesAdd(const AMessage: string);
@@ -297,9 +339,7 @@ exports
 
 function TSEIADebugNotifier.BeforeProgramLaunch(const Project: IOTAProject): boolean;
 begin
-{$IFDEF GITHUBEVAL}
   CheckNagCount;
-{$ENDIF}
 {$IFDEF DEBUG}
   FWizard.MessagesAdd('Before Program Launch');
 {$ENDIF}
@@ -318,7 +358,9 @@ begin
   if FNagCount = 5 then
   begin
     FNagCount := 0;
+{$IFDEF GITHUBEVAL}
     FWizard.NagCountReached;
+{$ENDIF}
   end;
 end;
 
@@ -484,19 +526,24 @@ end;
 
 function TSECaddieCheck.CaddieAppExists: boolean;
 begin
-  result := TFile.Exists(TPath.Combine(CaddieAppFolder, 'RT_Caddie.exe'))
+  result := TFile.Exists(CaddieAppFile);
+end;
+
+function TSECaddieCheck.CaddieAppFile: string;
+begin
+  result := TPath.Combine(CaddieAppFolder, 'RT_Caddie.exe')
 end;
 
 function TSECaddieCheck.CaddieAppFolder: string;
 begin
-  result := TPath.Combine(TPath.GetCachePath, 'Programs\RunTime_ToolKit');
+  result := TPath.Combine(TPath.GetCachePath, 'Programs\RunTime_ToolKit2');
 end;
 
 function TSECaddieCheck.CaddieAppFolderExists(const ACreateFolder: boolean): boolean;
 begin
-  result := TDirectory.Exists(CaddieAppFolder);
-  if not result and ACreateFolder then
+  if not TDirectory.Exists(CaddieAppFolder) and ACreateFolder then
     TDirectory.CreateDirectory(CaddieAppFolder);
+  result := TDirectory.Exists(CaddieAppFolder);
 end;
 
 function TSECaddieCheck.CaddieButtonText: string;
@@ -505,6 +552,12 @@ begin
     result := 'Download & Install Caddie'
   else
     result := 'Run Caddie'
+end;
+
+function TSECaddieCheck.CaddieDownloadFile: string;
+begin
+  if CaddieAppFolderExists(true) then
+    result := TPath.Combine(CaddieAppFolder, dl_fl_name);
 end;
 
 function TSECaddieCheck.CaddieIniFile: string;
@@ -517,9 +570,110 @@ begin
   result := TFile.Exists(CaddieIniFile)
 end;
 
+procedure TSECaddieCheck.DistServerAuthEvent(const Sender: TObject; AnAuthTarget: TAuthTargetType;
+  const ARealm, AURL: string; var AUserName, APassword: string; var AbortAuth: boolean;
+  var Persistence: TAuthPersistenceType);
+begin
+  if AnAuthTarget = TAuthTargetType.Server then
+  begin
+    AUserName := 'DeputyExpert';
+    APassword := 'Illbeyourhuckleberry';
+  end;
+end;
+
+procedure TSECaddieCheck.DownloadCaddie;
+begin
+  if not Assigned(FHTTPReqCaddie) then
+    FHTTPReqCaddie := TNetHTTPRequest.Create(nil);
+
+  if not Assigned(FHTTPClientCaddie) then
+  begin // InitHttpClient(FHTTPClientCaddie, FHTTPReqCaddie);
+    if not Assigned(FHTTPReqCaddie) then
+      raise Exception.Create('Request not assigned');
+    if not Assigned(FHTTPClientCaddie) then
+      FHTTPClientCaddie := TNetHTTPClient.Create(FHTTPReqCaddie);
+    FHTTPClientCaddie.OnAuthEvent := DistServerAuthEvent;
+    FHTTPClientCaddie.SecureProtocols := [THTTPSecureProtocol.TLS12, THTTPSecureProtocol.TLS13];
+    FHTTPClientCaddie.UseDefaultCredentials := false;
+    FHTTPReqCaddie.Client := FHTTPClientCaddie;
+  end;
+
+  FHTTPReqCaddie.OnRequestException := HttpCaddieDLException;
+  FHTTPReqCaddie.OnRequestCompleted := HttpCaddieDLCompleted;
+  FHTTPReqCaddie.SynchronizeEvents := false;
+  FHTTPReqCaddie.Asynchronous := true;
+  FHTTPReqCaddie.Get('https://swiftexpat.com/downloads/' + dl_fl_name);
+
+end;
+
+procedure TSECaddieCheck.HttpCaddieDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
+var
+  lfs: TFileStream;
+  // lrv: TSEDistReleaseVersion;
+begin
+  if AResponse.StatusCode = 200 then
+  begin
+    lfs := TFileStream.Create(CaddieDownloadFile, fmCreate);
+    lfs.CopyFrom(AResponse.ContentStream, 0);
+    lfs.Free;
+    LogMessage('Download Complete, Extracting');
+    if TZipFile.IsValid(CaddieDownloadFile) then
+    begin
+      LogMessage('Zip File is valid');
+      TZipFile.ExtractZipFile(CaddieDownloadFile, self.CaddieAppFolder);
+      if TFile.Exists(CaddieAppFile) then
+        RunCaddie
+      else // for file exists
+        LogMessage('Caddie not found after');
+    end
+    else // Zip file invalid
+      LogMessage('Zip File not valid')
+  end
+  else
+    LogMessage('Download Http result = ' + AResponse.StatusCode.ToString);
+end;
+
+procedure TSECaddieCheck.HttpCaddieDLException(const Sender: TObject; const AError: Exception);
+var
+  msg: string;
+begin
+  msg := 'Server Exception:' + AError.Message;
+  // Logger.Critical('Requesting Caddie file failed: ' + msg);
+
+end;
+
+procedure TSECaddieCheck.LogMessage(AMessage: string);
+var
+  msg: string;
+begin
+  msg := 'Caddie Check Message: ' + AMessage;
+  TThread.Queue(nil,
+    procedure
+    begin // directly delivering message gives null pointer
+      if Assigned(FOnMessage) then
+        FOnMessage(msg);
+    end);
+end;
+
 procedure TSECaddieCheck.OnClickCaddieRun(Sender: TObject);
 begin
+  if CaddieAppExists then
+    RunCaddie
+  else
+    DownloadCaddie;
+end;
 
+procedure TSECaddieCheck.RunCaddie;
+var
+  shi: TShellExecuteInfo;
+begin
+  shi := Default (TShellExecuteInfo);
+  shi.cbSize := SizeOf(TShellExecuteInfo);
+  shi.lpFile := PChar(CaddieAppFile);
+  shi.lpDirectory := PChar(CaddieAppFolder);
+  shi.nShow := SW_SHOWNORMAL;
+  ShellExecuteEx(@shi);
+  LogMessage('Caddie Running' + shi.lpFile);
 end;
 
 initialization
