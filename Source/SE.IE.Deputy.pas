@@ -49,12 +49,14 @@ type
     procedure HttpCaddieDLException(const Sender: TObject; const AError: Exception);
     procedure HttpCaddieDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
   public
+    procedure ShowWebsite;
     procedure DownloadCaddie;
     property Downloaded: boolean read CaddieAppExists;
     property Executed: boolean read CaddieIniFileExists;
     property Licensed: boolean read FLicensed write FLicensed;
     function CaddieButtonText: string;
     procedure OnClickCaddieRun(Sender: TObject);
+    procedure OnClickShowWebsite(Sender: TObject);
     property OnMessage: TSECaddieCheckOnMessage read FOnMessage write FOnMessage;
     property OnDownloadDone: TSECaddieCheckOnDownloadDone read FOnDownloadDone write FOnDownloadDone;
   end;
@@ -62,7 +64,6 @@ type
   TSEIXNagCounter = class
   strict private
     FNagCount, FNagLevel: integer;
-    procedure NagCountReached;
   public
     constructor Create(const ANagCount: integer = 0; const ANagLevel: integer = 5);
     function NagUser: boolean;
@@ -99,10 +100,8 @@ type
     procedure CheckNagCount;
   public
     function BeforeProgramLaunch(const Project: IOTAProject): boolean; override;
-  public
     constructor Create(const AWizard: TSEIXDeputyWizard);
     destructor Destroy; override;
-    procedure NagLess;
   end;
 
   TSEIXDeputyWizard = class(TIDENotifierOTAWizard)
@@ -112,6 +111,7 @@ type
     nm_message_group = 'SE Deputy';
     nm_mi_killprocnabled = 'killprocitem';
     nm_mi_run_caddie = 'caddierunitem';
+    nm_mi_show_website = 'showwebsiteitem';
   strict private
     FProcMgr: TSEIAProcessManagerUtil;
     FToolsMenuRootItem: TMenuItem;
@@ -139,7 +139,7 @@ type
     function GetWizardDescription: string; override;
     property Settings: TSEIXSettings read FSettings;
     procedure IDEStarted; override;
-    procedure NagCountReached;
+    function NagCountReached: integer;
   public
     constructor Create; override;
     destructor Destroy; override;
@@ -224,7 +224,7 @@ end;
 
 class function TSEIXDeputyWizard.GetWizardName: string;
 resourcestring
-  nm_wizardname = 'SwiftExpat Deputy';
+  nm_wizardname = 'RunTime ToolKit - Deputy';
 begin
   result := nm_wizardname;
 end;
@@ -242,7 +242,7 @@ begin
     MessagesAdd(FProcMgr.Actions);
 {$IFDEF GITHUBEVAL}
     if FNagCounter.NagUser then
-      NagCountReached;
+      FNagCounter.NagLess(NagCountReached);
 {$ENDIF}
   end;
   inherited;
@@ -276,6 +276,10 @@ begin
   mi.OnClick := FCaddieCheck.OnClickCaddieRun;
   FCaddieCheck.OnMessage := MessageCaddieCheck;
   FCaddieCheck.OnDownloadDone := CaddieCheckDownloaded;
+  FToolsMenuRootItem.Add(mi);
+  mi := MenuItemByName(nm_mi_show_website);
+  mi.Caption := 'RTTK Website';
+  mi.OnClick := FCaddiecheck.OnClickShowWebsite;
   FToolsMenuRootItem.Add(mi);
 end;
 
@@ -312,29 +316,39 @@ begin
     MessagesAdd(s)
 end;
 
-procedure TSEIXDeputyWizard.NagCountReached;
+function TSEIXDeputyWizard.NagCountReached: integer;
 const
   m_dl_free = #13 + 'The download is free & is a demo of RunTime ToolKit.';
   t_m_title = 'RunTime ToolKit Caddie not found!';
   t_m_download = 'Are you ready to download RunTime ToolKit Caddie?' + m_dl_free;
   t_m_nag = 'Visit http://swiftexpat.com for more information about RunTime ToolKit.' + m_dl_free;
 begin
+  result := -1; // some default
   if FCaddieCheck.Downloaded then
-    MessagesAdd('Ready to execute, please try RunTime ToolKit')
+  begin
+    MessagesAdd('Ready to execute, please try RunTime ToolKit');
+    result := -3; // log a message
+  end
   else
     case TaskMessageDlg(t_m_title, t_m_download, mtConfirmation, [mbOK, mbCancel], 0) of
       mrOk:
-        FCaddieCheck.DownloadCaddie;
+        begin
+          FCaddieCheck.DownloadCaddie;
+          result := -4096; // if the IDE runs more than that, wow
+        end;
       mrCancel:
         begin // Write code here for pressing button Cancel
-          MessageDlg(t_m_nag, mtInformation, [mbOK, mbCancel, mbRetry], 0, mbOK,
-            ['Visit Site', 'Cancel', 'Later please']);
-          case TaskMessageDlg(t_m_title, t_m_download, mtConfirmation, [mbOK, mbCancel], 0) of
+          case MessageDlg(t_m_nag, mtInformation, [mbOK, mbCancel, mbRetry], 0, mbOK,
+            ['Visit Site', 'Cancel', 'Later please']) of
             mrOk:
-              FCaddieCheck.DownloadCaddie;
-            mrRetry: // cast the interface refrence to get to the method
-              if FDebugNotifier is TSEIADebugNotifier then
-                TSEIADebugNotifier(FDebugNotifier).NagLess;
+              begin
+                FCaddieCheck.ShowWebsite;
+                result := -1024; // visited the site, dont bug again for this session
+              end;
+            mrCancel:
+              result := 0; // prompt at next interval
+            mrRetry:
+              result := -5; // the asked for later
           end;
         end;
     end;
@@ -392,7 +406,7 @@ procedure TSEIADebugNotifier.CheckNagCount;
 begin
 {$IFDEF GITHUBEVAL}
   if FNagCounter.NagUser then
-    FWizard.NagCountReached;
+    FNagCounter.NagLess(FWizard.NagCountReached);
 {$ENDIF}
 end;
 
@@ -408,11 +422,6 @@ destructor TSEIADebugNotifier.Destroy;
 begin
   FNagCounter.Free;
   inherited;
-end;
-
-procedure TSEIADebugNotifier.NagLess;
-begin
-  FNagCounter.NagLess(-4);
 end;
 
 { TSEIAProcessManagerUtil }
@@ -714,6 +723,11 @@ begin
     DownloadCaddie;
 end;
 
+procedure TSECaddieCheck.OnClickShowWebsite(Sender: TObject);
+begin
+  ShowWebsite;
+end;
+
 procedure TSECaddieCheck.RunCaddie;
 var
   shi: TShellExecuteInfo;
@@ -727,17 +741,28 @@ begin
   LogMessage('Caddie Running' + shi.lpFile);
 end;
 
+procedure TSECaddieCheck.ShowWebsite;
+const
+  ws_link = 'https://swiftexpat.com';
+var
+  shi: TShellExecuteInfo;
+begin
+  shi := Default (TShellExecuteInfo);
+  shi.lpVerb := PChar('open');
+  shi.cbSize := SizeOf(TShellExecuteInfo);
+  shi.lpFile := PChar(ws_link);
+  shi.nShow := SW_SHOWNORMAL;
+  ShellExecuteEx(@shi);
+  LogMessage('Caddie Running' + shi.lpFile);
+
+end;
+
 { TSEIXNagCounter }
 
 constructor TSEIXNagCounter.Create(const ANagCount: integer = 0; const ANagLevel: integer = 5);
 begin
   FNagCount := ANagCount;
   FNagLevel := ANagLevel;
-end;
-
-procedure TSEIXNagCounter.NagCountReached;
-begin
-
 end;
 
 procedure TSEIXNagCounter.NagLess(ANagCount: integer);
