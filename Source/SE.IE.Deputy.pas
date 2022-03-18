@@ -279,7 +279,7 @@ begin
   FToolsMenuRootItem.Add(mi);
   mi := MenuItemByName(nm_mi_show_website);
   mi.Caption := 'RTTK Website';
-  mi.OnClick := FCaddiecheck.OnClickShowWebsite;
+  mi.OnClick := FCaddieCheck.OnClickShowWebsite;
   FToolsMenuRootItem.Add(mi);
 end;
 
@@ -325,7 +325,7 @@ const
 begin
   result := -1; // some default
   if FCaddieCheck.Downloaded then
-  begin
+  begin { TODO : Add nag behavior if caddie was not run recently }
     MessagesAdd('Ready to execute, please try RunTime ToolKit');
     result := -3; // log a message
   end
@@ -338,8 +338,13 @@ begin
         end;
       mrCancel:
         begin // Write code here for pressing button Cancel
-          case MessageDlg(t_m_nag, mtInformation, [mbOK, mbCancel, mbRetry], 0, mbOK,
-            ['Visit Site', 'Cancel', 'Later please']) of
+          case
+{$IF COMPILERVERSION > 33}
+            MessageDlg(t_m_nag, mtInformation, [mbOK, mbCancel, mbRetry], 0, mbOK,
+            ['Visit Site', 'Cancel', 'Later please'])
+{$ELSE}
+            MessageDlg(t_m_nag, mtInformation, [mbOK, mbCancel, mbRetry], 0, mbOK)
+{$ENDIF} of
             mrOk:
               begin
                 FCaddieCheck.ShowWebsite;
@@ -645,14 +650,23 @@ begin
     if not Assigned(FHTTPClientCaddie) then
       FHTTPClientCaddie := TNetHTTPClient.Create(FHTTPReqCaddie);
     FHTTPClientCaddie.OnAuthEvent := DistServerAuthEvent;
+{$IF COMPILERVERSION > 33}
     FHTTPClientCaddie.SecureProtocols := [THTTPSecureProtocol.TLS12, THTTPSecureProtocol.TLS13];
+{$ELSE}
+    FHTTPClientCaddie.SecureProtocols := [THTTPSecureProtocol.TLS12];
+{$ENDIF}
     FHTTPClientCaddie.UseDefaultCredentials := false;
     FHTTPReqCaddie.Client := FHTTPClientCaddie;
   end;
-
+{$IF COMPILERVERSION > 33}
   FHTTPReqCaddie.OnRequestException := HttpCaddieDLException;
-  FHTTPReqCaddie.OnRequestCompleted := HttpCaddieDLCompleted;
   FHTTPReqCaddie.SynchronizeEvents := false;
+{$ELSE}
+  //FHTTPReqCaddie.OnRequestError := HttpCaddieDLException;
+  FHTTPReqCaddie.Asynchronous := true;
+{$ENDIF}
+  FHTTPReqCaddie.OnRequestCompleted := HttpCaddieDLCompleted;
+
   FHTTPReqCaddie.Asynchronous := true;
   FHTTPReqCaddie.Get('https://swiftexpat.com/downloads/' + dl_fl_name);
 
