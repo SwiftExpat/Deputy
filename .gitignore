@@ -69,3 +69,6 @@ win32/
 # Boss dependency manager vendor folder https://github.com/HashLoad/boss
 modules/
 Source/SE.IDE.Deputy.delphilsp.json
+GRTAGS
+GPATH
+GTAGS
