@@ -7,7 +7,7 @@ interface
 implementation
 
 uses System.Classes, ToolsAPI, VCL.Dialogs, System.SysUtils, System.TypInfo, Winapi.Windows, Winapi.TlHelp32,
-  System.IOUtils, Generics.Collections,
+  System.IOUtils, Generics.Collections,   System.DateUtils,
   VCL.Forms, VCL.Menus, System.Win.Registry, ShellApi, VCL.Controls,
   DW.OTA.Wizard, DW.OTA.IDENotifierOTAWizard, DW.OTA.Helpers, DW.Menus.Helpers, DW.OTA.ProjectManagerMenu,
   DW.OTA.Notifiers, System.Net.HttpClientComponent, System.Net.URLClient, System.Net.HttpClient, System.Zip;
@@ -500,14 +500,17 @@ begin
 end;
 
 function TSEIAProcessManagerUtil.ProcessContinue(AProjectOptions: IOTAProjectOptions): boolean;
+var s:TDateTime;
 begin
-  FActions.Clear;
+  s:= now;
+  FActions.Clear;  //is this slow?
   result := TFile.Exists(AProjectOptions.TargetName);
   if result then // file exists, then inspect the proc tree
   begin
     try
-      ActionAdd('File Exists, begin eval proc tree');
+      ActionAdd('File Exists, begin eval proc tree. T='+MilliSecondsBetween(s, now).ToString);
       result := IsRunning(AProjectOptions);
+      ActionAdd('Termination complete. T='+MilliSecondsBetween(s, now).ToString);
     except
       on E: Exception do
         result := true; // allow the IDE to do what it did before
@@ -593,7 +596,7 @@ end;
 
 function TSECaddieCheck.CaddieAppFolder: string;
 begin
-  result := TPath.Combine(TPath.GetCachePath, 'Programs\RunTime_ToolKit2');
+  result := TPath.Combine(TPath.GetCachePath, 'Programs\RunTime_ToolKit');
 end;
 
 function TSECaddieCheck.CaddieAppFolderExists(const ACreateFolder: boolean): boolean;
