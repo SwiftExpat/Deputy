@@ -6,6 +6,8 @@ Delphi IDE plugin created using TOTAL https://github.com/DelphiWorlds/TOTAL
 
 This expert will watch for compile and debug actions in the Delphi IDE and terminate any running instances of the target application before compile. Warning this will terminate the process without saving any data.
 
+https://youtu.be/UfsSbDxbAL8
+
 ### Process Identification Logic
 
 The plugin identifies process to kill in the following order:
