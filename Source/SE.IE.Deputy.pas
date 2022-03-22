@@ -112,6 +112,8 @@ type
     nm_mi_killprocnabled = 'killprocitem';
     nm_mi_run_caddie = 'caddierunitem';
     nm_mi_show_website = 'showwebsiteitem';
+    nm_wizard_id = 'com.swiftexpat.deputy';
+    nm_wizard_display = 'RunTime ToolKit - Deputy';
   strict private
     FProcMgr: TSEIAProcessManagerUtil;
     FToolsMenuRootItem: TMenuItem;
@@ -135,7 +137,6 @@ type
       var ACancel: boolean); override;
     function GetIDString: string; override;
     function GetName: string; override;
-    class function GetWizardName: string; override;
     function GetWizardDescription: string; override;
     property Settings: TSEIXSettings read FSettings;
     procedure IDEStarted; override;
@@ -144,7 +145,8 @@ type
     constructor Create; override;
     destructor Destroy; override;
     function GetState: TWizardState;
-    // function GetMenuText: string;
+    class function GetWizardName: string; override;
+    class function GetWizardLicense: string; override;
   end;
 
   // function GetProcessImageFileName(hProcess: THandle; lpImageFileName: LPTSTR; nSize: DWORD): DWORD; stdcall;
@@ -152,13 +154,18 @@ type
 function QueryFullProcessImageName(hProcess: THandle; dwFlags: cardinal; lpExeName: PWideChar; Var lpdwSize: cardinal)
   : boolean; StdCall; External 'Kernel32.dll' Name 'QueryFullProcessImageNameW';
 
-{ TSEIAKillRunningAppWizard }
-
-procedure TSEIXDeputyWizard.CaddieCheckDownloaded(const AMessage: string);
+  // Invokes TOTAWizard.InitializeWizard, which in turn creates an instance of the add-in, and registers it with the IDE
+function Initialize(const Services: IBorlandIDEServices; RegisterProc: TWizardRegisterProc;
+  var TerminateProc: TWizardTerminateProc): boolean; stdcall;
 begin
-  MenuItemByName(nm_mi_run_caddie).Caption := FCaddieCheck.CaddieButtonText;
-  MessagesAdd('Caddie Downloaded' + AMessage);
+  result := TOTAWizard.InitializeWizard(Services, RegisterProc, TerminateProc, TSEIXDeputyWizard);
 end;
+
+exports
+// Provides a function named WizardEntryPoint that is required by the IDE when loading a DLL-based add-in
+  Initialize name WizardEntryPoint;
+
+{ TSEIXDeputyWizard }
 
 constructor TSEIXDeputyWizard.Create;
 begin
@@ -183,29 +190,10 @@ begin
   inherited;
 end;
 
-function TSEIXDeputyWizard.FindMenuItemFirstLine(const AMenuItem: TMenuItem): integer;
-var
-  mi: TMenuItem;
-  i: integer;
-begin
-  for i := 0 to AMenuItem.Count - 1 do
-  begin
-    mi := AMenuItem.Items[i];
-    if mi.IsLine then
-      exit(i);
-  end;
-  result := 0;
-end;
-
 function TSEIXDeputyWizard.GetIDString: string;
 begin
-  result := 'com.swiftexpat.deputy';
+  result := nm_wizard_id;
 end;
-
-// function TSEIXDeputyWizard.GetMenuText: string;
-// begin
-// result := 'SE Kill Running';
-// end;
 
 function TSEIXDeputyWizard.GetName: string;
 begin
@@ -222,11 +210,35 @@ begin
   result := 'Expert provided by SwiftExpat.com .' + #13 + '  Deputy works with RunTime ToolKit';
 end;
 
-class function TSEIXDeputyWizard.GetWizardName: string;
-resourcestring
-  nm_wizardname = 'RunTime ToolKit - Deputy';
+class function TSEIXDeputyWizard.GetWizardLicense: string;
 begin
-  result := nm_wizardname;
+result := 'Licensed under GPL'
+end;
+
+class function TSEIXDeputyWizard.GetWizardName: string;
+begin
+  result := nm_wizard_display;
+end;
+
+
+procedure TSEIXDeputyWizard.CaddieCheckDownloaded(const AMessage: string);
+begin
+  MenuItemByName(nm_mi_run_caddie).Caption := FCaddieCheck.CaddieButtonText;
+  MessagesAdd('Caddie Downloaded' + AMessage);
+end;
+
+function TSEIXDeputyWizard.FindMenuItemFirstLine(const AMenuItem: TMenuItem): integer;
+var
+  mi: TMenuItem;
+  i: integer;
+begin
+  for i := 0 to AMenuItem.Count - 1 do
+  begin
+    mi := AMenuItem.Items[i];
+    if mi.IsLine then
+      exit(i);
+  end;
+  result := 0;
 end;
 
 procedure TSEIXDeputyWizard.IDENotifierBeforeCompile(const AProject: IOTAProject; const AIsCodeInsight: boolean;
@@ -378,17 +390,6 @@ procedure TSEIXDeputyWizard.MessagesAdd(const AMessage: string);
 begin
   TOTAHelper.AddTitleMessage(AMessage, nm_message_group);
 end;
-
-// Invokes TOTAWizard.InitializeWizard, which in turn creates an instance of the add-in, and registers it with the IDE
-function Initialize(const Services: IBorlandIDEServices; RegisterProc: TWizardRegisterProc;
-  var TerminateProc: TWizardTerminateProc): boolean; stdcall;
-begin
-  result := TOTAWizard.InitializeWizard(Services, RegisterProc, TerminateProc, TSEIXDeputyWizard);
-end;
-
-exports
-// Provides a function named WizardEntryPoint that is required by the IDE when loading a DLL-based add-in
-  Initialize name WizardEntryPoint;
 
 { TSEIADebugNotifier }
 
