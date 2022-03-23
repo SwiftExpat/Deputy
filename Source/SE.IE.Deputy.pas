@@ -7,7 +7,7 @@ interface
 implementation
 
 uses System.Classes, ToolsAPI, VCL.Dialogs, System.SysUtils, System.TypInfo, Winapi.Windows, Winapi.TlHelp32,
-  System.IOUtils, Generics.Collections,   System.DateUtils,
+  System.IOUtils, Generics.Collections, System.DateUtils,
   VCL.Forms, VCL.Menus, System.Win.Registry, ShellApi, VCL.Controls,
   DW.OTA.Wizard, DW.OTA.IDENotifierOTAWizard, DW.OTA.Helpers, DW.Menus.Helpers, DW.OTA.ProjectManagerMenu,
   DW.OTA.Notifiers, System.Net.HttpClientComponent, System.Net.URLClient, System.Net.HttpClient, System.Zip;
@@ -28,6 +28,7 @@ type
   TSECaddieCheck = class
   const
     dl_fl_name = 'SERTTK_Caddie_dl.zip';
+    nm_user_agent = 'Deputy Expert';
   strict private
     FLicensed: boolean;
     FHTTPReqCaddie: TNetHTTPRequest;
@@ -37,6 +38,8 @@ type
     function CaddieAppFile: string;
     function CaddieDownloadFile: string;
     function CaddieAppExists: boolean;
+    function DemoVCLExists: boolean;
+    function DemoFMXExists: boolean;
     function CaddieAppFolderExists(const ACreateFolder: boolean): boolean;
     function CaddieAppFolder: string;
     function CaddieIniFile: string;
@@ -55,7 +58,11 @@ type
     property Executed: boolean read CaddieIniFileExists;
     property Licensed: boolean read FLicensed write FLicensed;
     function CaddieButtonText: string;
+    function DemoVCLButtonText: string;
+    function DemoFMXButtonText: string;
     procedure OnClickCaddieRun(Sender: TObject);
+    procedure OnClickDemoVCL(Sender: TObject);
+    procedure OnClickDemoFMX(Sender: TObject);
     procedure OnClickShowWebsite(Sender: TObject);
     property OnMessage: TSECaddieCheckOnMessage read FOnMessage write FOnMessage;
     property OnDownloadDone: TSECaddieCheckOnDownloadDone read FOnDownloadDone write FOnDownloadDone;
@@ -122,7 +129,8 @@ type
     FMenuItems: TDictionary<string, TMenuItem>;
     FNagCounter: TSEIXNagCounter;
     function MenuItemByName(const AItemName: string): TMenuItem;
-    procedure MessageKillProcStatus;
+    // procedure MessageKillProcStatus;
+    procedure MenuItemKillProcStatus;
     procedure MessageCaddieCheck(const AMessage: string);
     procedure CaddieCheckDownloaded(const AMessage: string);
   private
@@ -154,7 +162,7 @@ type
 function QueryFullProcessImageName(hProcess: THandle; dwFlags: cardinal; lpExeName: PWideChar; Var lpdwSize: cardinal)
   : boolean; StdCall; External 'Kernel32.dll' Name 'QueryFullProcessImageNameW';
 
-  // Invokes TOTAWizard.InitializeWizard, which in turn creates an instance of the add-in, and registers it with the IDE
+// Invokes TOTAWizard.InitializeWizard, which in turn creates an instance of the add-in, and registers it with the IDE
 function Initialize(const Services: IBorlandIDEServices; RegisterProc: TWizardRegisterProc;
   var TerminateProc: TWizardTerminateProc): boolean; stdcall;
 begin
@@ -212,14 +220,13 @@ end;
 
 class function TSEIXDeputyWizard.GetWizardLicense: string;
 begin
-result := 'Licensed under GPL'
+  result := 'GPL V3' + #13 + 'Commerical via SwiftExpat.com'
 end;
 
 class function TSEIXDeputyWizard.GetWizardName: string;
 begin
   result := nm_wizard_display;
 end;
-
 
 procedure TSEIXDeputyWizard.CaddieCheckDownloaded(const AMessage: string);
 begin
@@ -263,7 +270,7 @@ end;
 procedure TSEIXDeputyWizard.IDEStarted;
 begin
   inherited;
-  MessageKillProcStatus;
+  MessagesAdd('Deputy Started');
 end;
 
 procedure TSEIXDeputyWizard.InitToolsMenu;
@@ -279,10 +286,9 @@ begin
     LToolsMenuItem.Insert(FindMenuItemFirstLine(LToolsMenuItem), FToolsMenuRootItem);
   end;
   mi := MenuItemByName(nm_mi_killprocnabled);
-  mi.Caption := 'Kill Process Enabled';
-  mi.Checked := FSettings.KillProcActive;
   mi.OnClick := OnClickMiKillProcEnabled;
   FToolsMenuRootItem.Add(mi);
+  MenuItemKillProcStatus;
   mi := MenuItemByName(nm_mi_run_caddie);
   mi.Caption := FCaddieCheck.CaddieButtonText;
   mi.OnClick := FCaddieCheck.OnClickCaddieRun;
@@ -312,12 +318,32 @@ begin
   MessagesAdd(AMessage);
 end;
 
-procedure TSEIXDeputyWizard.MessageKillProcStatus;
+procedure TSEIXDeputyWizard.MenuItemKillProcStatus;
+var
+  mi: TMenuItem;
+begin
+  mi := MenuItemByName(nm_mi_killprocnabled);
+  mi.Checked := FSettings.KillProcActive;
+  if mi.Checked then
+  begin
+    mi.Caption := 'Kill Process Enabled';
+    MessagesAdd('Deputy Kill Process Enabled');
+  end
+  else
+  begin
+    mi.Caption := 'Kill Process Disabled';
+    MessagesAdd('Deputy Kill Process disabled');
+  end;
+end;
+
+procedure TSEIXDeputyWizard.OnClickMiKillProcEnabled(Sender: TObject);
 begin
   if FSettings.KillProcActive then // if it is checked, then trun it false
-    MessagesAdd('Deputy Kill Process Enabled')
+    FSettings.KillProcActive := false
   else
-    MessagesAdd('Deputy Kill Process disabled');
+    FSettings.KillProcActive := true;
+  // read the settings
+  MenuItemKillProcStatus;
 end;
 
 procedure TSEIXDeputyWizard.MessagesAdd(const AMessageList: TStringList);
@@ -369,21 +395,6 @@ begin
           end;
         end;
     end;
-end;
-
-procedure TSEIXDeputyWizard.OnClickMiKillProcEnabled(Sender: TObject);
-var
-  mi: TMenuItem;
-begin
-  mi := MenuItemByName(nm_mi_killprocnabled);
-
-  if mi.Checked then // if it is checked, then trun it false
-    FSettings.KillProcActive := false
-  else
-    FSettings.KillProcActive := true;
-  // read the settings
-  mi.Checked := FSettings.KillProcActive;
-  MessageKillProcStatus;
 end;
 
 procedure TSEIXDeputyWizard.MessagesAdd(const AMessage: string);
@@ -501,17 +512,18 @@ begin
 end;
 
 function TSEIAProcessManagerUtil.ProcessContinue(AProjectOptions: IOTAProjectOptions): boolean;
-var s:TDateTime;
+var
+  s: TDateTime;
 begin
-  s:= now;
-  FActions.Clear;  //is this slow?
+  s := now;
+  FActions.Clear; // is this slow?
   result := TFile.Exists(AProjectOptions.TargetName);
   if result then // file exists, then inspect the proc tree
   begin
     try
-      ActionAdd('File Exists, begin eval proc tree. T='+MilliSecondsBetween(s, now).ToString);
+      ActionAdd('File Exists, begin eval proc tree. T=' + MilliSecondsBetween(s, now).ToString);
       result := IsRunning(AProjectOptions);
-      ActionAdd('Termination complete. T='+MilliSecondsBetween(s, now).ToString);
+      ActionAdd('Termination complete. T=' + MilliSecondsBetween(s, now).ToString);
     except
       on E: Exception do
         result := true; // allow the IDE to do what it did before
@@ -631,6 +643,32 @@ begin
   result := TFile.Exists(CaddieIniFile)
 end;
 
+function TSECaddieCheck.DemoFMXButtonText: string;
+begin
+  if not DemoFMXExists then
+    result := 'Download & Install FMX Demo'
+  else
+    result := 'Run FMX Demo'
+end;
+
+function TSECaddieCheck.DemoFMXExists: boolean;
+begin
+  result := TFile.Exists(TPath.Combine(CaddieAppFolder, 'RT_Caddie.exe'))
+end;
+
+function TSECaddieCheck.DemoVCLButtonText: string;
+begin
+  if not DemoVCLExists then
+    result := 'Download & Install VCL Demo'
+  else
+    result := 'Run VCL Demo'
+end;
+
+function TSECaddieCheck.DemoVCLExists: boolean;
+begin
+  result := TFile.Exists(TPath.Combine(CaddieAppFolder, 'RT_Caddie.exe'))
+end;
+
 procedure TSECaddieCheck.DistServerAuthEvent(const Sender: TObject; AnAuthTarget: TAuthTargetType;
   const ARealm, AURL: string; var AUserName, APassword: string; var AbortAuth: boolean;
   var Persistence: TAuthPersistenceType);
@@ -649,10 +687,7 @@ begin
 
   if not Assigned(FHTTPClientCaddie) then
   begin // InitHttpClient(FHTTPClientCaddie, FHTTPReqCaddie);
-    if not Assigned(FHTTPReqCaddie) then
-      raise Exception.Create('Request not assigned');
-    if not Assigned(FHTTPClientCaddie) then
-      FHTTPClientCaddie := TNetHTTPClient.Create(FHTTPReqCaddie);
+    FHTTPClientCaddie := TNetHTTPClient.Create(FHTTPReqCaddie);
     FHTTPClientCaddie.OnAuthEvent := DistServerAuthEvent;
 {$IF COMPILERVERSION > 33}
     FHTTPClientCaddie.SecureProtocols := [THTTPSecureProtocol.TLS12, THTTPSecureProtocol.TLS13];
@@ -661,12 +696,13 @@ begin
 {$ENDIF}
     FHTTPClientCaddie.UseDefaultCredentials := false;
     FHTTPReqCaddie.Client := FHTTPClientCaddie;
+    FHTTPClientCaddie.UserAgent := nm_user_agent;
   end;
 {$IF COMPILERVERSION > 33}
   FHTTPReqCaddie.OnRequestException := HttpCaddieDLException;
   FHTTPReqCaddie.SynchronizeEvents := false;
 {$ELSE}
-  //FHTTPReqCaddie.OnRequestError := HttpCaddieDLException;
+  // FHTTPReqCaddie.OnRequestError := HttpCaddieDLException;
   FHTTPReqCaddie.Asynchronous := true;
 {$ENDIF}
   FHTTPReqCaddie.OnRequestCompleted := HttpCaddieDLCompleted;
@@ -739,6 +775,16 @@ begin
     RunCaddie
   else
     DownloadCaddie;
+end;
+
+procedure TSECaddieCheck.OnClickDemoFMX(Sender: TObject);
+begin
+
+end;
+
+procedure TSECaddieCheck.OnClickDemoVCL(Sender: TObject);
+begin
+
 end;
 
 procedure TSECaddieCheck.OnClickShowWebsite(Sender: TObject);
