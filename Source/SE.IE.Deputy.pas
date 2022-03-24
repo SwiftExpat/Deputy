@@ -28,13 +28,15 @@ type
   TSECaddieCheck = class
   const
     dl_fl_name = 'SERTTK_Caddie_dl.zip';
+    dl_fl_demo_vcl = 'RTTK_Demo_VCL.zip';
+    dl_fl_demo_fmx = 'RTTK_Demo_FMX.zip';
     nm_user_agent = 'Deputy Expert';
     fl_nm_demo_vcl = 'RTTK_VCL_DEMO.exe';
     fl_nm_demo_fmx = 'RTTK_FMX_DEMO.exe';
   strict private
     FLicensed: boolean;
-    FHTTPReqCaddie: TNetHTTPRequest;
-    FHTTPClientCaddie: TNetHTTPClient;
+    FHTTPReqCaddie, FHTTPReqDemoFMX, FHTTPReqDemoVCL: TNetHTTPRequest;
+    FHTTPClient: TNetHTTPClient;
     FOnMessage: TSECaddieCheckOnMessage;
     FOnDownloadDone: TSECaddieCheckOnDownloadDone;
     function CaddieAppFile: string;
@@ -42,10 +44,12 @@ type
     function CaddieAppExists: boolean;
     function DemoVCLExists: boolean;
     function DemoAppVCLFile: string;
+    function DemoDownloadVCLFile: string;
     function DemoFMXExists: boolean;
-    function DemoAppFMXFile: string;
-    function CaddieAppFolderExists(const ACreateFolder: boolean): boolean;
-    function CaddieAppFolder: string;
+    function DemoDownloadFMXFile: string;
+    function RttkAppFolderExists(const ACreateFolder: boolean): boolean;
+    function RttkDownloadFolder: string;
+    function RttkAppFolder: string;
     function CaddieIniFile: string;
     function CaddieIniFileExists: boolean;
     procedure LogMessage(AMessage: string);
@@ -54,6 +58,7 @@ type
     procedure RunDemoFMX;
     procedure DownloadDemoFMX;
     procedure DownloadDemoVCL;
+    procedure InitHttpClient;
     procedure DistServerAuthEvent(const Sender: TObject; AnAuthTarget: TAuthTargetType; const ARealm, AURL: string;
       var AUserName, APassword: string; var AbortAuth: boolean; var Persistence: TAuthPersistenceType);
     procedure HttpCaddieDLException(const Sender: TObject; const AError: Exception);
@@ -62,6 +67,8 @@ type
     procedure HttpDemoVCLDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
     procedure HttpDemoFMXDLException(const Sender: TObject; const AError: Exception);
     procedure HttpDemoFMXDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
+  private
+    function DemoAppFMXFile: string;
 
   public
     procedure ShowWebsite;
@@ -628,19 +635,27 @@ end;
 
 function TSECaddieCheck.CaddieAppFile: string;
 begin
-  result := TPath.Combine(CaddieAppFolder, 'RT_Caddie.exe')
+  result := TPath.Combine(RttkAppFolder, 'RT_Caddie.exe')
 end;
 
-function TSECaddieCheck.CaddieAppFolder: string;
+function TSECaddieCheck.RttkAppFolder: string;
 begin
   result := TPath.Combine(TPath.GetCachePath, 'Programs\RunTime_ToolKit');
 end;
 
-function TSECaddieCheck.CaddieAppFolderExists(const ACreateFolder: boolean): boolean;
+function TSECaddieCheck.RttkAppFolderExists(const ACreateFolder: boolean): boolean;
 begin
-  if not TDirectory.Exists(CaddieAppFolder) and ACreateFolder then
-    TDirectory.CreateDirectory(CaddieAppFolder);
-  result := TDirectory.Exists(CaddieAppFolder);
+  if not TDirectory.Exists(RttkAppFolder) and ACreateFolder then
+    TDirectory.CreateDirectory(RttkAppFolder);
+  result := TDirectory.Exists(RttkAppFolder);
+end;
+
+function TSECaddieCheck.RttkDownloadFolder: string;
+begin
+  if RttkAppFolderExists(true) then
+    result := TPath.Combine(RttkAppFolder, 'Downloads');
+  if not TDirectory.Exists(result) then
+    TDirectory.CreateDirectory(result);
 end;
 
 function TSECaddieCheck.CaddieButtonText: string;
@@ -653,8 +668,8 @@ end;
 
 function TSECaddieCheck.CaddieDownloadFile: string;
 begin
-  if CaddieAppFolderExists(true) then
-    result := TPath.Combine(CaddieAppFolder, dl_fl_name);
+  if RttkAppFolderExists(true) then
+    result := TPath.Combine(RttkAppFolder, dl_fl_name);
 end;
 
 function TSECaddieCheck.CaddieIniFile: string;
@@ -669,12 +684,22 @@ end;
 
 function TSECaddieCheck.DemoAppFMXFile: string;
 begin
-  result := TPath.Combine(CaddieAppFolder, fl_nm_demo_fmx)
+  result := TPath.Combine(RttkAppFolder, fl_nm_demo_fmx)
 end;
 
 function TSECaddieCheck.DemoAppVCLFile: string;
 begin
-  TPath.Combine(CaddieAppFolder, fl_nm_demo_vcl)
+  TPath.Combine(RttkAppFolder, fl_nm_demo_vcl)
+end;
+
+function TSECaddieCheck.DemoDownloadFMXFile: string;
+begin
+result := TPath.Combine(RttkDownloadFolder, dl_fl_demo_fmx)
+end;
+
+function TSECaddieCheck.DemoDownloadVCLFile: string;
+begin
+result := TPath.Combine(RttkDownloadFolder, dl_fl_demo_fmx)
 end;
 
 function TSECaddieCheck.DemoFMXButtonText: string;
@@ -714,24 +739,27 @@ begin
   end;
 end;
 
+procedure TSECaddieCheck.InitHttpClient;
+begin
+  if not Assigned(FHTTPClient) then
+  begin
+    FHTTPClient := TNetHTTPClient.Create(nil);
+    FHTTPClient.OnAuthEvent := DistServerAuthEvent;
+{$IF COMPILERVERSION > 33}
+    FHTTPClient.SecureProtocols := [THTTPSecureProtocol.TLS12, THTTPSecureProtocol.TLS13];
+{$ELSE}
+    FHTTPClient.SecureProtocols := [THTTPSecureProtocol.TLS12];
+{$ENDIF}
+    FHTTPClient.UseDefaultCredentials := false;
+    FHTTPClient.UserAgent := nm_user_agent;
+  end;
+end;
+
 procedure TSECaddieCheck.DownloadCaddie;
 begin
+  InitHttpClient;
   if not Assigned(FHTTPReqCaddie) then
     FHTTPReqCaddie := TNetHTTPRequest.Create(nil);
-
-  if not Assigned(FHTTPClientCaddie) then
-  begin // InitHttpClient(FHTTPClientCaddie, FHTTPReqCaddie);
-    FHTTPClientCaddie := TNetHTTPClient.Create(FHTTPReqCaddie);
-    FHTTPClientCaddie.OnAuthEvent := DistServerAuthEvent;
-{$IF COMPILERVERSION > 33}
-    FHTTPClientCaddie.SecureProtocols := [THTTPSecureProtocol.TLS12, THTTPSecureProtocol.TLS13];
-{$ELSE}
-    FHTTPClientCaddie.SecureProtocols := [THTTPSecureProtocol.TLS12];
-{$ENDIF}
-    FHTTPClientCaddie.UseDefaultCredentials := false;
-    FHTTPReqCaddie.Client := FHTTPClientCaddie;
-    FHTTPClientCaddie.UserAgent := nm_user_agent;
-  end;
 {$IF COMPILERVERSION > 33}
   FHTTPReqCaddie.OnRequestException := HttpCaddieDLException;
   FHTTPReqCaddie.SynchronizeEvents := false;
@@ -739,27 +767,51 @@ begin
   // FHTTPReqCaddie.OnRequestError := HttpCaddieDLException;
   FHTTPReqCaddie.Asynchronous := true;
 {$ENDIF}
+  FHTTPReqCaddie.Client := FHTTPClient;
   FHTTPReqCaddie.OnRequestCompleted := HttpCaddieDLCompleted;
-
   FHTTPReqCaddie.Asynchronous := true;
   FHTTPReqCaddie.Get('https://swiftexpat.com/downloads/' + dl_fl_name);
-
 end;
 
 procedure TSECaddieCheck.DownloadDemoFMX;
 begin
-
+  InitHttpClient;
+  if not Assigned(FHTTPReqDemoFMX) then
+    FHTTPReqDemoFMX := TNetHTTPRequest.Create(nil);
+{$IF COMPILERVERSION > 33}
+  FHTTPReqDemoFMX.OnRequestException := HttpDemoFMXDLException;
+  FHTTPReqDemoFMX.SynchronizeEvents := false;
+{$ELSE}
+  // FHTTPReqCaddie.OnRequestError := HttpCaddieDLException;
+  FHTTPReqDemoFMX.Asynchronous := true;
+{$ENDIF}
+  FHTTPReqDemoFMX.Client := FHTTPClient;
+  FHTTPReqDemoFMX.OnRequestCompleted := HttpDemoFMXDLCompleted;
+  FHTTPReqDemoFMX.Asynchronous := true;
+  FHTTPReqDemoFMX.Get('https://demos.swiftexpat.com/downloads/' + dl_fl_demo_fmx);
 end;
 
 procedure TSECaddieCheck.DownloadDemoVCL;
 begin
-
+  InitHttpClient;
+  if not Assigned(FHTTPReqDemoVCL) then
+    FHTTPReqDemoVCL := TNetHTTPRequest.Create(nil);
+{$IF COMPILERVERSION > 33}
+  FHTTPReqDemoVCL.OnRequestException := HttpDemoVCLDLException;
+  FHTTPReqDemoVCL.SynchronizeEvents := false;
+{$ELSE}
+  // FHTTPReqCaddie.OnRequestError := HttpCaddieDLException;
+  FHTTPReqDemoVCL.Asynchronous := true;
+{$ENDIF}
+  FHTTPReqDemoVCL.Client := FHTTPClient;
+  FHTTPReqDemoVCL.OnRequestCompleted := HttpDemoVCLDLCompleted;
+  FHTTPReqDemoVCL.Asynchronous := true;
+  FHTTPReqDemoVCL.Get('https://demos.swiftexpat.com/downloads/' + dl_fl_demo_vcl);
 end;
 
 procedure TSECaddieCheck.HttpCaddieDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
 var
   lfs: TFileStream;
-  // lrv: TSEDistReleaseVersion;
 begin
   if AResponse.StatusCode = 200 then
   begin
@@ -770,7 +822,7 @@ begin
     if TZipFile.IsValid(CaddieDownloadFile) then
     begin
       LogMessage('Zip File is valid');
-      TZipFile.ExtractZipFile(CaddieDownloadFile, self.CaddieAppFolder);
+      TZipFile.ExtractZipFile(CaddieDownloadFile, RttkAppFolder);
       if TFile.Exists(CaddieAppFile) then
       begin
         RunCaddie;
@@ -795,33 +847,96 @@ procedure TSECaddieCheck.HttpCaddieDLException(const Sender: TObject; const AErr
 var
   msg: string;
 begin
-  msg := 'Download Caddie Server Exception:' + AError.Message;
+  msg := 'Download Caddie~Server Exception:' + AError.Message;
   LogMessage(msg);
 end;
 
 procedure TSECaddieCheck.HttpDemoFMXDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
+const
+  nm_log_id = 'Demo FMX';
+var
+  lfs: TFileStream;
 begin
-
+  if AResponse.StatusCode = 200 then
+  begin
+    lfs := TFileStream.Create(DemoDownloadFMXFile, fmCreate);
+    lfs.CopyFrom(AResponse.ContentStream, 0);
+    lfs.Free;
+    LogMessage('Download Complete, Extracting ' +nm_log_id);
+    if TZipFile.IsValid(DemoDownloadFMXFile) then
+    begin
+      LogMessage('Zip File is valid '+ DemoDownloadFMXFile);
+      TZipFile.ExtractZipFile(DemoDownloadFMXFile, RttkAppFolder);
+      if TFile.Exists(DemoAppFMXFile) then
+      begin
+        RunDemoFMX;
+        TThread.Queue(nil,
+          procedure
+          begin
+            if Assigned(OnDownloadDone) then
+              OnDownloadDone('Downloaded '+ nm_log_id);
+          end);
+      end
+      else // for file exists
+        LogMessage(nm_log_id+ ' not found after extract. '+ DemoAppFMXFile);
+    end
+    else // Zip file invalid
+      LogMessage('Zip File not valid '+ DemoDownloadFMXFile)
+  end
+  else
+    LogMessage('Download '+nm_log_id+' Http result = ' + AResponse.StatusCode.ToString);
 end;
 
 procedure TSECaddieCheck.HttpDemoFMXDLException(const Sender: TObject; const AError: Exception);
 var
   msg: string;
 begin
-  msg := 'Download Demo FMX Server Exception:' + AError.Message;
+  msg := 'Download Demo FMX~Server Exception:' + AError.Message;
   LogMessage(msg);
 end;
 
 procedure TSECaddieCheck.HttpDemoVCLDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
+const
+  nm_log_id = 'Demo VCL';
+var
+  lfs: TFileStream;
 begin
+  if AResponse.StatusCode = 200 then
+  begin
+    lfs := TFileStream.Create(DemoDownloadVCLFile, fmCreate);
+    lfs.CopyFrom(AResponse.ContentStream, 0);
+    lfs.Free;
+    LogMessage('Download Complete, Extracting ' +nm_log_id);
+    if TZipFile.IsValid(DemoDownloadVCLFile) then
+    begin
+      LogMessage('Zip File is valid '+ DemoDownloadVCLFile);
+      TZipFile.ExtractZipFile(DemoDownloadVCLFile, RttkAppFolder);
+      if TFile.Exists(DemoAppVCLFile) then
+      begin
+        RunDemoVCL;
+        TThread.Queue(nil,
+          procedure
+          begin
+            if Assigned(OnDownloadDone) then
+              OnDownloadDone('Downloaded '+ nm_log_id);
+          end);
+      end
+      else // for file exists
+        LogMessage(nm_log_id+ ' not found after extract. '+ DemoAppVCLFile);
+    end
+    else // Zip file invalid
+      LogMessage('Zip File not valid '+ DemoDownloadVCLFile)
+  end
+  else
+    LogMessage('Download '+nm_log_id+' Http result = ' + AResponse.StatusCode.ToString);
 end;
 
 procedure TSECaddieCheck.HttpDemoVCLDLException(const Sender: TObject; const AError: Exception);
 var
   msg: string;
 begin
-  msg := 'Download Demo VCL Server Exception:' + AError.Message;
-
+  msg := 'Download Demo VCL~Server Exception:' + AError.Message;
+  LogMessage(msg);
 end;
 
 procedure TSECaddieCheck.LogMessage(AMessage: string);
@@ -873,7 +988,7 @@ begin
   shi := Default (TShellExecuteInfo);
   shi.cbSize := SizeOf(TShellExecuteInfo);
   shi.lpFile := PChar(CaddieAppFile);
-  shi.lpDirectory := PChar(CaddieAppFolder);
+  shi.lpDirectory := PChar(RttkAppFolder);
   shi.nShow := SW_SHOWNORMAL;
   ShellExecuteEx(@shi);
   LogMessage('Caddie Running' + shi.lpFile);
@@ -886,7 +1001,7 @@ begin
   shi := Default (TShellExecuteInfo);
   shi.cbSize := SizeOf(TShellExecuteInfo);
   shi.lpFile := PChar(DemoAppFMXFile);
-  shi.lpDirectory := PChar(CaddieAppFolder);
+  shi.lpDirectory := PChar(RttkAppFolder);
   shi.nShow := SW_SHOWNORMAL;
   ShellExecuteEx(@shi);
   LogMessage('Demo FMX Running' + shi.lpFile);
@@ -899,7 +1014,7 @@ begin
   shi := Default (TShellExecuteInfo);
   shi.cbSize := SizeOf(TShellExecuteInfo);
   shi.lpFile := PChar(DemoAppVCLFile);
-  shi.lpDirectory := PChar(CaddieAppFolder);
+  shi.lpDirectory := PChar(RttkAppFolder);
   shi.nShow := SW_SHOWNORMAL;
   ShellExecuteEx(@shi);
   LogMessage('Demo VCL Running' + shi.lpFile);
