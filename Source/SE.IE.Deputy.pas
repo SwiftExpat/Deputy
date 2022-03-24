@@ -29,6 +29,8 @@ type
   const
     dl_fl_name = 'SERTTK_Caddie_dl.zip';
     nm_user_agent = 'Deputy Expert';
+    fl_nm_demo_vcl = 'RTTK_VCL_DEMO.exe';
+    fl_nm_demo_fmx = 'RTTK_FMX_DEMO.exe';
   strict private
     FLicensed: boolean;
     FHTTPReqCaddie: TNetHTTPRequest;
@@ -39,18 +41,28 @@ type
     function CaddieDownloadFile: string;
     function CaddieAppExists: boolean;
     function DemoVCLExists: boolean;
+    function DemoAppVCLFile: string;
     function DemoFMXExists: boolean;
+    function DemoAppFMXFile: string;
     function CaddieAppFolderExists(const ACreateFolder: boolean): boolean;
     function CaddieAppFolder: string;
     function CaddieIniFile: string;
     function CaddieIniFileExists: boolean;
     procedure LogMessage(AMessage: string);
     procedure RunCaddie;
-
+    procedure RunDemoVCL;
+    procedure RunDemoFMX;
+    procedure DownloadDemoFMX;
+    procedure DownloadDemoVCL;
     procedure DistServerAuthEvent(const Sender: TObject; AnAuthTarget: TAuthTargetType; const ARealm, AURL: string;
       var AUserName, APassword: string; var AbortAuth: boolean; var Persistence: TAuthPersistenceType);
     procedure HttpCaddieDLException(const Sender: TObject; const AError: Exception);
     procedure HttpCaddieDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
+    procedure HttpDemoVCLDLException(const Sender: TObject; const AError: Exception);
+    procedure HttpDemoVCLDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
+    procedure HttpDemoFMXDLException(const Sender: TObject; const AError: Exception);
+    procedure HttpDemoFMXDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
+
   public
     procedure ShowWebsite;
     procedure DownloadCaddie;
@@ -118,6 +130,8 @@ type
     nm_message_group = 'SE Deputy';
     nm_mi_killprocnabled = 'killprocitem';
     nm_mi_run_caddie = 'caddierunitem';
+    nm_mi_run_vcldemo = 'demovclrunitem';
+    nm_mi_run_fmxdemo = 'demofmxrunitem';
     nm_mi_show_website = 'showwebsiteitem';
     nm_wizard_id = 'com.swiftexpat.deputy';
     nm_wizard_display = 'RunTime ToolKit - Deputy';
@@ -299,6 +313,16 @@ begin
   mi.Caption := 'RTTK Website';
   mi.OnClick := FCaddieCheck.OnClickShowWebsite;
   FToolsMenuRootItem.Add(mi);
+
+  mi := MenuItemByName(nm_mi_run_vcldemo);
+  mi.Caption := FCaddieCheck.DemoVCLButtonText;
+  mi.OnClick := FCaddieCheck.OnClickDemoVCL;
+  FToolsMenuRootItem.Add(mi);
+  mi := MenuItemByName(nm_mi_run_fmxdemo);
+  mi.Caption := FCaddieCheck.DemoFMXButtonText;
+  mi.OnClick := FCaddieCheck.OnClickDemoFMX;
+  FToolsMenuRootItem.Add(mi);
+
 end;
 
 function TSEIXDeputyWizard.MenuItemByName(const AItemName: string): TMenuItem;
@@ -643,6 +667,16 @@ begin
   result := TFile.Exists(CaddieIniFile)
 end;
 
+function TSECaddieCheck.DemoAppFMXFile: string;
+begin
+  result := TPath.Combine(CaddieAppFolder, fl_nm_demo_fmx)
+end;
+
+function TSECaddieCheck.DemoAppVCLFile: string;
+begin
+  TPath.Combine(CaddieAppFolder, fl_nm_demo_vcl)
+end;
+
 function TSECaddieCheck.DemoFMXButtonText: string;
 begin
   if not DemoFMXExists then
@@ -653,7 +687,7 @@ end;
 
 function TSECaddieCheck.DemoFMXExists: boolean;
 begin
-  result := TFile.Exists(TPath.Combine(CaddieAppFolder, 'RT_Caddie.exe'))
+  result := TFile.Exists(DemoAppFMXFile)
 end;
 
 function TSECaddieCheck.DemoVCLButtonText: string;
@@ -666,7 +700,7 @@ end;
 
 function TSECaddieCheck.DemoVCLExists: boolean;
 begin
-  result := TFile.Exists(TPath.Combine(CaddieAppFolder, 'RT_Caddie.exe'))
+  result := TFile.Exists(DemoAppVCLFile)
 end;
 
 procedure TSECaddieCheck.DistServerAuthEvent(const Sender: TObject; AnAuthTarget: TAuthTargetType;
@@ -712,6 +746,16 @@ begin
 
 end;
 
+procedure TSECaddieCheck.DownloadDemoFMX;
+begin
+
+end;
+
+procedure TSECaddieCheck.DownloadDemoVCL;
+begin
+
+end;
+
 procedure TSECaddieCheck.HttpCaddieDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
 var
   lfs: TFileStream;
@@ -751,8 +795,32 @@ procedure TSECaddieCheck.HttpCaddieDLException(const Sender: TObject; const AErr
 var
   msg: string;
 begin
-  msg := 'Server Exception:' + AError.Message;
-  // Logger.Critical('Requesting Caddie file failed: ' + msg);
+  msg := 'Download Caddie Server Exception:' + AError.Message;
+  LogMessage(msg);
+end;
+
+procedure TSECaddieCheck.HttpDemoFMXDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
+begin
+
+end;
+
+procedure TSECaddieCheck.HttpDemoFMXDLException(const Sender: TObject; const AError: Exception);
+var
+  msg: string;
+begin
+  msg := 'Download Demo FMX Server Exception:' + AError.Message;
+  LogMessage(msg);
+end;
+
+procedure TSECaddieCheck.HttpDemoVCLDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
+begin
+end;
+
+procedure TSECaddieCheck.HttpDemoVCLDLException(const Sender: TObject; const AError: Exception);
+var
+  msg: string;
+begin
+  msg := 'Download Demo VCL Server Exception:' + AError.Message;
 
 end;
 
@@ -779,12 +847,18 @@ end;
 
 procedure TSECaddieCheck.OnClickDemoFMX(Sender: TObject);
 begin
-
+  if DemoFMXExists then
+    RunDemoFMX
+  else
+    DownloadDemoFMX;
 end;
 
 procedure TSECaddieCheck.OnClickDemoVCL(Sender: TObject);
 begin
-
+  if DemoVCLExists then
+    RunDemoVCL
+  else
+    DownloadDemoVCL;
 end;
 
 procedure TSECaddieCheck.OnClickShowWebsite(Sender: TObject);
@@ -803,6 +877,32 @@ begin
   shi.nShow := SW_SHOWNORMAL;
   ShellExecuteEx(@shi);
   LogMessage('Caddie Running' + shi.lpFile);
+end;
+
+procedure TSECaddieCheck.RunDemoFMX;
+var
+  shi: TShellExecuteInfo;
+begin
+  shi := Default (TShellExecuteInfo);
+  shi.cbSize := SizeOf(TShellExecuteInfo);
+  shi.lpFile := PChar(DemoAppFMXFile);
+  shi.lpDirectory := PChar(CaddieAppFolder);
+  shi.nShow := SW_SHOWNORMAL;
+  ShellExecuteEx(@shi);
+  LogMessage('Demo FMX Running' + shi.lpFile);
+end;
+
+procedure TSECaddieCheck.RunDemoVCL;
+var
+  shi: TShellExecuteInfo;
+begin
+  shi := Default (TShellExecuteInfo);
+  shi.cbSize := SizeOf(TShellExecuteInfo);
+  shi.lpFile := PChar(DemoAppVCLFile);
+  shi.lpDirectory := PChar(CaddieAppFolder);
+  shi.nShow := SW_SHOWNORMAL;
+  ShellExecuteEx(@shi);
+  LogMessage('Demo VCL Running' + shi.lpFile);
 end;
 
 procedure TSECaddieCheck.ShowWebsite;
