@@ -31,14 +31,14 @@ type
     dl_fl_demo_vcl = 'RTTK_Demo_VCL.zip';
     dl_fl_demo_fmx = 'RTTK_Demo_FMX.zip';
     nm_user_agent = 'Deputy Expert';
-    fl_nm_demo_vcl = 'RTTK_VCL_DEMO.exe';
-    fl_nm_demo_fmx = 'RTTK_FMX_DEMO.exe';
+    fl_nm_demo_vcl = 'RTTK.VCL.exe';
+    fl_nm_demo_fmx = 'RTTK_FMX.exe';
   strict private
     FLicensed: boolean;
     FHTTPReqCaddie, FHTTPReqDemoFMX, FHTTPReqDemoVCL: TNetHTTPRequest;
     FHTTPClient: TNetHTTPClient;
     FOnMessage: TSECaddieCheckOnMessage;
-    FOnDownloadDone: TSECaddieCheckOnDownloadDone;
+    FOnDownloadDone, FOnDownloadFMXDemoDone, FOnDownloadVCLDemoDone: TSECaddieCheckOnDownloadDone;
     function CaddieAppFile: string;
     function CaddieDownloadFile: string;
     function CaddieAppExists: boolean;
@@ -85,6 +85,10 @@ type
     procedure OnClickShowWebsite(Sender: TObject);
     property OnMessage: TSECaddieCheckOnMessage read FOnMessage write FOnMessage;
     property OnDownloadDone: TSECaddieCheckOnDownloadDone read FOnDownloadDone write FOnDownloadDone;
+    property OnDownloadDemoVCLDone: TSECaddieCheckOnDownloadDone read FOnDownloadVCLDemoDone
+      write FOnDownloadVCLDemoDone;
+    property OnDownloadDemoFMXDone: TSECaddieCheckOnDownloadDone read FOnDownloadFMXDemoDone
+      write FOnDownloadFMXDemoDone;
   end;
 
   TSEIXNagCounter = class
@@ -146,7 +150,7 @@ type
     FProcMgr: TSEIAProcessManagerUtil;
     FToolsMenuRootItem: TMenuItem;
     FSettings: TSEIXSettings;
-    FCaddieCheck: TSECaddieCheck;
+    FRTTKCheck: TSECaddieCheck;
     FMenuItems: TDictionary<string, TMenuItem>;
     FNagCounter: TSEIXNagCounter;
     function MenuItemByName(const AItemName: string): TMenuItem;
@@ -154,6 +158,8 @@ type
     procedure MenuItemKillProcStatus;
     procedure MessageCaddieCheck(const AMessage: string);
     procedure CaddieCheckDownloaded(const AMessage: string);
+    procedure DemoFMXDownloaded(const AMessage: string);
+    procedure DemoVCLDownloaded(const AMessage: string);
   private
     FDebugNotifier: ITOTALNotifier;
     procedure InitToolsMenu;
@@ -202,7 +208,7 @@ begin
   FMenuItems := TDictionary<string, TMenuItem>.Create;
   FDebugNotifier := TSEIADebugNotifier.Create(self);
   FProcMgr := TSEIAProcessManagerUtil.Create;
-  FCaddieCheck := TSECaddieCheck.Create;
+  FRTTKCheck := TSECaddieCheck.Create;
   FNagCounter := TSEIXNagCounter.Create(0, 7);
   FSettings := TSEIXSettings.Create('SOFTWARE\SwiftExpat\Deputy');
   InitToolsMenu;
@@ -214,7 +220,7 @@ begin
   FSettings.Free;
   FMenuItems.Free;
   FProcMgr.Free;
-  FCaddieCheck.Free;
+  FRTTKCheck.Free;
   FNagCounter.Free;
   inherited;
 end;
@@ -249,10 +255,16 @@ begin
   result := nm_wizard_display;
 end;
 
-procedure TSEIXDeputyWizard.CaddieCheckDownloaded(const AMessage: string);
+function TSEIXDeputyWizard.MenuItemByName(const AItemName: string): TMenuItem;
 begin
-  MenuItemByName(nm_mi_run_caddie).Caption := FCaddieCheck.CaddieButtonText;
-  MessagesAdd('Caddie Downloaded' + AMessage);
+  if FMenuItems.TryGetValue(AItemName, result) then
+    exit(result)
+  else
+  begin
+    result := TMenuItem.Create(nil);
+    result.Name := AItemName;
+    FMenuItems.Add(AItemName, result)
+  end;
 end;
 
 function TSEIXDeputyWizard.FindMenuItemFirstLine(const AMenuItem: TMenuItem): integer;
@@ -311,37 +323,45 @@ begin
   FToolsMenuRootItem.Add(mi);
   MenuItemKillProcStatus;
   mi := MenuItemByName(nm_mi_run_caddie);
-  mi.Caption := FCaddieCheck.CaddieButtonText;
-  mi.OnClick := FCaddieCheck.OnClickCaddieRun;
-  FCaddieCheck.OnMessage := MessageCaddieCheck;
-  FCaddieCheck.OnDownloadDone := CaddieCheckDownloaded;
+  mi.Caption := FRTTKCheck.CaddieButtonText;
+  mi.OnClick := FRTTKCheck.OnClickCaddieRun;
+  FRTTKCheck.OnMessage := MessageCaddieCheck;
+  FRTTKCheck.OnDownloadDone := CaddieCheckDownloaded;
   FToolsMenuRootItem.Add(mi);
   mi := MenuItemByName(nm_mi_show_website);
   mi.Caption := 'RTTK Website';
-  mi.OnClick := FCaddieCheck.OnClickShowWebsite;
+  mi.OnClick := FRTTKCheck.OnClickShowWebsite;
   FToolsMenuRootItem.Add(mi);
 
   mi := MenuItemByName(nm_mi_run_vcldemo);
-  mi.Caption := FCaddieCheck.DemoVCLButtonText;
-  mi.OnClick := FCaddieCheck.OnClickDemoVCL;
+  mi.Caption := FRTTKCheck.DemoVCLButtonText;
+  mi.OnClick := FRTTKCheck.OnClickDemoVCL;
+  FRTTKCheck.OnDownloadDemoVCLDone := DemoVCLDownloaded;
   FToolsMenuRootItem.Add(mi);
   mi := MenuItemByName(nm_mi_run_fmxdemo);
-  mi.Caption := FCaddieCheck.DemoFMXButtonText;
-  mi.OnClick := FCaddieCheck.OnClickDemoFMX;
+  mi.Caption := FRTTKCheck.DemoFMXButtonText;
+  mi.OnClick := FRTTKCheck.OnClickDemoFMX;
+  FRTTKCheck.OnDownloadDemoFMXDone := DemoFMXDownloaded;
   FToolsMenuRootItem.Add(mi);
 
 end;
 
-function TSEIXDeputyWizard.MenuItemByName(const AItemName: string): TMenuItem;
+procedure TSEIXDeputyWizard.CaddieCheckDownloaded(const AMessage: string);
 begin
-  if FMenuItems.TryGetValue(AItemName, result) then
-    exit(result)
-  else
-  begin
-    result := TMenuItem.Create(nil);
-    result.Name := AItemName;
-    FMenuItems.Add(AItemName, result)
-  end;
+  MenuItemByName(nm_mi_run_caddie).Caption := FRTTKCheck.CaddieButtonText;
+  MessagesAdd('Caddie Downloaded ' + AMessage);
+end;
+
+procedure TSEIXDeputyWizard.DemoFMXDownloaded(const AMessage: string);
+begin
+   MenuItemByName(nm_mi_run_fmxdemo).Caption := FRTTKCheck.DemoFMXButtonText;
+  MessagesAdd('FMX Demo Downloaded : ' + AMessage);
+end;
+
+procedure TSEIXDeputyWizard.DemoVCLDownloaded(const AMessage: string);
+begin
+    MenuItemByName(nm_mi_run_vcldemo).Caption := FRTTKCheck.DemoVCLButtonText;
+  MessagesAdd('VCL Demo Downloaded : ' + AMessage);
 end;
 
 procedure TSEIXDeputyWizard.MessageCaddieCheck(const AMessage: string);
@@ -393,7 +413,7 @@ const
   t_m_nag = 'Visit http://swiftexpat.com for more information about RunTime ToolKit.' + m_dl_free;
 begin
   result := -1; // some default
-  if FCaddieCheck.Downloaded then
+  if FRTTKCheck.Downloaded then
   begin { TODO : Add nag behavior if caddie was not run recently }
     MessagesAdd('Ready to execute, please try RunTime ToolKit');
     result := -3; // log a message
@@ -402,7 +422,7 @@ begin
     case TaskMessageDlg(t_m_title, t_m_download, mtConfirmation, [mbOK, mbCancel], 0) of
       mrOk:
         begin
-          FCaddieCheck.DownloadCaddie;
+          FRTTKCheck.DownloadCaddie;
           result := -4096; // if the IDE runs more than that, wow
         end;
       mrCancel:
@@ -416,7 +436,7 @@ begin
 {$ENDIF} of
             mrOk:
               begin
-                FCaddieCheck.ShowWebsite;
+                FRTTKCheck.ShowWebsite;
                 result := -1024; // visited the site, dont bug again for this session
               end;
             mrCancel:
@@ -668,8 +688,7 @@ end;
 
 function TSECaddieCheck.CaddieDownloadFile: string;
 begin
-  if RttkAppFolderExists(true) then
-    result := TPath.Combine(RttkAppFolder, dl_fl_name);
+  result := TPath.Combine(RttkDownloadFolder, dl_fl_name);
 end;
 
 function TSECaddieCheck.CaddieIniFile: string;
@@ -689,17 +708,17 @@ end;
 
 function TSECaddieCheck.DemoAppVCLFile: string;
 begin
-  TPath.Combine(RttkAppFolder, fl_nm_demo_vcl)
+  result := TPath.Combine(RttkAppFolder, fl_nm_demo_vcl)
 end;
 
 function TSECaddieCheck.DemoDownloadFMXFile: string;
 begin
-result := TPath.Combine(RttkDownloadFolder, dl_fl_demo_fmx)
+  result := TPath.Combine(RttkDownloadFolder, dl_fl_demo_fmx)
 end;
 
 function TSECaddieCheck.DemoDownloadVCLFile: string;
 begin
-result := TPath.Combine(RttkDownloadFolder, dl_fl_demo_fmx)
+  result := TPath.Combine(RttkDownloadFolder, dl_fl_demo_vcl)
 end;
 
 function TSECaddieCheck.DemoFMXButtonText: string;
@@ -862,10 +881,10 @@ begin
     lfs := TFileStream.Create(DemoDownloadFMXFile, fmCreate);
     lfs.CopyFrom(AResponse.ContentStream, 0);
     lfs.Free;
-    LogMessage('Download Complete, Extracting ' +nm_log_id);
+    LogMessage('Download Complete, Extracting ' + nm_log_id);
     if TZipFile.IsValid(DemoDownloadFMXFile) then
     begin
-      LogMessage('Zip File is valid '+ DemoDownloadFMXFile);
+      LogMessage('Zip File is valid ' + DemoDownloadFMXFile);
       TZipFile.ExtractZipFile(DemoDownloadFMXFile, RttkAppFolder);
       if TFile.Exists(DemoAppFMXFile) then
       begin
@@ -873,18 +892,18 @@ begin
         TThread.Queue(nil,
           procedure
           begin
-            if Assigned(OnDownloadDone) then
-              OnDownloadDone('Downloaded '+ nm_log_id);
+            if Assigned(OnDownloadDemoFMXDone) then
+              OnDownloadDemoFMXDone('Downloaded ' + nm_log_id);
           end);
       end
       else // for file exists
-        LogMessage(nm_log_id+ ' not found after extract. '+ DemoAppFMXFile);
+        LogMessage(nm_log_id + ' not found after extract. ' + DemoAppFMXFile);
     end
     else // Zip file invalid
-      LogMessage('Zip File not valid '+ DemoDownloadFMXFile)
+      LogMessage('Zip File not valid ' + DemoDownloadFMXFile)
   end
   else
-    LogMessage('Download '+nm_log_id+' Http result = ' + AResponse.StatusCode.ToString);
+    LogMessage('Download ' + nm_log_id + ' Http result = ' + AResponse.StatusCode.ToString);
 end;
 
 procedure TSECaddieCheck.HttpDemoFMXDLException(const Sender: TObject; const AError: Exception);
@@ -906,10 +925,10 @@ begin
     lfs := TFileStream.Create(DemoDownloadVCLFile, fmCreate);
     lfs.CopyFrom(AResponse.ContentStream, 0);
     lfs.Free;
-    LogMessage('Download Complete, Extracting ' +nm_log_id);
+    LogMessage('Download Complete, Extracting ' + nm_log_id);
     if TZipFile.IsValid(DemoDownloadVCLFile) then
     begin
-      LogMessage('Zip File is valid '+ DemoDownloadVCLFile);
+      LogMessage('Zip File is valid ' + DemoDownloadVCLFile);
       TZipFile.ExtractZipFile(DemoDownloadVCLFile, RttkAppFolder);
       if TFile.Exists(DemoAppVCLFile) then
       begin
@@ -917,18 +936,18 @@ begin
         TThread.Queue(nil,
           procedure
           begin
-            if Assigned(OnDownloadDone) then
-              OnDownloadDone('Downloaded '+ nm_log_id);
+            if Assigned(OnDownloadDemoVCLDone) then
+              OnDownloadDemoVCLDone('Downloaded ' + nm_log_id);
           end);
       end
       else // for file exists
-        LogMessage(nm_log_id+ ' not found after extract. '+ DemoAppVCLFile);
+        LogMessage(nm_log_id + ' not found after extract. ' + DemoAppVCLFile);
     end
     else // Zip file invalid
-      LogMessage('Zip File not valid '+ DemoDownloadVCLFile)
+      LogMessage('Zip File not valid ' + DemoDownloadVCLFile)
   end
   else
-    LogMessage('Download '+nm_log_id+' Http result = ' + AResponse.StatusCode.ToString);
+    LogMessage('Download ' + nm_log_id + ' Http result = ' + AResponse.StatusCode.ToString);
 end;
 
 procedure TSECaddieCheck.HttpDemoVCLDLException(const Sender: TObject; const AError: Exception);
