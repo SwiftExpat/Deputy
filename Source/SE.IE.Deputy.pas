@@ -15,17 +15,24 @@ uses System.Classes, ToolsAPI, VCL.Dialogs, System.SysUtils, System.TypInfo, Win
 type
 
   TSEIXSettings = class(TRegistryIniFile)
+  const
+    nm_section_updates = 'Updates';
+    nm_section_killprocess = 'KillProcess';
+    nm_updates_lastupdate = 'LastUpdateCheckDate';
   strict private
     function KillProcActiveGet: boolean;
     procedure KillProcActiveSet(const Value: boolean);
+    function LastUpdateCheckGet: TDateTime;
+    procedure LastUpdateCheckSet(const Value: TDateTime);
   public
     property KillProcActive: boolean read KillProcActiveGet write KillProcActiveSet;
+    property LastUpdateCheck: TDateTime read LastUpdateCheckGet write LastUpdateCheckSet;
   end;
 
   TSECaddieCheckOnMessage = procedure(const AMessage: string) of object;
   TSECaddieCheckOnDownloadDone = procedure(const AMessage: string) of object;
 
-  TSECaddieCheck = class
+  TSERTTKCheck = class
   const
     dl_fl_name = 'SERTTK_Caddie_dl.zip';
     dl_fl_demo_vcl = 'RTTK_Demo_VCL.zip';
@@ -119,6 +126,21 @@ type
     destructor Destroy; override;
   end;
 
+  TSEIXUpdateClient = class
+  const
+    fl_nm_update_cache = 'updates.xml';
+  strict private
+    FHTTPReqVersion: TNetHTTPRequest;
+    FHTTPClient: TNetHTTPClient;
+    function UpdateFileExists: boolean;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    function UpdateButtonText: string;
+    procedure OnClickUpdate(Sender: TObject);
+    procedure RefreshUpdates;
+  end;
+
   TSEIXDeputyWizard = class;
 
   TSEIADebugNotifier = class(TDebuggerNotifier)
@@ -144,15 +166,17 @@ type
     nm_mi_run_vcldemo = 'demovclrunitem';
     nm_mi_run_fmxdemo = 'demofmxrunitem';
     nm_mi_show_website = 'showwebsiteitem';
+    nm_mi_update_status = 'updatestatusitem';
     nm_wizard_id = 'com.swiftexpat.deputy';
     nm_wizard_display = 'RunTime ToolKit - Deputy';
   strict private
     FProcMgr: TSEIAProcessManagerUtil;
     FToolsMenuRootItem: TMenuItem;
     FSettings: TSEIXSettings;
-    FRTTKCheck: TSECaddieCheck;
+    FRTTKCheck: TSERTTKCheck;
     FMenuItems: TDictionary<string, TMenuItem>;
     FNagCounter: TSEIXNagCounter;
+    FUpdateClient: TSEIXUpdateClient;
     function MenuItemByName(const AItemName: string): TMenuItem;
     // procedure MessageKillProcStatus;
     procedure MenuItemKillProcStatus;
@@ -208,7 +232,8 @@ begin
   FMenuItems := TDictionary<string, TMenuItem>.Create;
   FDebugNotifier := TSEIADebugNotifier.Create(self);
   FProcMgr := TSEIAProcessManagerUtil.Create;
-  FRTTKCheck := TSECaddieCheck.Create;
+  FRTTKCheck := TSERTTKCheck.Create;
+  FUpdateClient := TSEIXUpdateClient.Create;
   FNagCounter := TSEIXNagCounter.Create(0, 7);
   FSettings := TSEIXSettings.Create('SOFTWARE\SwiftExpat\Deputy');
   InitToolsMenu;
@@ -222,6 +247,7 @@ begin
   FProcMgr.Free;
   FRTTKCheck.Free;
   FNagCounter.Free;
+  FUpdateClient.Free;
   inherited;
 end;
 
@@ -304,6 +330,7 @@ procedure TSEIXDeputyWizard.IDEStarted;
 begin
   inherited;
   MessagesAdd('Deputy Started');
+  FUpdateClient.RefreshUpdates;
 end;
 
 procedure TSEIXDeputyWizard.InitToolsMenu;
@@ -343,7 +370,10 @@ begin
   mi.OnClick := FRTTKCheck.OnClickDemoFMX;
   FRTTKCheck.OnDownloadDemoFMXDone := DemoFMXDownloaded;
   FToolsMenuRootItem.Add(mi);
-
+  mi := MenuItemByName(nm_mi_update_status);
+  mi.Caption := FUpdateClient.UpdateButtonText;
+  mi.OnClick := FUpdateClient.OnClickUpdate;
+  FToolsMenuRootItem.Add(mi);
 end;
 
 procedure TSEIXDeputyWizard.CaddieCheckDownloaded(const AMessage: string);
@@ -354,13 +384,13 @@ end;
 
 procedure TSEIXDeputyWizard.DemoFMXDownloaded(const AMessage: string);
 begin
-   MenuItemByName(nm_mi_run_fmxdemo).Caption := FRTTKCheck.DemoFMXButtonText;
+  MenuItemByName(nm_mi_run_fmxdemo).Caption := FRTTKCheck.DemoFMXButtonText;
   MessagesAdd('FMX Demo Downloaded : ' + AMessage);
 end;
 
 procedure TSEIXDeputyWizard.DemoVCLDownloaded(const AMessage: string);
 begin
-    MenuItemByName(nm_mi_run_vcldemo).Caption := FRTTKCheck.DemoVCLButtonText;
+  MenuItemByName(nm_mi_run_vcldemo).Caption := FRTTKCheck.DemoVCLButtonText;
   MessagesAdd('VCL Demo Downloaded : ' + AMessage);
 end;
 
@@ -638,39 +668,49 @@ end;
 
 function TSEIXSettings.KillProcActiveGet: boolean;
 begin
-  result := self.ReadBool('KillProcess', 'Enabled', true);
+  result := self.ReadBool(nm_section_killprocess, 'Enabled', true);
 end;
 
 procedure TSEIXSettings.KillProcActiveSet(const Value: boolean);
 begin
-  self.WriteBool('KillProcess', 'Enabled', Value);
+  self.WriteBool(nm_section_killprocess, 'Enabled', Value);
+end;
+
+function TSEIXSettings.LastUpdateCheckGet: TDateTime;
+begin
+result := self.ReadDateTime(nm_section_updates, nm_updates_lastupdate, now)
+end;
+
+procedure TSEIXSettings.LastUpdateCheckSet(const Value: TDateTime);
+begin
+self.WriteDateTime(nm_section_updates, nm_updates_lastupdate, Value);
 end;
 
 { TSECaddieNagCheck }
 
-function TSECaddieCheck.CaddieAppExists: boolean;
+function TSERTTKCheck.CaddieAppExists: boolean;
 begin
   result := TFile.Exists(CaddieAppFile);
 end;
 
-function TSECaddieCheck.CaddieAppFile: string;
+function TSERTTKCheck.CaddieAppFile: string;
 begin
   result := TPath.Combine(RttkAppFolder, 'RT_Caddie.exe')
 end;
 
-function TSECaddieCheck.RttkAppFolder: string;
+function TSERTTKCheck.RttkAppFolder: string;
 begin
   result := TPath.Combine(TPath.GetCachePath, 'Programs\RunTime_ToolKit');
 end;
 
-function TSECaddieCheck.RttkAppFolderExists(const ACreateFolder: boolean): boolean;
+function TSERTTKCheck.RttkAppFolderExists(const ACreateFolder: boolean): boolean;
 begin
   if not TDirectory.Exists(RttkAppFolder) and ACreateFolder then
     TDirectory.CreateDirectory(RttkAppFolder);
   result := TDirectory.Exists(RttkAppFolder);
 end;
 
-function TSECaddieCheck.RttkDownloadFolder: string;
+function TSERTTKCheck.RttkDownloadFolder: string;
 begin
   if RttkAppFolderExists(true) then
     result := TPath.Combine(RttkAppFolder, 'Downloads');
@@ -678,7 +718,7 @@ begin
     TDirectory.CreateDirectory(result);
 end;
 
-function TSECaddieCheck.CaddieButtonText: string;
+function TSERTTKCheck.CaddieButtonText: string;
 begin
   if not CaddieAppExists then
     result := 'Download & Install Caddie'
@@ -686,42 +726,42 @@ begin
     result := 'Run Caddie'
 end;
 
-function TSECaddieCheck.CaddieDownloadFile: string;
+function TSERTTKCheck.CaddieDownloadFile: string;
 begin
   result := TPath.Combine(RttkDownloadFolder, dl_fl_name);
 end;
 
-function TSECaddieCheck.CaddieIniFile: string;
+function TSERTTKCheck.CaddieIniFile: string;
 begin
   result := TPath.Combine(TPath.GetHomePath, 'RTTK\RTTKCaddie.ini');
 end;
 
-function TSECaddieCheck.CaddieIniFileExists: boolean;
+function TSERTTKCheck.CaddieIniFileExists: boolean;
 begin
   result := TFile.Exists(CaddieIniFile)
 end;
 
-function TSECaddieCheck.DemoAppFMXFile: string;
+function TSERTTKCheck.DemoAppFMXFile: string;
 begin
   result := TPath.Combine(RttkAppFolder, fl_nm_demo_fmx)
 end;
 
-function TSECaddieCheck.DemoAppVCLFile: string;
+function TSERTTKCheck.DemoAppVCLFile: string;
 begin
   result := TPath.Combine(RttkAppFolder, fl_nm_demo_vcl)
 end;
 
-function TSECaddieCheck.DemoDownloadFMXFile: string;
+function TSERTTKCheck.DemoDownloadFMXFile: string;
 begin
   result := TPath.Combine(RttkDownloadFolder, dl_fl_demo_fmx)
 end;
 
-function TSECaddieCheck.DemoDownloadVCLFile: string;
+function TSERTTKCheck.DemoDownloadVCLFile: string;
 begin
   result := TPath.Combine(RttkDownloadFolder, dl_fl_demo_vcl)
 end;
 
-function TSECaddieCheck.DemoFMXButtonText: string;
+function TSERTTKCheck.DemoFMXButtonText: string;
 begin
   if not DemoFMXExists then
     result := 'Download & Install FMX Demo'
@@ -729,12 +769,12 @@ begin
     result := 'Run FMX Demo'
 end;
 
-function TSECaddieCheck.DemoFMXExists: boolean;
+function TSERTTKCheck.DemoFMXExists: boolean;
 begin
   result := TFile.Exists(DemoAppFMXFile)
 end;
 
-function TSECaddieCheck.DemoVCLButtonText: string;
+function TSERTTKCheck.DemoVCLButtonText: string;
 begin
   if not DemoVCLExists then
     result := 'Download & Install VCL Demo'
@@ -742,12 +782,12 @@ begin
     result := 'Run VCL Demo'
 end;
 
-function TSECaddieCheck.DemoVCLExists: boolean;
+function TSERTTKCheck.DemoVCLExists: boolean;
 begin
   result := TFile.Exists(DemoAppVCLFile)
 end;
 
-procedure TSECaddieCheck.DistServerAuthEvent(const Sender: TObject; AnAuthTarget: TAuthTargetType;
+procedure TSERTTKCheck.DistServerAuthEvent(const Sender: TObject; AnAuthTarget: TAuthTargetType;
   const ARealm, AURL: string; var AUserName, APassword: string; var AbortAuth: boolean;
   var Persistence: TAuthPersistenceType);
 begin
@@ -758,7 +798,7 @@ begin
   end;
 end;
 
-procedure TSECaddieCheck.InitHttpClient;
+procedure TSERTTKCheck.InitHttpClient;
 begin
   if not Assigned(FHTTPClient) then
   begin
@@ -774,7 +814,7 @@ begin
   end;
 end;
 
-procedure TSECaddieCheck.DownloadCaddie;
+procedure TSERTTKCheck.DownloadCaddie;
 begin
   InitHttpClient;
   if not Assigned(FHTTPReqCaddie) then
@@ -792,7 +832,7 @@ begin
   FHTTPReqCaddie.Get('https://swiftexpat.com/downloads/' + dl_fl_name);
 end;
 
-procedure TSECaddieCheck.DownloadDemoFMX;
+procedure TSERTTKCheck.DownloadDemoFMX;
 begin
   InitHttpClient;
   if not Assigned(FHTTPReqDemoFMX) then
@@ -810,7 +850,7 @@ begin
   FHTTPReqDemoFMX.Get('https://demos.swiftexpat.com/downloads/' + dl_fl_demo_fmx);
 end;
 
-procedure TSECaddieCheck.DownloadDemoVCL;
+procedure TSERTTKCheck.DownloadDemoVCL;
 begin
   InitHttpClient;
   if not Assigned(FHTTPReqDemoVCL) then
@@ -828,7 +868,7 @@ begin
   FHTTPReqDemoVCL.Get('https://demos.swiftexpat.com/downloads/' + dl_fl_demo_vcl);
 end;
 
-procedure TSECaddieCheck.HttpCaddieDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
+procedure TSERTTKCheck.HttpCaddieDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
 var
   lfs: TFileStream;
 begin
@@ -862,7 +902,7 @@ begin
     LogMessage('Download Http result = ' + AResponse.StatusCode.ToString);
 end;
 
-procedure TSECaddieCheck.HttpCaddieDLException(const Sender: TObject; const AError: Exception);
+procedure TSERTTKCheck.HttpCaddieDLException(const Sender: TObject; const AError: Exception);
 var
   msg: string;
 begin
@@ -870,7 +910,7 @@ begin
   LogMessage(msg);
 end;
 
-procedure TSECaddieCheck.HttpDemoFMXDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
+procedure TSERTTKCheck.HttpDemoFMXDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
 const
   nm_log_id = 'Demo FMX';
 var
@@ -906,7 +946,7 @@ begin
     LogMessage('Download ' + nm_log_id + ' Http result = ' + AResponse.StatusCode.ToString);
 end;
 
-procedure TSECaddieCheck.HttpDemoFMXDLException(const Sender: TObject; const AError: Exception);
+procedure TSERTTKCheck.HttpDemoFMXDLException(const Sender: TObject; const AError: Exception);
 var
   msg: string;
 begin
@@ -914,7 +954,7 @@ begin
   LogMessage(msg);
 end;
 
-procedure TSECaddieCheck.HttpDemoVCLDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
+procedure TSERTTKCheck.HttpDemoVCLDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
 const
   nm_log_id = 'Demo VCL';
 var
@@ -950,7 +990,7 @@ begin
     LogMessage('Download ' + nm_log_id + ' Http result = ' + AResponse.StatusCode.ToString);
 end;
 
-procedure TSECaddieCheck.HttpDemoVCLDLException(const Sender: TObject; const AError: Exception);
+procedure TSERTTKCheck.HttpDemoVCLDLException(const Sender: TObject; const AError: Exception);
 var
   msg: string;
 begin
@@ -958,7 +998,7 @@ begin
   LogMessage(msg);
 end;
 
-procedure TSECaddieCheck.LogMessage(AMessage: string);
+procedure TSERTTKCheck.LogMessage(AMessage: string);
 var
   msg: string;
 begin
@@ -971,7 +1011,7 @@ begin
     end);
 end;
 
-procedure TSECaddieCheck.OnClickCaddieRun(Sender: TObject);
+procedure TSERTTKCheck.OnClickCaddieRun(Sender: TObject);
 begin
   if CaddieAppExists then
     RunCaddie
@@ -979,7 +1019,7 @@ begin
     DownloadCaddie;
 end;
 
-procedure TSECaddieCheck.OnClickDemoFMX(Sender: TObject);
+procedure TSERTTKCheck.OnClickDemoFMX(Sender: TObject);
 begin
   if DemoFMXExists then
     RunDemoFMX
@@ -987,7 +1027,7 @@ begin
     DownloadDemoFMX;
 end;
 
-procedure TSECaddieCheck.OnClickDemoVCL(Sender: TObject);
+procedure TSERTTKCheck.OnClickDemoVCL(Sender: TObject);
 begin
   if DemoVCLExists then
     RunDemoVCL
@@ -995,12 +1035,12 @@ begin
     DownloadDemoVCL;
 end;
 
-procedure TSECaddieCheck.OnClickShowWebsite(Sender: TObject);
+procedure TSERTTKCheck.OnClickShowWebsite(Sender: TObject);
 begin
   ShowWebsite;
 end;
 
-procedure TSECaddieCheck.RunCaddie;
+procedure TSERTTKCheck.RunCaddie;
 var
   shi: TShellExecuteInfo;
 begin
@@ -1013,7 +1053,7 @@ begin
   LogMessage('Caddie Running' + shi.lpFile);
 end;
 
-procedure TSECaddieCheck.RunDemoFMX;
+procedure TSERTTKCheck.RunDemoFMX;
 var
   shi: TShellExecuteInfo;
 begin
@@ -1026,7 +1066,7 @@ begin
   LogMessage('Demo FMX Running' + shi.lpFile);
 end;
 
-procedure TSECaddieCheck.RunDemoVCL;
+procedure TSERTTKCheck.RunDemoVCL;
 var
   shi: TShellExecuteInfo;
 begin
@@ -1039,7 +1079,7 @@ begin
   LogMessage('Demo VCL Running' + shi.lpFile);
 end;
 
-procedure TSECaddieCheck.ShowWebsite;
+procedure TSERTTKCheck.ShowWebsite;
 const
   ws_link = 'https://swiftexpat.com';
 var
@@ -1076,6 +1116,41 @@ begin
   result := FNagLevel = FNagCount;
   if result then
     FNagCount := 0;
+end;
+
+{ TSEIXUpdateClient }
+
+constructor TSEIXUpdateClient.Create;
+begin
+
+end;
+
+destructor TSEIXUpdateClient.Destroy;
+begin
+  FHTTPReqVersion.Free;
+  FHTTPClient.Free;
+  inherited;
+end;
+
+procedure TSEIXUpdateClient.OnClickUpdate(Sender: TObject);
+begin
+
+end;
+
+procedure TSEIXUpdateClient.RefreshUpdates;
+begin
+
+end;
+
+function TSEIXUpdateClient.UpdateButtonText: string;
+begin
+  //check the settings to see the last cache date
+  result := 'Version is current';
+end;
+
+function TSEIXUpdateClient.UpdateFileExists: boolean;
+begin
+  result := TFile.Exists(self.fl_nm_update_cache)
 end;
 
 initialization
