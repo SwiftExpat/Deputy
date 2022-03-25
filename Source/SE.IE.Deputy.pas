@@ -40,8 +40,11 @@ type
     nm_user_agent = 'Deputy Expert';
     fl_nm_demo_vcl = 'RTTK.VCL.exe';
     fl_nm_demo_fmx = 'RTTK_FMX.exe';
+    fl_nm_expert_update_cache = 'expertupdates.xml';
+    rk_nm_expert = 'SwiftExpat Deputy';
   strict private
     FLicensed: boolean;
+    FWizardVersion:string;
     FHTTPReqCaddie, FHTTPReqDemoFMX, FHTTPReqDemoVCL: TNetHTTPRequest;
     FHTTPClient: TNetHTTPClient;
     FOnMessage: TSECaddieCheckOnMessage;
@@ -76,6 +79,7 @@ type
     procedure HttpDemoFMXDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
   private
     function DemoAppFMXFile: string;
+    function ExpertFileLocation: string;
 
   public
     procedure ShowWebsite;
@@ -96,6 +100,9 @@ type
       write FOnDownloadVCLDemoDone;
     property OnDownloadDemoFMXDone: TSECaddieCheckOnDownloadDone read FOnDownloadFMXDemoDone
       write FOnDownloadFMXDemoDone;
+    function UpdateExpertButtonText: string;
+    procedure OnClickUpdateExpert(Sender: TObject);
+    procedure ExpertUpdatesRefresh(const AWizardVersion:string);
   end;
 
   TSEIXNagCounter = class
@@ -126,20 +133,20 @@ type
     destructor Destroy; override;
   end;
 
-  TSEIXUpdateClient = class
-  const
-    fl_nm_update_cache = 'updates.xml';
-  strict private
-    FHTTPReqVersion: TNetHTTPRequest;
-    FHTTPClient: TNetHTTPClient;
-    function UpdateFileExists: boolean;
-  public
-    constructor Create;
-    destructor Destroy; override;
-    function UpdateButtonText: string;
-    procedure OnClickUpdate(Sender: TObject);
-    procedure RefreshUpdates;
-  end;
+  // TSEIXUpdateClient = class
+  // const
+  //
+  // strict private
+  // FHTTPReqVersion: TNetHTTPRequest;
+  // FHTTPClient: TNetHTTPClient;
+  // function UpdateFileExists: boolean;
+  // public
+  // constructor Create;
+  // destructor Destroy; override;
+  // function UpdateButtonText: string;
+  // procedure OnClickUpdate(Sender: TObject);
+  // procedure RefreshUpdates;
+  // end;
 
   TSEIXDeputyWizard = class;
 
@@ -176,7 +183,6 @@ type
     FRTTKCheck: TSERTTKCheck;
     FMenuItems: TDictionary<string, TMenuItem>;
     FNagCounter: TSEIXNagCounter;
-    FUpdateClient: TSEIXUpdateClient;
     function MenuItemByName(const AItemName: string): TMenuItem;
     // procedure MessageKillProcStatus;
     procedure MenuItemKillProcStatus;
@@ -233,7 +239,6 @@ begin
   FDebugNotifier := TSEIADebugNotifier.Create(self);
   FProcMgr := TSEIAProcessManagerUtil.Create;
   FRTTKCheck := TSERTTKCheck.Create;
-  FUpdateClient := TSEIXUpdateClient.Create;
   FNagCounter := TSEIXNagCounter.Create(0, 7);
   FSettings := TSEIXSettings.Create('SOFTWARE\SwiftExpat\Deputy');
   InitToolsMenu;
@@ -247,7 +252,6 @@ begin
   FProcMgr.Free;
   FRTTKCheck.Free;
   FNagCounter.Free;
-  FUpdateClient.Free;
   inherited;
 end;
 
@@ -330,7 +334,8 @@ procedure TSEIXDeputyWizard.IDEStarted;
 begin
   inherited;
   MessagesAdd('Deputy Started');
-  FUpdateClient.RefreshUpdates;
+  FRTTKCheck.ExpertUpdatesRefresh(GetWizardVersion);
+
 end;
 
 procedure TSEIXDeputyWizard.InitToolsMenu;
@@ -371,8 +376,8 @@ begin
   FRTTKCheck.OnDownloadDemoFMXDone := DemoFMXDownloaded;
   FToolsMenuRootItem.Add(mi);
   mi := MenuItemByName(nm_mi_update_status);
-  mi.Caption := FUpdateClient.UpdateButtonText;
-  mi.OnClick := FUpdateClient.OnClickUpdate;
+  mi.Caption := FRTTKCheck.UpdateExpertButtonText;
+  mi.OnClick := FRTTKCheck.OnClickUpdateExpert;
   FToolsMenuRootItem.Add(mi);
 end;
 
@@ -678,12 +683,12 @@ end;
 
 function TSEIXSettings.LastUpdateCheckGet: TDateTime;
 begin
-result := self.ReadDateTime(nm_section_updates, nm_updates_lastupdate, now)
+  result := self.ReadDateTime(nm_section_updates, nm_updates_lastupdate, now)
 end;
 
 procedure TSEIXSettings.LastUpdateCheckSet(const Value: TDateTime);
 begin
-self.WriteDateTime(nm_section_updates, nm_updates_lastupdate, Value);
+  self.WriteDateTime(nm_section_updates, nm_updates_lastupdate, Value);
 end;
 
 { TSECaddieNagCheck }
@@ -866,6 +871,32 @@ begin
   FHTTPReqDemoVCL.OnRequestCompleted := HttpDemoVCLDLCompleted;
   FHTTPReqDemoVCL.Asynchronous := true;
   FHTTPReqDemoVCL.Get('https://demos.swiftexpat.com/downloads/' + dl_fl_demo_vcl);
+end;
+
+function TSERTTKCheck.ExpertFileLocation: string;
+{ Computer\HKEY_CURRENT_USER\SOFTWARE\Embarcadero\BDS\20.0\Experts }
+var
+  bk: string;
+  reg: TRegistry;
+begin
+  result := 'err';
+  reg := TRegistry.Create;
+  reg.RootKey := HKEY_CURRENT_USER;
+  try
+    bk := TOTAHelper.GetRegKey + '\Experts';
+    if reg.KeyExists(bk) then
+    begin
+      reg.OpenKey(bk, false);
+      if reg.ValueExists(rk_nm_expert) then
+        result := reg.ReadString(rk_nm_expert)
+      else
+        result := 'not found';
+      reg.CloseKey;
+    end;
+
+  finally
+    reg.Free;
+  end;
 end;
 
 procedure TSERTTKCheck.HttpCaddieDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
@@ -1095,6 +1126,23 @@ begin
 
 end;
 
+procedure TSERTTKCheck.ExpertUpdatesRefresh(const AWizardVersion:string);
+begin
+  FWizardVersion := AWizardVersion;
+end;
+
+procedure TSERTTKCheck.OnClickUpdateExpert(Sender: TObject);
+begin
+  // start a download
+  // rename dll
+
+end;
+
+function TSERTTKCheck.UpdateExpertButtonText: string;
+begin
+  result := 'Version is current';
+end;
+
 { TSEIXNagCounter }
 
 constructor TSEIXNagCounter.Create(const ANagCount: integer = 0; const ANagLevel: integer = 5);
@@ -1116,41 +1164,6 @@ begin
   result := FNagLevel = FNagCount;
   if result then
     FNagCount := 0;
-end;
-
-{ TSEIXUpdateClient }
-
-constructor TSEIXUpdateClient.Create;
-begin
-
-end;
-
-destructor TSEIXUpdateClient.Destroy;
-begin
-  FHTTPReqVersion.Free;
-  FHTTPClient.Free;
-  inherited;
-end;
-
-procedure TSEIXUpdateClient.OnClickUpdate(Sender: TObject);
-begin
-
-end;
-
-procedure TSEIXUpdateClient.RefreshUpdates;
-begin
-
-end;
-
-function TSEIXUpdateClient.UpdateButtonText: string;
-begin
-  //check the settings to see the last cache date
-  result := 'Version is current';
-end;
-
-function TSEIXUpdateClient.UpdateFileExists: boolean;
-begin
-  result := TFile.Exists(self.fl_nm_update_cache)
 end;
 
 initialization
