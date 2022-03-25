@@ -44,7 +44,7 @@ type
     rk_nm_expert = 'SwiftExpat Deputy';
   strict private
     FLicensed: boolean;
-    FWizardVersion:string;
+    FWizardVersion, FUpdateVersion:string;
     FHTTPReqCaddie, FHTTPReqDemoFMX, FHTTPReqDemoVCL: TNetHTTPRequest;
     FHTTPClient: TNetHTTPClient;
     FOnMessage: TSECaddieCheckOnMessage;
@@ -78,9 +78,11 @@ type
     procedure HttpDemoFMXDLException(const Sender: TObject; const AError: Exception);
     procedure HttpDemoFMXDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
   private
+    FExpertUpdateMenuItem: TMenuItem;
     function DemoAppFMXFile: string;
     function ExpertFileLocation: string;
-
+    function ExpertUpdateAvailable:boolean;
+    procedure ExpertUpdateMenuItemSet(const Value: TMenuItem);
   public
     procedure ShowWebsite;
     procedure DownloadCaddie;
@@ -103,6 +105,7 @@ type
     function UpdateExpertButtonText: string;
     procedure OnClickUpdateExpert(Sender: TObject);
     procedure ExpertUpdatesRefresh(const AWizardVersion:string);
+    property ExpertUpdateMenuItem: TMenuItem read FExpertUpdateMenuItem write ExpertUpdateMenuItemSet;
   end;
 
   TSEIXNagCounter = class
@@ -376,8 +379,8 @@ begin
   FRTTKCheck.OnDownloadDemoFMXDone := DemoFMXDownloaded;
   FToolsMenuRootItem.Add(mi);
   mi := MenuItemByName(nm_mi_update_status);
-  mi.Caption := FRTTKCheck.UpdateExpertButtonText;
-  mi.OnClick := FRTTKCheck.OnClickUpdateExpert;
+  mi.Caption := 'Loading Version';//FRTTKCheck.UpdateExpertButtonText;
+  FRTTKCheck.ExpertUpdateMenuItem := mi;
   FToolsMenuRootItem.Add(mi);
 end;
 
@@ -1126,21 +1129,33 @@ begin
 
 end;
 
+function TSERTTKCheck.ExpertUpdateAvailable: boolean;
+begin
+result := SameText(FWizardVersion, FUpdateVersion);
+end;
+
+procedure TSERTTKCheck.ExpertUpdateMenuItemSet(const Value: TMenuItem);
+begin
+  FExpertUpdateMenuItem := Value;
+  FExpertUpdateMenuItem.OnClick :=OnClickUpdateExpert;
+end;
+
 procedure TSERTTKCheck.ExpertUpdatesRefresh(const AWizardVersion:string);
 begin
   FWizardVersion := AWizardVersion;
+  //check the settings for last update dts
 end;
 
 procedure TSERTTKCheck.OnClickUpdateExpert(Sender: TObject);
 begin
   // start a download
   // rename dll
-
+  FExpertUpdateMenuItem.Caption := UpdateExpertButtonText;
 end;
 
 function TSERTTKCheck.UpdateExpertButtonText: string;
 begin
-  result := 'Version is current';
+  result := 'Version is current '+FWizardVersion;
 end;
 
 { TSEIXNagCounter }
