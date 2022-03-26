@@ -73,10 +73,10 @@ type
     function DemoDownloadVCLFile: string;
     function DemoFMXExists: boolean;
     function DemoDownloadFMXFile: string;
-    function RttkAppFolderExists(const ACreateFolder: boolean): boolean;
-    function RttkDownloadFolder: string;
+    // function RttkAppFolderExists(const ACreateFolder: boolean): boolean;
+    function RttkDownloadDirectory: string;
     function RttkAppFolder: string;
-    function RttkDataFolder: string;
+    function RttkDataDirectory: string;
     function RttkUpdatesDirectory: string;
     function CaddieIniFile: string;
     function CaddieIniFileExists: boolean;
@@ -741,31 +741,27 @@ end;
 function TSERTTKCheck.RttkAppFolder: string;
 begin
   result := TPath.Combine(TPath.GetCachePath, 'Programs\RunTime_ToolKit');
+  if not TDirectory.Exists(result) then
+    TDirectory.CreateDirectory(result);
 end;
 
-function TSERTTKCheck.RttkAppFolderExists(const ACreateFolder: boolean): boolean;
-begin
-  if not TDirectory.Exists(RttkAppFolder) and ACreateFolder then
-    TDirectory.CreateDirectory(RttkAppFolder);
-  result := TDirectory.Exists(RttkAppFolder);
-end;
-
-function TSERTTKCheck.RttkDataFolder: string;
+function TSERTTKCheck.RttkDataDirectory: string;
 begin
   result := TPath.Combine(TPath.GetHomePath, 'RTTK');
+  if not TDirectory.Exists(result) then
+    TDirectory.CreateDirectory(result)
 end;
 
-function TSERTTKCheck.RttkDownloadFolder: string;
+function TSERTTKCheck.RttkDownloadDirectory: string;
 begin
-  if RttkAppFolderExists(true) then
-    result := TPath.Combine(RttkAppFolder, 'Downloads');
+  result := TPath.Combine(RttkDataDirectory, 'Downloads');
   if not TDirectory.Exists(result) then
     TDirectory.CreateDirectory(result);
 end;
 
 function TSERTTKCheck.RttkUpdatesDirectory: string;
 begin
-  result := TPath.Combine(RttkDataFolder, 'Updates');
+  result := TPath.Combine(RttkDataDirectory, 'Updates');
 end;
 
 function TSERTTKCheck.CaddieButtonText: string;
@@ -778,12 +774,12 @@ end;
 
 function TSERTTKCheck.CaddieDownloadFile: string;
 begin
-  result := TPath.Combine(RttkDownloadFolder, dl_fl_name);
+  result := TPath.Combine(RttkDownloadDirectory, dl_fl_name);
 end;
 
 function TSERTTKCheck.CaddieIniFile: string;
 begin
-  result := TPath.Combine(RttkDataFolder, 'RTTKCaddie.ini');
+  result := TPath.Combine(RttkDataDirectory, 'RTTKCaddie.ini');
 end;
 
 function TSERTTKCheck.CaddieIniFileExists: boolean;
@@ -803,12 +799,12 @@ end;
 
 function TSERTTKCheck.DemoDownloadFMXFile: string;
 begin
-  result := TPath.Combine(RttkDownloadFolder, dl_fl_demo_fmx)
+  result := TPath.Combine(RttkDownloadDirectory, dl_fl_demo_fmx)
 end;
 
 function TSERTTKCheck.DemoDownloadVCLFile: string;
 begin
-  result := TPath.Combine(RttkDownloadFolder, dl_fl_demo_vcl)
+  result := TPath.Combine(RttkDownloadDirectory, dl_fl_demo_vcl)
 end;
 
 function TSERTTKCheck.DemoFMXButtonText: string;
@@ -1173,7 +1169,7 @@ end;
 
 function TSERTTKCheck.DeputyVersionFile: string;
 begin
-  result := TPath.Combine(RttkDownloadFolder, fl_nm_deputy_version)
+  result := TPath.Combine(RttkDownloadDirectory, fl_nm_deputy_version)
 end;
 
 function TSERTTKCheck.DeputyVersionFileExists: boolean;
@@ -1235,12 +1231,15 @@ const
 var
   JSONValue: TJSONValue;
 begin
+  if not Assigned(FUpdateVersion) then
+    FUpdateVersion := TSEIXVersionInfo.Create;
+  FUpdateVersion.VerMaj := -1;
+  FUpdateVersion.VerMin := -1;
+  FUpdateVersion.VerRel := -1;
   if not DeputyVersionFileExists then
     exit;
   JSONValue := TJSONObject.ParseJSONValue(TFile.ReadAllText(DeputyVersionFile));
-  if Assigned(FUpdateVersion) then
-    FUpdateVersion.Free;
-  FUpdateVersion := TSEIXVersionInfo.Create;
+
   if JSONValue is TJSONObject then
   begin
     FUpdateVersion.VerMaj := JSONValue.GetValue<integer>(nm_json_object + '.' + nm_json_prop_major);
@@ -1300,13 +1299,11 @@ begin
 end;
 
 procedure TSERTTKCheck.OnClickUpdateExpert(Sender: TObject);
-var
-  fn: string;
 begin
   // start a download
   // rename dll FWizardInfo.WizardFileName
   if not SameText(ExpertFileLocation, FWizardInfo.WizardFileName) then
-  begin //ensure the Update would be for the wizard loaded
+  begin // ensure the Update would be for the wizard loaded
     FExpertUpdateMenuItem.Caption := 'Dll missmatch to registry';
     exit;
   end;
