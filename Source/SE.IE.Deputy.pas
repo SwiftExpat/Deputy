@@ -7,7 +7,7 @@ interface
 implementation
 
 uses System.Classes, ToolsAPI, VCL.Dialogs, System.SysUtils, System.TypInfo, Winapi.Windows, Winapi.TlHelp32,
-  System.IOUtils, Generics.Collections, System.DateUtils,
+  System.IOUtils, Generics.Collections, System.DateUtils, System.JSON,
   VCL.Forms, VCL.Menus, System.Win.Registry, ShellApi, VCL.Controls,
   DW.OTA.Wizard, DW.OTA.IDENotifierOTAWizard, DW.OTA.Helpers, DW.Menus.Helpers, DW.OTA.ProjectManagerMenu,
   DW.OTA.Notifiers, System.Net.HttpClientComponent, System.Net.URLClient, System.Net.HttpClient, System.Zip;
@@ -32,6 +32,20 @@ type
   TSECaddieCheckOnMessage = procedure(const AMessage: string) of object;
   TSECaddieCheckOnDownloadDone = procedure(const AMessage: string) of object;
 
+  TSEIXWizardInfo = class
+  public
+    WizardFileName: string;
+    WizardVersion: string;
+  end;
+
+  TSEIXVersionInfo = class
+  public
+    VerMaj: integer;
+    VerMin: integer;
+    VerRel: integer;
+    function VersionString: string;
+  end;
+
   TSERTTKCheck = class
   const
     dl_fl_name = 'SERTTK_Caddie_dl.zip';
@@ -41,10 +55,12 @@ type
     fl_nm_demo_vcl = 'RTTK.VCL.exe';
     fl_nm_demo_fmx = 'RTTK_FMX.exe';
     fl_nm_expert_update_cache = 'expertupdates.xml';
+    fl_nm_deputy_version = 'deputyversion.json';
     rk_nm_expert = 'SwiftExpat Deputy';
   strict private
     FLicensed: boolean;
-    FWizardVersion, FUpdateVersion:string;
+    FWizardInfo: TSEIXWizardInfo;
+    FWizardVersion, FUpdateVersion: TSEIXVersionInfo;
     FHTTPReqCaddie, FHTTPReqDemoFMX, FHTTPReqDemoVCL: TNetHTTPRequest;
     FHTTPClient: TNetHTTPClient;
     FOnMessage: TSECaddieCheckOnMessage;
@@ -60,9 +76,16 @@ type
     function RttkAppFolderExists(const ACreateFolder: boolean): boolean;
     function RttkDownloadFolder: string;
     function RttkAppFolder: string;
+    function RttkDataFolder: string;
+    function RttkUpdatesDirectory: string;
     function CaddieIniFile: string;
     function CaddieIniFileExists: boolean;
     procedure LogMessage(AMessage: string);
+    function DeputyVersionFile: string;
+    function DeputyVersionFileExists: boolean;
+    function DeputyWizardBackupFilename: string;
+    function DeputyWizardUpdateFilename: string;
+    function DeputyWizardUpdatesDirectory: string;
     procedure RunCaddie;
     procedure RunDemoVCL;
     procedure RunDemoFMX;
@@ -81,9 +104,13 @@ type
     FExpertUpdateMenuItem: TMenuItem;
     function DemoAppFMXFile: string;
     function ExpertFileLocation: string;
-    function ExpertUpdateAvailable:boolean;
+    function ExpertUpdateAvailable: boolean;
     procedure ExpertUpdateMenuItemSet(const Value: TMenuItem);
+    procedure LoadDeputyUpdateVersion;
+    procedure OnClickUpdateExpert(Sender: TObject);
+    function UpdateExpertButtonText: string;
   public
+    destructor Destroy; override;
     procedure ShowWebsite;
     procedure DownloadCaddie;
     property Downloaded: boolean read CaddieAppExists;
@@ -102,9 +129,7 @@ type
       write FOnDownloadVCLDemoDone;
     property OnDownloadDemoFMXDone: TSECaddieCheckOnDownloadDone read FOnDownloadFMXDemoDone
       write FOnDownloadFMXDemoDone;
-    function UpdateExpertButtonText: string;
-    procedure OnClickUpdateExpert(Sender: TObject);
-    procedure ExpertUpdatesRefresh(const AWizardVersion:string);
+    procedure ExpertUpdatesRefresh(const AWizardInfo: TSEIXWizardInfo);
     property ExpertUpdateMenuItem: TMenuItem read FExpertUpdateMenuItem write ExpertUpdateMenuItemSet;
   end;
 
@@ -184,6 +209,7 @@ type
     FToolsMenuRootItem: TMenuItem;
     FSettings: TSEIXSettings;
     FRTTKCheck: TSERTTKCheck;
+    FWizardInfo: TSEIXWizardInfo;
     FMenuItems: TDictionary<string, TMenuItem>;
     FNagCounter: TSEIXNagCounter;
     function MenuItemByName(const AItemName: string): TMenuItem;
@@ -255,6 +281,7 @@ begin
   FProcMgr.Free;
   FRTTKCheck.Free;
   FNagCounter.Free;
+  FWizardInfo.Free;
   inherited;
 end;
 
@@ -334,10 +361,15 @@ begin
 end;
 
 procedure TSEIXDeputyWizard.IDEStarted;
+
 begin
   inherited;
   MessagesAdd('Deputy Started');
-  FRTTKCheck.ExpertUpdatesRefresh(GetWizardVersion);
+
+  FWizardInfo := TSEIXWizardInfo.Create;
+  FWizardInfo.WizardVersion := GetWizardVersion;
+  FWizardInfo.WizardFileName := GetWizardFileName;
+  FRTTKCheck.ExpertUpdatesRefresh(FWizardInfo);
 
 end;
 
@@ -379,7 +411,7 @@ begin
   FRTTKCheck.OnDownloadDemoFMXDone := DemoFMXDownloaded;
   FToolsMenuRootItem.Add(mi);
   mi := MenuItemByName(nm_mi_update_status);
-  mi.Caption := 'Loading Version';//FRTTKCheck.UpdateExpertButtonText;
+  mi.Caption := 'Loading Version'; // FRTTKCheck.UpdateExpertButtonText;
   FRTTKCheck.ExpertUpdateMenuItem := mi;
   FToolsMenuRootItem.Add(mi);
 end;
@@ -718,12 +750,22 @@ begin
   result := TDirectory.Exists(RttkAppFolder);
 end;
 
+function TSERTTKCheck.RttkDataFolder: string;
+begin
+  result := TPath.Combine(TPath.GetHomePath, 'RTTK');
+end;
+
 function TSERTTKCheck.RttkDownloadFolder: string;
 begin
   if RttkAppFolderExists(true) then
     result := TPath.Combine(RttkAppFolder, 'Downloads');
   if not TDirectory.Exists(result) then
     TDirectory.CreateDirectory(result);
+end;
+
+function TSERTTKCheck.RttkUpdatesDirectory: string;
+begin
+  result := TPath.Combine(RttkDataFolder, 'Updates');
 end;
 
 function TSERTTKCheck.CaddieButtonText: string;
@@ -741,7 +783,7 @@ end;
 
 function TSERTTKCheck.CaddieIniFile: string;
 begin
-  result := TPath.Combine(TPath.GetHomePath, 'RTTK\RTTKCaddie.ini');
+  result := TPath.Combine(RttkDataFolder, 'RTTKCaddie.ini');
 end;
 
 function TSERTTKCheck.CaddieIniFileExists: boolean;
@@ -1129,33 +1171,163 @@ begin
 
 end;
 
+function TSERTTKCheck.DeputyVersionFile: string;
+begin
+  result := TPath.Combine(RttkDownloadFolder, fl_nm_deputy_version)
+end;
+
+function TSERTTKCheck.DeputyVersionFileExists: boolean;
+begin
+  result := TFile.Exists(DeputyVersionFile)
+end;
+
+function TSERTTKCheck.DeputyWizardBackupFilename: string;
+begin
+  result := FWizardInfo.WizardFileName + '.bak';
+end;
+
+function TSERTTKCheck.DeputyWizardUpdateFilename: string;
+var
+  fl, sn: string;
+
+begin
+{$IF LIBSUFFIX = '280'}
+  sn := '280';
+{$ELSEIF LIBSUFFIX = '270'}
+  sn := '270';
+{$ELSEIF LIBSUFFIX = '260'}
+  sn := '260';
+{$ELSE}
+  sn := '###';
+{$ENDIF}
+  // SE.IDE.Deputy280.dll
+  // SE.IDE.Deputy270.dll
+  // this needs to parse out the 280 libsuffix added to the dll
+  result := '';
+  for fl in TDirectory.GetFiles(DeputyWizardUpdatesDirectory, '*.dll', TSearchOption.soTopDirectoryOnly) do
+    if fl.EndsWith(sn + '.dll') then
+      exit(fl);
+
+end;
+
+function TSERTTKCheck.DeputyWizardUpdatesDirectory: string;
+begin
+  result := TPath.Combine(RttkUpdatesDirectory, 'Deputy');
+  if not TDirectory.Exists(result) then
+    TDirectory.CreateDirectory(result);
+end;
+
+destructor TSERTTKCheck.Destroy;
+begin
+  FWizardVersion.Free;
+  FUpdateVersion.Free;
+  inherited;
+end;
+
+procedure TSERTTKCheck.LoadDeputyUpdateVersion;
+const
+  nm_json_object = 'DeputyVersion';
+  nm_json_prop_major = 'VerMajor';
+  nm_json_prop_minor = 'VerMinor';
+  nm_json_prop_release = 'VerRelease';
+var
+  JSONValue: TJSONValue;
+begin
+  if not DeputyVersionFileExists then
+    exit;
+  JSONValue := TJSONObject.ParseJSONValue(TFile.ReadAllText(DeputyVersionFile));
+  if Assigned(FUpdateVersion) then
+    FUpdateVersion.Free;
+  FUpdateVersion := TSEIXVersionInfo.Create;
+  if JSONValue is TJSONObject then
+  begin
+    FUpdateVersion.VerMaj := JSONValue.GetValue<integer>(nm_json_object + '.' + nm_json_prop_major);
+    FUpdateVersion.VerMin := JSONValue.GetValue<integer>(nm_json_object + '.' + nm_json_prop_minor);
+    FUpdateVersion.VerRel := JSONValue.GetValue<integer>(nm_json_object + '.' + nm_json_prop_release);
+  end;
+
+end;
+
 function TSERTTKCheck.ExpertUpdateAvailable: boolean;
 begin
-result := SameText(FWizardVersion, FUpdateVersion);
+  result := false;
+  if FWizardVersion.VerMaj < FUpdateVersion.VerMaj then
+  begin
+    result := true; // 2021.??.?? vs 2022.??.??
+    exit;
+  end;
+
+  if (FWizardVersion.VerMaj = FUpdateVersion.VerMaj) then
+  begin
+    if (FWizardVersion.VerMin < FUpdateVersion.VerMin) then
+    begin
+      result := true; // 2021.10.?? vs 2021.11.??
+      exit;
+    end;
+    if (FWizardVersion.VerMin = FUpdateVersion.VerMin) then
+    begin
+      if (FWizardVersion.VerRel < FUpdateVersion.VerRel) then
+      begin
+        result := true; // 2021.??.?? vs 2022.??.??
+        exit;
+      end;
+    end;
+  end
 end;
 
 procedure TSERTTKCheck.ExpertUpdateMenuItemSet(const Value: TMenuItem);
 begin
   FExpertUpdateMenuItem := Value;
-  FExpertUpdateMenuItem.OnClick :=OnClickUpdateExpert;
+  FExpertUpdateMenuItem.OnClick := OnClickUpdateExpert;
 end;
 
-procedure TSERTTKCheck.ExpertUpdatesRefresh(const AWizardVersion:string);
+procedure TSERTTKCheck.ExpertUpdatesRefresh(const AWizardInfo: TSEIXWizardInfo);
 begin
-  FWizardVersion := AWizardVersion;
-  //check the settings for last update dts
+
+  FWizardInfo := AWizardInfo;
+  if Assigned(FWizardVersion) then
+    FWizardVersion.Free;
+
+  FWizardVersion := TSEIXVersionInfo.Create;
+  FWizardVersion.VerMaj := AWizardInfo.WizardVersion.Split(['.'])[0].ToInteger;
+  FWizardVersion.VerMin := AWizardInfo.WizardVersion.Split(['.'])[1].ToInteger;
+  FWizardVersion.VerRel := AWizardInfo.WizardVersion.Split(['.'])[2].ToInteger;
+  // check the settings for last update dts
+  LoadDeputyUpdateVersion;
+  FExpertUpdateMenuItem.Caption := UpdateExpertButtonText;
 end;
 
 procedure TSERTTKCheck.OnClickUpdateExpert(Sender: TObject);
+var
+  fn: string;
 begin
   // start a download
-  // rename dll
+  // rename dll FWizardInfo.WizardFileName
+  if FWizardInfo.WizardFileName = DeputyWizardBackupFilename then
+  begin // pending restart, do not continue
+    FExpertUpdateMenuItem.Caption := 'Restart IDE to load update';
+    exit;
+  end;
+  if not TFile.Exists(DeputyWizardUpdateFilename) then
+  begin // no update to install, exit
+    FExpertUpdateMenuItem.Caption := 'Update not found';
+    exit;
+  end;
+  if TFile.Exists(DeputyWizardBackupFilename) then
+    TFile.Delete(DeputyWizardBackupFilename);
+  fn := FWizardInfo.WizardFileName; { or read this from the registry to be sure? }
+  TFile.Move(FWizardInfo.WizardFileName, DeputyWizardBackupFilename);
+  TFile.Move(DeputyWizardUpdateFilename, fn);
+
   FExpertUpdateMenuItem.Caption := UpdateExpertButtonText;
 end;
 
 function TSERTTKCheck.UpdateExpertButtonText: string;
 begin
-  result := 'Version is current '+FWizardVersion;
+  if ExpertUpdateAvailable then
+    result := 'Update Available to  ' + FUpdateVersion.VersionString
+  else
+    result := 'Version is current ' + FWizardVersion.VersionString;
 end;
 
 { TSEIXNagCounter }
@@ -1179,6 +1351,13 @@ begin
   result := FNagLevel = FNagCount;
   if result then
     FNagCount := 0;
+end;
+
+{ TSEIXVersionInfo }
+
+function TSEIXVersionInfo.VersionString: string;
+begin
+  result := VerMaj.ToString + '.' + VerMin.ToString + '.' + VerRel.ToString;
 end;
 
 initialization
