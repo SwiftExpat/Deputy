@@ -34,7 +34,7 @@ type
 
   TSEIXWizardInfo = class
   public
-    WizardFileName: string;
+    WizardFileName: string; // make this a dynamic call to reflect the rename
     WizardVersion: string;
   end;
 
@@ -73,10 +73,10 @@ type
     function DemoDownloadVCLFile: string;
     function DemoFMXExists: boolean;
     function DemoDownloadFMXFile: string;
-    function RttkAppFolderExists(const ACreateFolder: boolean): boolean;
-    function RttkDownloadFolder: string;
+    // function RttkAppFolderExists(const ACreateFolder: boolean): boolean;
+    function RttkDownloadDirectory: string;
     function RttkAppFolder: string;
-    function RttkDataFolder: string;
+    function RttkDataDirectory: string;
     function RttkUpdatesDirectory: string;
     function CaddieIniFile: string;
     function CaddieIniFileExists: boolean;
@@ -84,7 +84,7 @@ type
     function DeputyVersionFile: string;
     function DeputyVersionFileExists: boolean;
     function DeputyWizardBackupFilename: string;
-    function DeputyWizardUpdateFilename: string;
+    function DeputyWizardUpdateFilename(const AFileName: string): string;
     function DeputyWizardUpdatesDirectory: string;
     procedure RunCaddie;
     procedure RunDemoVCL;
@@ -741,31 +741,27 @@ end;
 function TSERTTKCheck.RttkAppFolder: string;
 begin
   result := TPath.Combine(TPath.GetCachePath, 'Programs\RunTime_ToolKit');
+  if not TDirectory.Exists(result) then
+    TDirectory.CreateDirectory(result);
 end;
 
-function TSERTTKCheck.RttkAppFolderExists(const ACreateFolder: boolean): boolean;
-begin
-  if not TDirectory.Exists(RttkAppFolder) and ACreateFolder then
-    TDirectory.CreateDirectory(RttkAppFolder);
-  result := TDirectory.Exists(RttkAppFolder);
-end;
-
-function TSERTTKCheck.RttkDataFolder: string;
+function TSERTTKCheck.RttkDataDirectory: string;
 begin
   result := TPath.Combine(TPath.GetHomePath, 'RTTK');
+  if not TDirectory.Exists(result) then
+    TDirectory.CreateDirectory(result)
 end;
 
-function TSERTTKCheck.RttkDownloadFolder: string;
+function TSERTTKCheck.RttkDownloadDirectory: string;
 begin
-  if RttkAppFolderExists(true) then
-    result := TPath.Combine(RttkAppFolder, 'Downloads');
+  result := TPath.Combine(RttkDataDirectory, 'Downloads');
   if not TDirectory.Exists(result) then
     TDirectory.CreateDirectory(result);
 end;
 
 function TSERTTKCheck.RttkUpdatesDirectory: string;
 begin
-  result := TPath.Combine(RttkDataFolder, 'Updates');
+  result := TPath.Combine(RttkDataDirectory, 'Updates');
 end;
 
 function TSERTTKCheck.CaddieButtonText: string;
@@ -778,12 +774,12 @@ end;
 
 function TSERTTKCheck.CaddieDownloadFile: string;
 begin
-  result := TPath.Combine(RttkDownloadFolder, dl_fl_name);
+  result := TPath.Combine(RttkDownloadDirectory, dl_fl_name);
 end;
 
 function TSERTTKCheck.CaddieIniFile: string;
 begin
-  result := TPath.Combine(RttkDataFolder, 'RTTKCaddie.ini');
+  result := TPath.Combine(RttkDataDirectory, 'RTTKCaddie.ini');
 end;
 
 function TSERTTKCheck.CaddieIniFileExists: boolean;
@@ -803,12 +799,12 @@ end;
 
 function TSERTTKCheck.DemoDownloadFMXFile: string;
 begin
-  result := TPath.Combine(RttkDownloadFolder, dl_fl_demo_fmx)
+  result := TPath.Combine(RttkDownloadDirectory, dl_fl_demo_fmx)
 end;
 
 function TSERTTKCheck.DemoDownloadVCLFile: string;
 begin
-  result := TPath.Combine(RttkDownloadFolder, dl_fl_demo_vcl)
+  result := TPath.Combine(RttkDownloadDirectory, dl_fl_demo_vcl)
 end;
 
 function TSERTTKCheck.DemoFMXButtonText: string;
@@ -1173,7 +1169,7 @@ end;
 
 function TSERTTKCheck.DeputyVersionFile: string;
 begin
-  result := TPath.Combine(RttkDownloadFolder, fl_nm_deputy_version)
+  result := TPath.Combine(RttkDownloadDirectory, fl_nm_deputy_version)
 end;
 
 function TSERTTKCheck.DeputyVersionFileExists: boolean;
@@ -1186,27 +1182,14 @@ begin
   result := FWizardInfo.WizardFileName + '.bak';
 end;
 
-function TSERTTKCheck.DeputyWizardUpdateFilename: string;
+function TSERTTKCheck.DeputyWizardUpdateFilename(const AFileName: string): string;
 var
-  fl, sn: string;
-
-begin
-{$IF LIBSUFFIX = '280'}
-  sn := '280';
-{$ELSEIF LIBSUFFIX = '270'}
-  sn := '270';
-{$ELSEIF LIBSUFFIX = '260'}
-  sn := '260';
-{$ELSE}
-  sn := '###';
-{$ENDIF}
-  // SE.IDE.Deputy280.dll
-  // SE.IDE.Deputy270.dll
-  // this needs to parse out the 280 libsuffix added to the dll
+  fl: string;
+begin // match the filename of the expert from the updates dir
   result := '';
   for fl in TDirectory.GetFiles(DeputyWizardUpdatesDirectory, '*.dll', TSearchOption.soTopDirectoryOnly) do
   begin
-    if fl.EndsWith(sn + '.dll') then
+    if fl.EndsWith(AFileName) then
       exit(fl);
   end;
 
@@ -1235,12 +1218,15 @@ const
 var
   JSONValue: TJSONValue;
 begin
+  if not Assigned(FUpdateVersion) then
+    FUpdateVersion := TSEIXVersionInfo.Create;
+  FUpdateVersion.VerMaj := -1;
+  FUpdateVersion.VerMin := -1;
+  FUpdateVersion.VerRel := -1;
   if not DeputyVersionFileExists then
     exit;
   JSONValue := TJSONObject.ParseJSONValue(TFile.ReadAllText(DeputyVersionFile));
-  if Assigned(FUpdateVersion) then
-    FUpdateVersion.Free;
-  FUpdateVersion := TSEIXVersionInfo.Create;
+
   if JSONValue is TJSONObject then
   begin
     FUpdateVersion.VerMaj := JSONValue.GetValue<integer>(nm_json_object + '.' + nm_json_prop_major);
@@ -1305,27 +1291,36 @@ var
 begin
   // start a download
   // rename dll FWizardInfo.WizardFileName
-  if not SameText(ExpertFileLocation, FWizardInfo.WizardFileName) then
-  begin //ensure the Update would be for the wizard loaded
-    FExpertUpdateMenuItem.Caption := 'Dll missmatch to registry';
-    exit;
+  try
+    if not SameText(ExpertFileLocation, FWizardInfo.WizardFileName) then
+    begin // ensure the Update would be for the wizard loaded
+      FExpertUpdateMenuItem.Caption := 'Dll missmatch to registry';
+      exit;
+    end;
+    if FWizardInfo.WizardFileName = DeputyWizardBackupFilename then
+    begin // pending restart, do not continue
+      FExpertUpdateMenuItem.Caption := 'Restart IDE to load update';
+      exit;
+    end;
+    fn := TPath.GetFileName(FWizardInfo.WizardFileName);
+    if not TFile.Exists(DeputyWizardUpdateFilename(fn)) then
+    begin // no update to install, exit
+      FExpertUpdateMenuItem.Caption := 'Update not found';
+      exit;
+    end;
+    if TFile.Exists(DeputyWizardBackupFilename) then
+      TFile.Delete(DeputyWizardBackupFilename);
+    TFile.Move(FWizardInfo.WizardFileName, DeputyWizardBackupFilename);
+    TFile.Move(DeputyWizardUpdateFilename(fn), ExpertFileLocation);
+  except
+    on E: Exception do
+    begin    //likely IO related
+      FExpertUpdateMenuItem.Caption := 'E:' + E.Message.Substring(0, 20);
+      LogMessage('Failed Update ' + E.Message);
+    end;
   end;
-  if FWizardInfo.WizardFileName = DeputyWizardBackupFilename then
-  begin // pending restart, do not continue
-    FExpertUpdateMenuItem.Caption := 'Restart IDE to load update';
-    exit;
-  end;
-  if not TFile.Exists(DeputyWizardUpdateFilename) then
-  begin // no update to install, exit
-    FExpertUpdateMenuItem.Caption := 'Update not found';
-    exit;
-  end;
-  if TFile.Exists(DeputyWizardBackupFilename) then
-    TFile.Delete(DeputyWizardBackupFilename);
-  TFile.Move(FWizardInfo.WizardFileName, DeputyWizardBackupFilename);
-  TFile.Move(DeputyWizardUpdateFilename, ExpertFileLocation);
 
-  FExpertUpdateMenuItem.Caption := UpdateExpertButtonText;
+  FExpertUpdateMenuItem.Caption := 'Restart IDE pending';
 end;
 
 function TSERTTKCheck.UpdateExpertButtonText: string;
