@@ -1205,8 +1205,10 @@ begin
   // this needs to parse out the 280 libsuffix added to the dll
   result := '';
   for fl in TDirectory.GetFiles(DeputyWizardUpdatesDirectory, '*.dll', TSearchOption.soTopDirectoryOnly) do
+  begin
     if fl.EndsWith(sn + '.dll') then
       exit(fl);
+  end;
 
 end;
 
@@ -1303,6 +1305,11 @@ var
 begin
   // start a download
   // rename dll FWizardInfo.WizardFileName
+  if not SameText(ExpertFileLocation, FWizardInfo.WizardFileName) then
+  begin //ensure the Update would be for the wizard loaded
+    FExpertUpdateMenuItem.Caption := 'Dll missmatch to registry';
+    exit;
+  end;
   if FWizardInfo.WizardFileName = DeputyWizardBackupFilename then
   begin // pending restart, do not continue
     FExpertUpdateMenuItem.Caption := 'Restart IDE to load update';
@@ -1315,9 +1322,8 @@ begin
   end;
   if TFile.Exists(DeputyWizardBackupFilename) then
     TFile.Delete(DeputyWizardBackupFilename);
-  fn := FWizardInfo.WizardFileName; { or read this from the registry to be sure? }
   TFile.Move(FWizardInfo.WizardFileName, DeputyWizardBackupFilename);
-  TFile.Move(DeputyWizardUpdateFilename, fn);
+  TFile.Move(DeputyWizardUpdateFilename, ExpertFileLocation);
 
   FExpertUpdateMenuItem.Caption := UpdateExpertButtonText;
 end;
