@@ -56,12 +56,24 @@ type
     fl_nm_demo_fmx = 'RTTK_FMX.exe';
     fl_nm_expert_update_cache = 'expertupdates.xml';
     fl_nm_deputy_version = 'deputyversion.json';
+    fl_nm_deputy_expert_zip = 'DeputyExpert.zip';
     rk_nm_expert = 'SwiftExpat Deputy';
+    nm_json_object = 'DeputyVersion';
+    nm_json_prop_major = 'VerMajor';
+    nm_json_prop_minor = 'VerMinor';
+    nm_json_prop_release = 'VerRelease';
+    url_domain =  '.swiftexpat.com';
+    url_demos = 'https://demos' + url_domain ;
+    url_lic = 'https://licadmin' + url_domain;
+    url_demo_downloads = url_demos + '/downloads/';
+    url_version = url_lic + '/versions/';
+
   strict private
     FLicensed: boolean;
+    FSettings: TSEIXSettings;
     FWizardInfo: TSEIXWizardInfo;
     FWizardVersion, FUpdateVersion: TSEIXVersionInfo;
-    FHTTPReqCaddie, FHTTPReqDemoFMX, FHTTPReqDemoVCL: TNetHTTPRequest;
+    FHTTPReqCaddie, FHTTPReqDemoFMX, FHTTPReqDemoVCL, FHTTPReqDeputyVersion: TNetHTTPRequest;
     FHTTPClient: TNetHTTPClient;
     FOnMessage: TSECaddieCheckOnMessage;
     FOnDownloadDone, FOnDownloadFMXDemoDone, FOnDownloadVCLDemoDone: TSECaddieCheckOnDownloadDone;
@@ -71,6 +83,7 @@ type
     function DemoVCLExists: boolean;
     function DemoAppVCLFile: string;
     function DemoDownloadVCLFile: string;
+    function DeputyExpertDownloadFile: string;
     function DemoFMXExists: boolean;
     function DemoDownloadFMXFile: string;
     // function RttkAppFolderExists(const ACreateFolder: boolean): boolean;
@@ -100,11 +113,19 @@ type
     procedure HttpDemoVCLDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
     procedure HttpDemoFMXDLException(const Sender: TObject; const AError: Exception);
     procedure HttpDemoFMXDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
+    procedure HttpDeputyExpertDownload;
+    procedure HttpDeputyVersionDownload;
+    procedure HttpDeputyDLException(const Sender: TObject; const AError: Exception);
+    procedure HttpDeputyDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
+    procedure HttpDeputyVersionException(const Sender: TObject; const AError: Exception);
+    procedure HttpDeputyVersionCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
+
   private
     FExpertUpdateMenuItem: TMenuItem;
     function DemoAppFMXFile: string;
     function ExpertFileLocation: string;
     function ExpertUpdateAvailable: boolean;
+    function ExpertUpdateDownloaded: boolean;
     procedure ExpertUpdateMenuItemSet(const Value: TMenuItem);
     procedure LoadDeputyUpdateVersion;
     procedure OnClickUpdateExpert(Sender: TObject);
@@ -129,7 +150,7 @@ type
       write FOnDownloadVCLDemoDone;
     property OnDownloadDemoFMXDone: TSECaddieCheckOnDownloadDone read FOnDownloadFMXDemoDone
       write FOnDownloadFMXDemoDone;
-    procedure ExpertUpdatesRefresh(const AWizardInfo: TSEIXWizardInfo);
+    procedure ExpertUpdatesRefresh(const AWizardInfo: TSEIXWizardInfo; const ASettings: TSEIXSettings);
     property ExpertUpdateMenuItem: TMenuItem read FExpertUpdateMenuItem write ExpertUpdateMenuItemSet;
   end;
 
@@ -369,7 +390,7 @@ begin
   FWizardInfo := TSEIXWizardInfo.Create;
   FWizardInfo.WizardVersion := GetWizardVersion;
   FWizardInfo.WizardFileName := GetWizardFileName;
-  FRTTKCheck.ExpertUpdatesRefresh(FWizardInfo);
+  FRTTKCheck.ExpertUpdatesRefresh(FWizardInfo, FSettings);
 
 end;
 
@@ -1070,6 +1091,74 @@ begin
   LogMessage(msg);
 end;
 
+procedure TSERTTKCheck.HttpDeputyDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
+begin
+
+end;
+
+procedure TSERTTKCheck.HttpDeputyDLException(const Sender: TObject; const AError: Exception);
+var
+  msg: string;
+begin
+  msg := 'Download Deputy Expert~Server Exception:' + AError.Message;
+  LogMessage(msg);
+end;
+
+procedure TSERTTKCheck.HttpDeputyExpertDownload;
+begin // save the file to downloads
+
+end;
+
+procedure TSERTTKCheck.HttpDeputyVersionCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
+var
+  lfs: TFileStream;
+begin
+  if AResponse.StatusCode = 200 then
+  begin
+    lfs := TFileStream.Create(DeputyVersionFile, fmCreate);
+    lfs.CopyFrom(AResponse.ContentStream, 0);
+    lfs.Free;
+    LogMessage('Download Version Complete, Loading');
+
+    TThread.Queue(nil,
+      procedure
+      begin
+        LoadDeputyUpdateVersion;
+        FExpertUpdateMenuItem.Caption := UpdateExpertButtonText;
+        if ExpertUpdateAvailable and not ExpertUpdateDownloaded then
+          HttpDeputyExpertDownload;
+      end);
+  end
+  else
+    LogMessage('Download Deputy Version Http result = ' + AResponse.StatusCode.ToString);
+end;
+
+procedure TSERTTKCheck.HttpDeputyVersionDownload;
+begin
+       InitHttpClient;
+  if not Assigned(FHTTPReqDeputyVersion) then
+    FHTTPReqDeputyVersion := TNetHTTPRequest.Create(nil);
+{$IF COMPILERVERSION > 33}
+  FHTTPReqDeputyVersion.OnRequestException := HttpDeputyVersionException;
+  FHTTPReqDeputyVersion.SynchronizeEvents := false;
+{$ELSE}
+  // FHTTPReqCaddie.OnRequestError := HttpCaddieDLException;
+  FHTTPReqDeputyVersion.Asynchronous := true;
+{$ENDIF}
+  FHTTPReqDeputyVersion.Client := FHTTPClient;
+  FHTTPReqDeputyVersion.OnRequestCompleted := HttpDeputyVersionCompleted;
+  FHTTPReqDeputyVersion.Asynchronous := true;
+  FHTTPReqDeputyVersion.Get(url_version + dl_fl_demo_vcl);
+end;
+
+procedure TSERTTKCheck.HttpDeputyVersionException(const Sender: TObject; const AError: Exception);
+var
+  msg: string;
+begin
+  msg := 'Download Deputy Version~Server Exception:' + AError.Message;
+  LogMessage(msg);
+end;
+
 procedure TSERTTKCheck.LogMessage(AMessage: string);
 var
   msg: string;
@@ -1167,6 +1256,11 @@ begin
 
 end;
 
+function TSERTTKCheck.DeputyExpertDownloadFile: string;
+begin
+  result := TPath.Combine(RttkDownloadDirectory, fl_nm_deputy_expert_zip)
+end;
+
 function TSERTTKCheck.DeputyVersionFile: string;
 begin
   result := TPath.Combine(RttkDownloadDirectory, fl_nm_deputy_version)
@@ -1210,11 +1304,7 @@ begin
 end;
 
 procedure TSERTTKCheck.LoadDeputyUpdateVersion;
-const
-  nm_json_object = 'DeputyVersion';
-  nm_json_prop_major = 'VerMajor';
-  nm_json_prop_minor = 'VerMinor';
-  nm_json_prop_release = 'VerRelease';
+
 var
   JSONValue: TJSONValue;
 begin
@@ -1263,16 +1353,45 @@ begin
   end
 end;
 
+function TSERTTKCheck.ExpertUpdateDownloaded: boolean;
+var
+  zf: TZipFile;
+  ma, mi, re: integer;
+  zb: TBytes;
+  JSONValue: TJSONValue;
+begin
+  result := TFile.Exists(DeputyExpertDownloadFile);
+  if result then
+  begin { TODO : Open the zip file and check the version json to see if it matches, if not download }
+    if TZipFile.IsValid(DeputyExpertDownloadFile) then
+    begin
+      zf := TZipFile.Create;
+      zf.Open(DeputyExpertDownloadFile, TZipMode.zmRead);
+      zf.Read('fn', zb);
+      JSONValue := TJSONObject.ParseJSONValue(zb, 0);
+      if JSONValue is TJSONObject then
+      begin
+        ma := JSONValue.GetValue<integer>(nm_json_object + '.' + nm_json_prop_major);
+        mi := JSONValue.GetValue<integer>(nm_json_object + '.' + nm_json_prop_minor);
+        re := JSONValue.GetValue<integer>(nm_json_object + '.' + nm_json_prop_release);
+      end;
+      zf.Close;
+      zf.Free;
+      result := (ma = FUpdateVersion.VerMaj) and (mi = FUpdateVersion.VerMin) and (re = FUpdateVersion.VerRel);
+    end;
+  end;
+end;
+
 procedure TSERTTKCheck.ExpertUpdateMenuItemSet(const Value: TMenuItem);
 begin
   FExpertUpdateMenuItem := Value;
   FExpertUpdateMenuItem.OnClick := OnClickUpdateExpert;
 end;
 
-procedure TSERTTKCheck.ExpertUpdatesRefresh(const AWizardInfo: TSEIXWizardInfo);
+procedure TSERTTKCheck.ExpertUpdatesRefresh(const AWizardInfo: TSEIXWizardInfo; const ASettings: TSEIXSettings);
 begin
-
   FWizardInfo := AWizardInfo;
+  FSettings := ASettings;
   if Assigned(FWizardVersion) then
     FWizardVersion.Free;
 
@@ -1281,8 +1400,17 @@ begin
   FWizardVersion.VerMin := AWizardInfo.WizardVersion.Split(['.'])[1].ToInteger;
   FWizardVersion.VerRel := AWizardInfo.WizardVersion.Split(['.'])[2].ToInteger;
   // check the settings for last update dts
-  LoadDeputyUpdateVersion;
-  FExpertUpdateMenuItem.Caption := UpdateExpertButtonText;
+  if HoursBetween(FSettings.LastUpdateCheck, now) > 8 then
+  begin // async download must update button after checking the file
+    LogMessage(' checking server for updates');
+    HttpDeputyVersionDownload;
+  end
+  else
+  begin
+    LogMessage('Using cached values');
+    LoadDeputyUpdateVersion;
+    FExpertUpdateMenuItem.Caption := UpdateExpertButtonText;
+  end;
 end;
 
 procedure TSERTTKCheck.OnClickUpdateExpert(Sender: TObject);
@@ -1314,7 +1442,7 @@ begin
     TFile.Move(DeputyWizardUpdateFilename(fn), ExpertFileLocation);
   except
     on E: Exception do
-    begin    //likely IO related
+    begin // likely IO related
       FExpertUpdateMenuItem.Caption := 'E:' + E.Message.Substring(0, 20);
       LogMessage('Failed Update ' + E.Message);
     end;
