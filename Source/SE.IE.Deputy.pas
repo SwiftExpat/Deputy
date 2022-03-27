@@ -34,7 +34,7 @@ type
 
   TSEIXWizardInfo = class
   public
-    WizardFileName: string;
+    WizardFileName: string; // make this a dynamic call to reflect the rename
     WizardVersion: string;
   end;
 
@@ -84,7 +84,7 @@ type
     function DeputyVersionFile: string;
     function DeputyVersionFileExists: boolean;
     function DeputyWizardBackupFilename: string;
-    function DeputyWizardUpdateFilename: string;
+    function DeputyWizardUpdateFilename(const AFileName: string): string;
     function DeputyWizardUpdatesDirectory: string;
     procedure RunCaddie;
     procedure RunDemoVCL;
@@ -1182,27 +1182,14 @@ begin
   result := FWizardInfo.WizardFileName + '.bak';
 end;
 
-function TSERTTKCheck.DeputyWizardUpdateFilename: string;
+function TSERTTKCheck.DeputyWizardUpdateFilename(const AFileName: string): string;
 var
-  fl, sn: string;
-
-begin
-{$IF LIBSUFFIX = '280'}
-  sn := '280';
-{$ELSEIF LIBSUFFIX = '270'}
-  sn := '270';
-{$ELSEIF LIBSUFFIX = '260'}
-  sn := '260';
-{$ELSE}
-  sn := '###';
-{$ENDIF}
-  // SE.IDE.Deputy280.dll
-  // SE.IDE.Deputy270.dll
-  // this needs to parse out the 280 libsuffix added to the dll
+  fl: string;
+begin // match the filename of the expert from the updates dir
   result := '';
   for fl in TDirectory.GetFiles(DeputyWizardUpdatesDirectory, '*.dll', TSearchOption.soTopDirectoryOnly) do
   begin
-    if fl.EndsWith(sn + '.dll') then
+    if fl.EndsWith(AFileName) then
       exit(fl);
   end;
 
@@ -1299,30 +1286,41 @@ begin
 end;
 
 procedure TSERTTKCheck.OnClickUpdateExpert(Sender: TObject);
+var
+  fn: string;
 begin
   // start a download
   // rename dll FWizardInfo.WizardFileName
-  if not SameText(ExpertFileLocation, FWizardInfo.WizardFileName) then
-  begin // ensure the Update would be for the wizard loaded
-    FExpertUpdateMenuItem.Caption := 'Dll missmatch to registry';
-    exit;
+  try
+    if not SameText(ExpertFileLocation, FWizardInfo.WizardFileName) then
+    begin // ensure the Update would be for the wizard loaded
+      FExpertUpdateMenuItem.Caption := 'Dll missmatch to registry';
+      exit;
+    end;
+    if FWizardInfo.WizardFileName = DeputyWizardBackupFilename then
+    begin // pending restart, do not continue
+      FExpertUpdateMenuItem.Caption := 'Restart IDE to load update';
+      exit;
+    end;
+    fn := TPath.GetFileName(FWizardInfo.WizardFileName);
+    if not TFile.Exists(DeputyWizardUpdateFilename(fn)) then
+    begin // no update to install, exit
+      FExpertUpdateMenuItem.Caption := 'Update not found';
+      exit;
+    end;
+    if TFile.Exists(DeputyWizardBackupFilename) then
+      TFile.Delete(DeputyWizardBackupFilename);
+    TFile.Move(FWizardInfo.WizardFileName, DeputyWizardBackupFilename);
+    TFile.Move(DeputyWizardUpdateFilename(fn), ExpertFileLocation);
+  except
+    on E: Exception do
+    begin    //likely IO related
+      FExpertUpdateMenuItem.Caption := 'E:' + E.Message.Substring(0, 20);
+      LogMessage('Failed Update ' + E.Message);
+    end;
   end;
-  if FWizardInfo.WizardFileName = DeputyWizardBackupFilename then
-  begin // pending restart, do not continue
-    FExpertUpdateMenuItem.Caption := 'Restart IDE to load update';
-    exit;
-  end;
-  if not TFile.Exists(DeputyWizardUpdateFilename) then
-  begin // no update to install, exit
-    FExpertUpdateMenuItem.Caption := 'Update not found';
-    exit;
-  end;
-  if TFile.Exists(DeputyWizardBackupFilename) then
-    TFile.Delete(DeputyWizardBackupFilename);
-  TFile.Move(FWizardInfo.WizardFileName, DeputyWizardBackupFilename);
-  TFile.Move(DeputyWizardUpdateFilename, ExpertFileLocation);
 
-  FExpertUpdateMenuItem.Caption := UpdateExpertButtonText;
+  FExpertUpdateMenuItem.Caption := 'Restart IDE pending';
 end;
 
 function TSERTTKCheck.UpdateExpertButtonText: string;
