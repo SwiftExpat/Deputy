@@ -739,7 +739,7 @@ end;
 
 function TSEIXSettings.LastUpdateCheckGet: TDateTime;
 begin
-  result := self.ReadDateTime(nm_section_updates, nm_updates_lastupdate, now)
+  result := self.ReadDateTime(nm_section_updates, nm_updates_lastupdate, IncDay(now, -1))
 end;
 
 procedure TSEIXSettings.LastUpdateCheckSet(const Value: TDateTime);
@@ -1148,7 +1148,7 @@ begin
   FHTTPReqDeputyVersion.Client := FHTTPClient;
   FHTTPReqDeputyVersion.OnRequestCompleted := HttpDeputyVersionCompleted;
   FHTTPReqDeputyVersion.Asynchronous := true;
-  FHTTPReqDeputyVersion.Get(url_version + dl_fl_demo_vcl);
+  FHTTPReqDeputyVersion.Get(url_version + fl_nm_deputy_version);
 end;
 
 procedure TSERTTKCheck.HttpDeputyVersionException(const Sender: TObject; const AError: Exception);
@@ -1163,10 +1163,10 @@ procedure TSERTTKCheck.LogMessage(AMessage: string);
 var
   msg: string;
 begin
-  msg := 'Caddie Check Message: ' + AMessage;
+  msg := 'Msg RTTK Check: ' + AMessage;
   TThread.Queue(nil,
     procedure
-    begin // directly delivering message gives null pointer
+    begin
       if Assigned(FOnMessage) then
         FOnMessage(msg);
     end);
