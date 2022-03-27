@@ -36,6 +36,7 @@ type
   public
     WizardFileName: string; // make this a dynamic call to reflect the rename
     WizardVersion: string;
+    function AgentString: string;
   end;
 
   TSEIXVersionInfo = class
@@ -62,8 +63,8 @@ type
     nm_json_prop_major = 'VerMajor';
     nm_json_prop_minor = 'VerMinor';
     nm_json_prop_release = 'VerRelease';
-    url_domain =  '.swiftexpat.com';
-    url_demos = 'https://demos' + url_domain ;
+    url_domain = '.swiftexpat.com';
+    url_demos = 'https://demos' + url_domain;
     url_lic = 'https://licadmin' + url_domain;
     url_demo_downloads = url_demos + '/downloads/';
     url_version = url_lic + '/versions/';
@@ -877,7 +878,7 @@ begin
     FHTTPClient.SecureProtocols := [THTTPSecureProtocol.TLS12];
 {$ENDIF}
     FHTTPClient.UseDefaultCredentials := false;
-    FHTTPClient.UserAgent := nm_user_agent;
+    FHTTPClient.UserAgent := nm_user_agent + ' ' + FWizardInfo.AgentString;
   end;
 end;
 
@@ -1127,6 +1128,7 @@ begin
         FExpertUpdateMenuItem.Caption := UpdateExpertButtonText;
         if ExpertUpdateAvailable and not ExpertUpdateDownloaded then
           HttpDeputyExpertDownload;
+        FSettings.LastUpdateCheck := now;
       end);
   end
   else
@@ -1135,7 +1137,7 @@ end;
 
 procedure TSERTTKCheck.HttpDeputyVersionDownload;
 begin
-       InitHttpClient;
+  InitHttpClient;
   if not Assigned(FHTTPReqDeputyVersion) then
     FHTTPReqDeputyVersion := TNetHTTPRequest.Create(nil);
 {$IF COMPILERVERSION > 33}
@@ -1400,16 +1402,16 @@ begin
   FWizardVersion.VerMin := AWizardInfo.WizardVersion.Split(['.'])[1].ToInteger;
   FWizardVersion.VerRel := AWizardInfo.WizardVersion.Split(['.'])[2].ToInteger;
   // check the settings for last update dts
-  if HoursBetween(FSettings.LastUpdateCheck, now) > 8 then
-  begin // async download must update button after checking the file
-    LogMessage(' checking server for updates');
-    HttpDeputyVersionDownload;
-  end
-  else
+  if (HoursBetween(FSettings.LastUpdateCheck, now) < 8) and DeputyVersionFileExists then
   begin
     LogMessage('Using cached values');
     LoadDeputyUpdateVersion;
     FExpertUpdateMenuItem.Caption := UpdateExpertButtonText;
+  end
+  else
+  begin // async download must update button after checking the file
+    LogMessage(' checking server for updates');
+    HttpDeputyVersionDownload;
   end;
 end;
 
@@ -1487,6 +1489,14 @@ end;
 function TSEIXVersionInfo.VersionString: string;
 begin
   result := VerMaj.ToString + '.' + VerMin.ToString + '.' + VerRel.ToString;
+end;
+
+{ TSEIXWizardInfo }
+
+function TSEIXWizardInfo.AgentString: string;
+begin
+  result := 'Ver=' + WizardVersion;
+  result := result + ' Platform=' + TPath.GetFileName(WizardFileName)
 end;
 
 initialization
