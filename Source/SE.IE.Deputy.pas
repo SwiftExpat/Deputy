@@ -4,6 +4,29 @@ unit SE.IE.Deputy;
 
 interface
 
+const
+  MAJ_VER = 2; // Major version nr.
+  MIN_VER = 4; // Minor version nr.
+  REL_VER = 1; // Release nr.
+  BLD_VER = 0; // Build nr.
+
+  // Version history
+  // v2.4.1.0 : First Release
+
+  { ******************************************************************** }
+  { written by swiftexpat }
+  { copyright  ©  2022 }
+  { Email : support@swiftexpat.com }
+  { Web : https://swiftexpat.com }
+  { }
+  { The source code is given as is. The author is not responsible }
+  { for any possible damage done due to the use of this code. }
+  { The complete source code remains property of the author and may }
+  { not be distributed, published, given or sold in any form as such. }
+  { No parts of the source code can be included in any other component }
+  { or application without written authorization of the author. }
+  { ******************************************************************** }
+
 implementation
 
 uses System.Classes, ToolsAPI, VCL.Dialogs, System.SysUtils, System.TypInfo, Winapi.Windows, Winapi.TlHelp32,
@@ -1421,7 +1444,7 @@ begin
     begin
       zf := TZipFile.Create;
       zf.Open(DeputyExpertDownloadFile, TZipMode.zmRead);
-      zf.Read('fn', zb);
+      zf.Read(fl_nm_deputy_version, zb);
       JSONValue := TJSONObject.ParseJSONValue(zb, 0);
       if JSONValue is TJSONObject then
       begin
