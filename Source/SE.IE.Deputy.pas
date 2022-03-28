@@ -68,6 +68,7 @@ type
     url_lic = 'https://licadmin' + url_domain;
     url_demo_downloads = url_demos + '/downloads/';
     url_version = url_lic + '/versions/';
+    url_deputy_version = url_lic + '/deputy/' + fl_nm_deputy_version;
 
   strict private
     FLicensed: boolean;
@@ -120,7 +121,7 @@ type
     procedure HttpDeputyDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
     procedure HttpDeputyVersionException(const Sender: TObject; const AError: Exception);
     procedure HttpDeputyVersionCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
-
+    procedure ExpertLogUsage(const AUsageStep: string);
   private
     FExpertUpdateMenuItem: TMenuItem;
     function DemoAppFMXFile: string;
@@ -879,6 +880,7 @@ begin
 {$ENDIF}
     FHTTPClient.UseDefaultCredentials := false;
     FHTTPClient.UserAgent := nm_user_agent + ' ' + FWizardInfo.AgentString;
+    { TODO : Create a hash of Username / Computer name }
   end;
 end;
 
@@ -960,6 +962,18 @@ begin
   finally
     reg.Free;
   end;
+end;
+
+procedure TSERTTKCheck.ExpertLogUsage(const AUsageStep: string);
+var
+  hdr: TNetHeaders;
+begin
+  InitHttpClient;
+  SetLength(hdr, 1);
+  hdr[0] := TNameValuePair.Create('Referer', 'LogUsage:' + AUsageStep);
+  FHTTPClient.Asynchronous := true;
+  FHTTPClient.Head(url_deputy_version, hdr);
+  { TODO : Implement exception & success for this? }
 end;
 
 procedure TSERTTKCheck.HttpCaddieDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
@@ -1376,10 +1390,10 @@ begin
         ma := JSONValue.GetValue<integer>(nm_json_object + '.' + nm_json_prop_major);
         mi := JSONValue.GetValue<integer>(nm_json_object + '.' + nm_json_prop_minor);
         re := JSONValue.GetValue<integer>(nm_json_object + '.' + nm_json_prop_release);
+        result := (ma = FUpdateVersion.VerMaj) and (mi = FUpdateVersion.VerMin) and (re = FUpdateVersion.VerRel);
       end;
       zf.Close;
       zf.Free;
-      result := (ma = FUpdateVersion.VerMaj) and (mi = FUpdateVersion.VerMin) and (re = FUpdateVersion.VerRel);
     end;
   end;
 end;
@@ -1394,6 +1408,7 @@ procedure TSERTTKCheck.ExpertUpdatesRefresh(const AWizardInfo: TSEIXWizardInfo; 
 begin
   FWizardInfo := AWizardInfo;
   FSettings := ASettings;
+  ExpertLogUsage('Refresh-Updates');
   if Assigned(FWizardVersion) then
     FWizardVersion.Free;
 
