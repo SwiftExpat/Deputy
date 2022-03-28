@@ -4,7 +4,7 @@
         <ProjectVersion>19.3</ProjectVersion>
         <FrameworkType>None</FrameworkType>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Release</Config>
+        <Config Condition="'$(Config)'==''">Debug</Config>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>1</TargetedPlatforms>
         <AppType>Library</AppType>
@@ -144,9 +144,9 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Build>78</VerInfo_Build>
+        <VerInfo_Build>79</VerInfo_Build>
         <VerInfo_MajorVer>2</VerInfo_MajorVer>
-        <VerInfo_Keys>CompanyName=SwiftExpat;FileDescription=$(MSBuildProjectName);FileVersion=2.3.1.78;InternalName=Deputy;LegalCopyright=SwiftExpat;LegalTrademarks=;OriginalFilename=SE.IDE.Deputy;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=2.3.1.0;Comments=Deputy - IDE plugin for Delphi</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=SwiftExpat;FileDescription=$(MSBuildProjectName);FileVersion=2.3.1.79;InternalName=Deputy;LegalCopyright=SwiftExpat;LegalTrademarks=;OriginalFilename=SE.IDE.Deputy;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=2.3.1.0;Comments=Deputy - IDE plugin for Delphi</VerInfo_Keys>
         <VerInfo_MinorVer>3</VerInfo_MinorVer>
         <VerInfo_DLL>true</VerInfo_DLL>
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
@@ -159,8 +159,8 @@
         <DCC_DebugInformation>0</DCC_DebugInformation>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
-        <VerInfo_Build>12</VerInfo_Build>
-        <VerInfo_Keys>CompanyName=SwiftExpat;FileDescription=$(MSBuildProjectName);FileVersion=2.4.1.12;InternalName=Deputy;LegalCopyright=SwiftExpat;LegalTrademarks=;OriginalFilename=SE.IDE.Deputy;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=2.4.1.0;Comments=Deputy - IDE plugin for Delphi</VerInfo_Keys>
+        <VerInfo_Build>15</VerInfo_Build>
+        <VerInfo_Keys>CompanyName=SwiftExpat;FileDescription=$(MSBuildProjectName);FileVersion=2.4.1.15;InternalName=Deputy;LegalCopyright=SwiftExpat;LegalTrademarks=;OriginalFilename=SE.IDE.Deputy;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=2.4.1.0;Comments=Deputy - IDE plugin for Delphi</VerInfo_Keys>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_MajorVer>2</VerInfo_MajorVer>
         <VerInfo_DLL>true</VerInfo_DLL>
@@ -1036,13 +1036,13 @@
                 <ProjectRoot Platform="OSX32" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="OSX64" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="Win32" Name="$(PROJECTNAME)"/>
-                <ProjectRoot Platform="Android64" Name="$(PROJECTNAME)"/>
-                <ProjectRoot Platform="Android" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="OSXARM64" Name="$(PROJECTNAME).app"/>
+                <ProjectRoot Platform="Android" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="Win64" Name="$(PROJECTNAME)"/>
-                <ProjectRoot Platform="Linux64" Name="$(PROJECTNAME)"/>
+                <ProjectRoot Platform="Android64" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="iOSDevice32" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="iOSDevice64" Name="$(PROJECTNAME).app"/>
+                <ProjectRoot Platform="Linux64" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="iOSSimulator" Name="$(PROJECTNAME).app"/>
             </Deployment>
             <Platforms>

@@ -90,7 +90,7 @@ type
     url_demos = 'https://demos' + url_domain;
     url_lic = 'https://licadmin' + url_domain;
     url_demo_downloads = url_demos + '/downloads/';
-    url_version = url_lic + '/versions/';
+    url_version = url_lic + '/deputy/';
     url_deputy_version = url_lic + '/deputy/' + fl_nm_deputy_version;
 
   strict private
@@ -111,7 +111,6 @@ type
     function DeputyExpertDownloadFile: string;
     function DemoFMXExists: boolean;
     function DemoDownloadFMXFile: string;
-    // function RttkAppFolderExists(const ACreateFolder: boolean): boolean;
     function RttkDownloadDirectory: string;
     function RttkAppFolder: string;
     function RttkDataDirectory: string;
@@ -251,6 +250,7 @@ type
     nm_wizard_id = 'com.swiftexpat.deputy';
     nm_wizard_display = 'RunTime ToolKit - Deputy';
   strict private
+  FIDEStarted:boolean;
     FProcMgr: TSEIAProcessManagerUtil;
     FToolsMenuRootItem: TMenuItem;
     FSettings: TSEIXSettings;
@@ -310,6 +310,7 @@ exports
 constructor TSEIXDeputyWizard.Create;
 begin
   inherited;
+  FIDEStarted := false;
   FMenuItems := TDictionary<string, TMenuItem>.Create;
   FDebugNotifier := TSEIADebugNotifier.Create(self);
   FProcMgr := TSEIAProcessManagerUtil.Create;
@@ -410,6 +411,7 @@ procedure TSEIXDeputyWizard.IDEStarted;
 
 begin
   inherited;
+  FIDEStarted := true;
   MessagesAdd('Deputy Started');
 
   FWizardInfo := TSEIXWizardInfo.Create;
@@ -566,6 +568,7 @@ end;
 
 procedure TSEIXDeputyWizard.MessagesAdd(const AMessage: string);
 begin
+  if FIDEStarted then //only message if the IDE is started, throws exception on show
   TOTAHelper.AddTitleMessage(AMessage, nm_message_group);
 end;
 
@@ -1138,7 +1141,7 @@ begin
     lfs := TFileStream.Create(DeputyExpertDownloadFile, fmCreate);
     lfs.CopyFrom(AResponse.ContentStream, 0);
     lfs.Free;
-    LogMessage('Download Complete, Extracting Deputy Experts' );
+    LogMessage('Download Complete, Extracting Deputy Experts');
     if TZipFile.IsValid(DeputyExpertDownloadFile) then
     begin
       LogMessage('Zip File is valid ' + DeputyExpertDownloadFile);
@@ -1150,7 +1153,6 @@ begin
   end
   else
     LogMessage('Download Deputy Expert Http result = ' + AResponse.StatusCode.ToString);
-
 
 end;
 
@@ -1439,22 +1441,32 @@ var
 begin
   result := TFile.Exists(DeputyExpertDownloadFile);
   if result then
-  begin { TODO : Open the zip file and check the version json to see if it matches, if not download }
+  begin
     if TZipFile.IsValid(DeputyExpertDownloadFile) then
     begin
       zf := TZipFile.Create;
-      zf.Open(DeputyExpertDownloadFile, TZipMode.zmRead);
-      zf.Read(fl_nm_deputy_version, zb);
-      JSONValue := TJSONObject.ParseJSONValue(zb, 0);
-      if JSONValue is TJSONObject then
-      begin
-        ma := JSONValue.GetValue<integer>(nm_json_object + '.' + nm_json_prop_major);
-        mi := JSONValue.GetValue<integer>(nm_json_object + '.' + nm_json_prop_minor);
-        re := JSONValue.GetValue<integer>(nm_json_object + '.' + nm_json_prop_release);
-        result := (ma = FUpdateVersion.VerMaj) and (mi = FUpdateVersion.VerMin) and (re = FUpdateVersion.VerRel);
+      try
+        try
+          zf.Open(DeputyExpertDownloadFile, TZipMode.zmRead);
+          zf.Read(fl_nm_deputy_version, zb);//add logging if zb < 20?
+          JSONValue := TJSONObject.ParseJSONValue(zb, 0, true);
+          if JSONValue is TJSONObject then
+          begin    { TODO : replace with JSONValue.TryGetValue to be a little more flexible }
+            ma := JSONValue.GetValue<integer>(nm_json_object + '.' + nm_json_prop_major);
+            mi := JSONValue.GetValue<integer>(nm_json_object + '.' + nm_json_prop_minor);
+            re := JSONValue.GetValue<integer>(nm_json_object + '.' + nm_json_prop_release);
+            result := (ma = FUpdateVersion.VerMaj) and (mi = FUpdateVersion.VerMin) and (re = FUpdateVersion.VerRel);
+          end
+          else // false if the json can not parse
+            result := false;
+          zf.Close;
+        except
+          on E: Exception do
+            result := false;
+        end;
+      finally
+        zf.Free;
       end;
-      zf.Close;
-      zf.Free;
     end;
   end;
 end;
