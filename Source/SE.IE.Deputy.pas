@@ -75,7 +75,7 @@ type
     FSettings: TSEIXSettings;
     FWizardInfo: TSEIXWizardInfo;
     FWizardVersion, FUpdateVersion: TSEIXVersionInfo;
-    FHTTPReqCaddie, FHTTPReqDemoFMX, FHTTPReqDemoVCL, FHTTPReqDeputyVersion: TNetHTTPRequest;
+    FHTTPReqCaddie, FHTTPReqDemoFMX, FHTTPReqDemoVCL, FHTTPReqDeputyVersion, FHTTPReqDeputyDL: TNetHTTPRequest;
     FHTTPClient: TNetHTTPClient;
     FOnMessage: TSECaddieCheckOnMessage;
     FOnDownloadDone, FOnDownloadFMXDemoDone, FOnDownloadVCLDemoDone: TSECaddieCheckOnDownloadDone;
@@ -1107,7 +1107,27 @@ begin
 end;
 
 procedure TSERTTKCheck.HttpDeputyDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
+var
+  lfs: TFileStream;
 begin
+  if AResponse.StatusCode = 200 then
+  begin
+    lfs := TFileStream.Create(DeputyExpertDownloadFile, fmCreate);
+    lfs.CopyFrom(AResponse.ContentStream, 0);
+    lfs.Free;
+    LogMessage('Download Complete, Extracting Deputy Experts' );
+    if TZipFile.IsValid(DeputyExpertDownloadFile) then
+    begin
+      LogMessage('Zip File is valid ' + DeputyExpertDownloadFile);
+      TZipFile.ExtractZipFile(DeputyExpertDownloadFile, DeputyWizardUpdatesDirectory);
+      LogMessage('Wizard Updates Extracted.');
+    end
+    else // Zip file invalid
+      LogMessage('Zip File not valid ' + DeputyExpertDownloadFile)
+  end
+  else
+    LogMessage('Download Deputy Expert Http result = ' + AResponse.StatusCode.ToString);
+
 
 end;
 
@@ -1121,7 +1141,20 @@ end;
 
 procedure TSERTTKCheck.HttpDeputyExpertDownload;
 begin // save the file to downloads
-
+  InitHttpClient;
+  if not Assigned(FHTTPReqDeputyVersion) then
+    FHTTPReqDeputyVersion := TNetHTTPRequest.Create(nil);
+{$IF COMPILERVERSION > 33}
+  FHTTPReqDeputyVersion.OnRequestException := HttpDeputyDLException;
+  FHTTPReqDeputyVersion.SynchronizeEvents := false;
+{$ELSE}
+  // FHTTPReqCaddie.OnRequestError := HttpCaddieDLException;
+  FHTTPReqDeputyVersion.Asynchronous := true;
+{$ENDIF}
+  FHTTPReqDeputyVersion.Client := FHTTPClient;
+  FHTTPReqDeputyVersion.OnRequestCompleted := HttpDeputyDLCompleted;
+  FHTTPReqDeputyVersion.Asynchronous := true;
+  FHTTPReqDeputyVersion.Get(url_demo_downloads + fl_nm_deputy_expert_zip);
 end;
 
 procedure TSERTTKCheck.HttpDeputyVersionCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
@@ -1316,11 +1349,16 @@ destructor TSERTTKCheck.Destroy;
 begin
   FWizardVersion.Free;
   FUpdateVersion.Free;
+  FHTTPReqDeputyVersion.Free;
+  FHTTPReqDeputyDL.Free;
+  FHTTPReqCaddie.Free;
+  FHTTPReqDemoFMX.Free;
+  FHTTPReqDemoVCL.Free;
+  FHTTPClient.Free;
   inherited;
 end;
 
 procedure TSERTTKCheck.LoadDeputyUpdateVersion;
-
 var
   JSONValue: TJSONValue;
 begin
