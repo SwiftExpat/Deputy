@@ -2,9 +2,9 @@
 
 Delphi IDE plugin created using TOTAL https://github.com/DelphiWorlds/TOTAL
 
-##License
+## License
 
-Deputy dual-licensed. You may choose to use it under the restrictions of the GPL v3 licence at no cost to you, or you may purchase a commercial license. 
+Deputy is dual-licensed. You may choose to use it under the restrictions of the GPL v3 licence at no cost to you, or you may purchase a commercial license. 
 
 ## Terminate Running Processes
 
