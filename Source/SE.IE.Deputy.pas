@@ -7,11 +7,12 @@ interface
 const
   MAJ_VER = 2; // Major version nr.
   MIN_VER = 4; // Minor version nr.
-  REL_VER = 1; // Release nr.
+  REL_VER = 2; // Release nr.
   BLD_VER = 0; // Build nr.
 
   // Version history
   // v2.4.1.0 : First Release
+  // v2.4.2.0 : Removed line break on license string
 
   { ******************************************************************** }
   { written by swiftexpat }
@@ -205,21 +206,6 @@ type
     constructor Create;
     destructor Destroy; override;
   end;
-
-  // TSEIXUpdateClient = class
-  // const
-  //
-  // strict private
-  // FHTTPReqVersion: TNetHTTPRequest;
-  // FHTTPClient: TNetHTTPClient;
-  // function UpdateFileExists: boolean;
-  // public
-  // constructor Create;
-  // destructor Destroy; override;
-  // function UpdateButtonText: string;
-  // procedure OnClickUpdate(Sender: TObject);
-  // procedure RefreshUpdates;
-  // end;
 
   TSEIXDeputyWizard = class;
 
@@ -902,10 +888,12 @@ begin
     FHTTPClient.OnAuthEvent := DistServerAuthEvent;
 {$IF COMPILERVERSION > 33}
     FHTTPClient.SecureProtocols := [THTTPSecureProtocol.TLS12, THTTPSecureProtocol.TLS13];
-{$ELSE}
+{$ELSEIF COMPILERVERSION = 33}
     FHTTPClient.SecureProtocols := [THTTPSecureProtocol.TLS12];
 {$ENDIF}
+{$IF COMPILERVERSION > 33}
     FHTTPClient.UseDefaultCredentials := false;
+{$ENDIF}
     FHTTPClient.UserAgent := nm_user_agent + ' ' + FWizardInfo.AgentString;
     { TODO : Create a hash of Username / Computer name }
   end;
