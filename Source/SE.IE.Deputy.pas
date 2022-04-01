@@ -354,7 +354,8 @@ end;
 
 class function TSEIXDeputyWizard.GetWizardLicense: string;
 begin
-  result := 'GPL V3' + #13 + 'Commerical via SwiftExpat.com'
+  result := 'GPL V3, Commerical via SwiftExpat.com'
+  //result := 'GPL V3' + #13 + 'Commerical via SwiftExpat.com'
 end;
 
 class function TSEIXDeputyWizard.GetWizardName: string;
