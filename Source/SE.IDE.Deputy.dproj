@@ -2,7 +2,7 @@
     <PropertyGroup>
         <ProjectGuid>{2058DEB0-586B-4BFE-91F6-2E2C9BEB79D7}</ProjectGuid>
         <ProjectVersion>19.4</ProjectVersion>
-        <FrameworkType>None</FrameworkType>
+        <FrameworkType>VCL</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Release</Config>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
