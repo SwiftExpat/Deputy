@@ -14,6 +14,11 @@ const
   // v2.4.1.0 : First Release
   // v2.4.2.0 : Removed line break on license string
 
+  { Built with TOTAL & KASTRI versions:
+    KASTRI : fa453cd : https://github.com/DelphiWorlds/Kastri/commit/fa453cd2afaa47739f01133a5f22cf4dc391fc84
+    TOTAL : 2ec8360 : https://github.com/DelphiWorlds/TOTAL/commit/2ec8360328bab72b0ade817f1ffd168210f2098e
+  }
+
   { ******************************************************************** }
   { written by swiftexpat }
   { copyright  ©  2022 }
