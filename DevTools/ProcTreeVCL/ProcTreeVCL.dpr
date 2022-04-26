@@ -2,7 +2,7 @@ program ProcTreeVCL;
 
 uses
   Vcl.Forms,
-  frmProcTreeU in 'frmProcTreeU.pas' {Form1},
+  frmProcTreeU in 'frmProcTreeU.pas' {frmProcTree},
   SE.ProcMgrUtils in '..\..\Source\SE.ProcMgrUtils.pas';
 
 {$R *.res}
@@ -10,6 +10,6 @@ uses
 begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
-  Application.CreateForm(TForm1, Form1);
+  Application.CreateForm(TfrmProcTree, frmProcTree);
   Application.Run;
 end.

@@ -35,6 +35,8 @@ type
     function ProcessMatched(const AProcEntry: TProcessEntry32): boolean;
     function ProcIDRunning(APID: cardinal): boolean;
     function ProcListLoad: boolean;
+    function LeakWindowShowing(APID: cardinal): boolean;
+    function LeakWindowClose(APID: cardinal): boolean;
     procedure ExecKill;
     procedure ExecClose;
     function CloseMainWindow(APID: cardinal): boolean;
@@ -79,11 +81,14 @@ begin
   if result then // matched by PID
   begin // Inspect the window
     pw := GetParent(HWND) = 0;
-    wv := IsWindowVisible(HWND);
-    we := IsWindowEnabled(HWND);
-    style := GetWindowLongPtr(HWND, GWL_EXSTYLE);
-    if (Long_Ptr(style) and WS_EX_APPWINDOW) = WS_EX_APPWINDOW then
-      saw := true;
+    if pw then
+    begin
+      wv := IsWindowVisible(HWND);
+      we := IsWindowEnabled(HWND);
+      style := GetWindowLongPtr(HWND, GWL_EXSTYLE);
+      if (Long_Ptr(style) and WS_EX_APPWINDOW) = WS_EX_APPWINDOW then
+        saw := true;
+    end;
     if pw and (wv or we) and saw then
     begin
       result := false;
@@ -113,11 +118,14 @@ begin
   if result then // matched by PID
   begin // Inspect the window
     pw := GetParent(HWND) = 0;
-    wv := IsWindowVisible(HWND);
-    we := IsWindowEnabled(HWND);
-    style := GetWindowLongPtr(HWND, GWL_EXSTYLE);
-    if (Long_Ptr(style) and WS_EX_APPWINDOW) = WS_EX_APPWINDOW then
-      saw := true;
+    if pw then
+    begin
+      wv := IsWindowVisible(HWND);
+      we := IsWindowEnabled(HWND);
+      style := GetWindowLongPtr(HWND, GWL_EXSTYLE);
+      if (Long_Ptr(style) and WS_EX_DLGMODALFRAME) = WS_EX_DLGMODALFRAME then
+        saw := true;
+    end;
     if pw and (wv or we) and saw then
     begin
       result := false;
@@ -176,22 +184,31 @@ end;
 procedure TSEProcessManager.ExecClose;
 var
   s: string;
-  mw: DWord;
-  pid:cardinal;
+  PID: cardinal;
   pc: cardinal;
 begin
   for s in FCleanup.ProcList do
   begin
-    pid :=cardinal.Parse(s);
+    PID := cardinal.Parse(s);
     LogMsg('Closing Main ' + s);
-    CloseMainWindow(pid);
+    CloseMainWindow(PID);
     pc := 0;
-    while ProcIDRunning(pid) do
+    while ProcIDRunning(PID) do
     begin
+      TThread.Sleep(100); // sleep first, close was just sent
       inc(pc);
-      LogMsg('Running '+ pc.ToString);
+      LogMsg('Running ' + pc.ToString);
+      if LeakWindowShowing(PID) then
+      begin
+        LogMsg('Leak window showing');
+        if LeakWindowClose(PID) then
+        LogMsg('Leak window closed')
+        else
+        LogMsg('Failed Leak window close');
 
-      TThread.Sleep(100);
+
+      end;
+
     end;
 
   end;
@@ -239,6 +256,29 @@ begin
   else
     result := '';
   CloseHandle(hProcess);
+end;
+
+function TSEProcessManager.LeakWindowClose(APID: cardinal): boolean;
+var
+  mw: DWord;
+begin
+  result := false;
+  mw := FindLeakMsgWindow(APID);
+  try
+    LogMsg('Leak Window Handle =' + mw.ToString + ' hex=' + mw.ToHexString);
+    result := PostMessage(mw, WM_CLOSE, 0, 0);
+  except
+    on E: EOSError do
+      LogMsg('Error : ' + IntToStr(E.ErrorCode) + E.Message);
+  end;
+end;
+
+function TSEProcessManager.LeakWindowShowing(APID: cardinal): boolean;
+var
+  lw: cardinal;
+begin
+  lw := FindLeakMsgWindow(APID);
+  result := lw > 0;
 end;
 
 procedure TSEProcessManager.LogMsg(const AMsg: string);
