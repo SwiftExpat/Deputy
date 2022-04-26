@@ -10,6 +10,8 @@ object Form1: TForm1
   Font.Height = -12
   Font.Name = 'Segoe UI'
   Font.Style = []
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
   TextHeight = 15
   object Panel1: TPanel
     Left = 0
@@ -19,14 +21,14 @@ object Form1: TForm1
     Align = alTop
     Caption = 'Panel1'
     TabOrder = 0
-    object Button1: TButton
+    object btnClose: TButton
       Left = 272
       Top = 8
       Width = 75
       Height = 25
-      Caption = 'Button1'
+      Caption = 'Close'
       TabOrder = 0
-      OnClick = Button1Click
+      OnClick = btnCloseClick
     end
     object Edit1: TEdit
       Left = 502
@@ -37,6 +39,15 @@ object Form1: TForm1
       TabOrder = 1
       Text = 'RTTK.VCL.exe'
       ExplicitHeight = 23
+    end
+    object btnKill: TButton
+      Left = 16
+      Top = 10
+      Width = 75
+      Height = 25
+      Caption = 'Kill Proc'
+      TabOrder = 2
+      OnClick = btnKillClick
     end
   end
   object Memo1: TMemo

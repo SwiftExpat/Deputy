@@ -4,22 +4,25 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics, Winapi.TlHelp32,
+  System.Classes, Vcl.Graphics, Winapi.TlHelp32, SE.ProcMgrUtils,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls;
 
 type
   TForm1 = class(TForm)
     Panel1: TPanel;
     Memo1: TMemo;
-    Button1: TButton;
+    btnClose: TButton;
     Edit1: TEdit;
-    procedure Button1Click(Sender: TObject);
+    btnKill: TButton;
+    procedure btnCloseClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+    procedure btnKillClick(Sender: TObject);
   private
-    { Private declarations }
-    function ProcIsRunning(AExeName: string): boolean;
-    function FindMainWindow(PID: DWord): DWord;
+    FProcMgr: TSEProcessManager;
     procedure ProcessEval(AProcEntry: TProcessEntry32);
     procedure LogMsg(AMessage: string);
+    function FullProcName:string;
   public
     { Public declarations }
   end;
@@ -28,6 +31,8 @@ var
   Form1: TForm1;
 
 implementation
+
+uses System.IOUtils;
 
 const
   DNLEN = 15;
@@ -43,54 +48,41 @@ type
 
 {$R *.dfm}
 
-function EnumWindowsProc(HWND: DWord; var einfo: TEnumInfo): BOOL; stdcall;
+procedure TForm1.btnCloseClick(Sender: TObject);
 var
-  PID: DWord;
-  pw, wv, we, saw: boolean;
-  style: Long_Ptr;
+  lco: TSEProcessCleanup;
 begin
-  pw := false;
-  wv := false;
-  we := false;
-  saw := false;
-  // Get the Pid for the Window
-  GetWindowThreadProcessId(HWND, @PID);
-  result := PID = einfo.ProcessID;
-  if result then // matched by PID
-  begin // Inspect the window
-    pw := GetParent(HWND) = 0;
-    wv := IsWindowVisible(HWND);
-    we := IsWindowEnabled(HWND);
-    style := GetWindowLongPtr(HWND, GWL_EXSTYLE);
-    if (Long_Ptr(style) and WS_EX_APPWINDOW) = WS_EX_APPWINDOW then
-      saw := true;
-    if pw and (wv or we) and saw then
-    begin
-      result := false;
-      einfo.HWND := HWND; // set the handle
-    end
-    else
-      result := true;
-  end
-  else
-    result := true
-    // EnumWindows continues until the last top-level window is enumerated or the callback function returns FALSE.
+  lco := TSEProcessCleanup.Create(FullProcName, TSEProcessStopCommand.tseProcStopClose);
+  FProcMgr.ProcessCleanup(lco);
+
 end;
 
-procedure TForm1.Button1Click(Sender: TObject);
+procedure TForm1.btnKillClick(Sender: TObject);
+var
+  lco: TSEProcessCleanup;
 begin
-  ProcIsRunning(Edit1.Text);
+  lco := TSEProcessCleanup.Create(FullProcName, TSEProcessStopCommand.tseProcStopKill);
+  FProcMgr.ProcessCleanup(lco);
+
 end;
 
-function TForm1.FindMainWindow(PID: DWord): DWord;
-var
-  einfo: TEnumInfo;
+procedure TForm1.FormCreate(Sender: TObject);
 begin
-  einfo.ProcessID := PID;
-  einfo.HWND := 0;
-  // for each window execute EnumWindows proc
-  EnumWindows(@EnumWindowsProc, Integer(@einfo));
-  result := einfo.HWND;
+  FProcMgr := TSEProcessManager.Create;
+  FProcMgr.OnMessage := LogMsg;
+end;
+
+procedure TForm1.FormDestroy(Sender: TObject);
+begin
+  FProcMgr.Free;
+end;
+
+function TForm1.FullProcName: string;
+const
+proc_dir = 'C:\Data\GitHub\SwiftExpat\RunTime-ToolKit\RunTime-ToolKit\Samples\vcl\Win32\Debug';
+begin
+result := TPath.Combine(proc_dir, edit1.Text);
+
 end;
 
 procedure TForm1.LogMsg(AMessage: string);
@@ -101,10 +93,9 @@ end;
 procedure TForm1.ProcessEval(AProcEntry: TProcessEntry32);
 var
   mw: DWord;
-  wtPID: Cardinal;
 begin
   LogMsg(AProcEntry.th32ProcessID.ToString);
-  mw := FindMainWindow(AProcEntry.th32ProcessID);
+  mw := FProcMgr.FindMainWindow(AProcEntry.th32ProcessID);
   try
     LogMsg('Handle =' + mw.ToString);
     LogMsg('Handle =' + mw.ToHexString);
@@ -116,34 +107,5 @@ begin
 
 end;
 
-function TForm1.ProcIsRunning(AExeName: string): boolean;
-var
-  hSnapShot: THandle;
-  PE: TProcessEntry32;
-  tn: string;
-begin
-  hSnapShot := CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-  try
-    try
-      tn := AExeName;
-      if (hSnapShot <> THandle(-1)) then
-      begin
-        PE.dwSize := SizeOf(TProcessEntry32);
-        if (Process32First(hSnapShot, PE)) then
-          repeat // look for match by name
-            if (PE.szExeFile = tn) then
-              ProcessEval(PE);
-          until (Process32Next(hSnapShot, PE) = false);
-      end;
-      result := true;
-    except
-      on E: Exception do
-        raise Exception.Create('failed snapshot' + E.Message);
-    end;
-  finally
-    CloseHandle(hSnapShot);
-  end;
-
-end;
 
 end.
