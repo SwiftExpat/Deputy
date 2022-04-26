@@ -2,7 +2,8 @@ program ProcTreeVCL;
 
 uses
   Vcl.Forms,
-  frmProcTreeU in 'frmProcTreeU.pas' {Form1};
+  frmProcTreeU in 'frmProcTreeU.pas' {Form1},
+  SE.ProcMgrUtils in '..\..\Source\SE.ProcMgrUtils.pas';
 
 {$R *.res}
 
