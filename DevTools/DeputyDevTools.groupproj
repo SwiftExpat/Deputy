@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{A47B5A95-9443-43F7-90FF-070FE5C6EF14}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="ProcTreeVCL\ProcTreeVCL.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="..\Source\SE.IDE.Deputy.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="ProcTreeVCL">
+        <MSBuild Projects="ProcTreeVCL\ProcTreeVCL.dproj"/>
+    </Target>
+    <Target Name="ProcTreeVCL:Clean">
+        <MSBuild Projects="ProcTreeVCL\ProcTreeVCL.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="ProcTreeVCL:Make">
+        <MSBuild Projects="ProcTreeVCL\ProcTreeVCL.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="SE_IDE_Deputy">
+        <MSBuild Projects="..\Source\SE.IDE.Deputy.dproj"/>
+    </Target>
+    <Target Name="SE_IDE_Deputy:Clean">
+        <MSBuild Projects="..\Source\SE.IDE.Deputy.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="SE_IDE_Deputy:Make">
+        <MSBuild Projects="..\Source\SE.IDE.Deputy.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="ProcTreeVCL;SE_IDE_Deputy"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="ProcTreeVCL:Clean;SE_IDE_Deputy:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="ProcTreeVCL:Make;SE_IDE_Deputy:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
