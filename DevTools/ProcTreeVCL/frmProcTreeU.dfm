@@ -49,6 +49,15 @@ object frmProcTree: TfrmProcTree
       TabOrder = 2
       OnClick = btnKillClick
     end
+    object btnForm: TButton
+      Left = 152
+      Top = 9
+      Width = 75
+      Height = 25
+      Caption = 'Form'
+      TabOrder = 3
+      OnClick = btnFormClick
+    end
   end
   object Memo1: TMemo
     Left = 0

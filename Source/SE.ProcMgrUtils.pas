@@ -12,14 +12,21 @@ type
   public
     StopCommand: TSEProcessStopCommand;
     CloseMemLeak: boolean;
+    CopyMemLeak: boolean;
     Timeout: cardinal;
     ProcID: cardinal;
     ProcList: TStringList;
     ProcessName: string;
-    constructor Create(const AProcName: string; const AStopCommand: TSEProcessStopCommand);
+    ProcessDirectory: string;
+    function ProcessFullName: string;
+    constructor Create(const AProcName: string; const AProcDirectory: string;
+      const AStopCommand: TSEProcessStopCommand);
+    destructor Destroy; override;
   end;
 
   TSEProcessManagerMessage = procedure(AMsg: string) of object;
+
+  TSEProcessManagerLeakCopied = procedure(AMsg: string) of object;
 
   TSEProcessManager = class
   strict private
@@ -27,6 +34,7 @@ type
     FActions: TStringList;
     FCleanup: TSEProcessCleanup;
     FMsgProc: TSEProcessManagerMessage;
+    FLeakCopied: TSEProcessManagerLeakCopied;
     procedure SetBDSId;
     function TerminateProcessByID(AProcessID: cardinal): boolean;
     procedure LogMsg(const AMsg: string);
@@ -48,6 +56,7 @@ type
     constructor Create;
     destructor Destroy; override;
     property OnMessage: TSEProcessManagerMessage read FMsgProc write FMsgProc;
+    property OnLeakCopied: TSEProcessManagerLeakCopied read FLeakCopied write FLeakCopied;
   end;
 
 implementation
@@ -202,17 +211,13 @@ begin
       begin
         LogMsg('Leak window showing');
         if LeakWindowClose(PID) then
-        LogMsg('Leak window closed')
+          LogMsg('Leak window closed')
         else
-        LogMsg('Failed Leak window close');
-
+          LogMsg('Failed Leak window close');
 
       end;
-
     end;
-
   end;
-
 end;
 
 function TSEProcessManager.FindLeakMsgWindow(const APID: DWord): DWord;
@@ -266,6 +271,12 @@ begin
   mw := FindLeakMsgWindow(APID);
   try
     LogMsg('Leak Window Handle =' + mw.ToString + ' hex=' + mw.ToHexString);
+    if FCleanup.CopyMemLeak then
+    begin
+      result := PostMessage(mw, WM_COPY, 0, 0);
+      if Assigned(FLeakCopied) then
+        FLeakCopied('Leak Found');
+    end;
     result := PostMessage(mw, WM_CLOSE, 0, 0);
   except
     on E: EOSError do
@@ -289,6 +300,8 @@ end;
 
 procedure TSEProcessManager.ProcessCleanup(const ACleanup: TSEProcessCleanup);
 begin
+  if Assigned(FCleanup) then
+    FCleanup.Free;
   FCleanup := ACleanup;
   ProcListLoad;
   if FCleanup.ProcList.Count = 0 then
@@ -302,15 +315,6 @@ begin
     ExecClose
 end;
 
-// function TSEProcessManager.ProcessKill(const AProcEntry: TProcessEntry32): boolean;
-// begin
-// result := TerminateProcessByID(AProcEntry.th32ProcessID);
-// if result then
-// LogMsg('Process ID ' + AProcEntry.th32ProcessID.ToString + ' killed ' + now.ToString)
-// else
-// LogMsg('Process not killed ' + AProcEntry.th32ProcessID.ToString);
-// end;
-
 function TSEProcessManager.ProcessMatched(const AProcEntry: TProcessEntry32): boolean;
 begin
   if AProcEntry.th32ParentProcessID = FBDSID then
@@ -318,7 +322,7 @@ begin
     LogMsg('Process matched by parent ID and name');
     result := true;
   end
-  else if ImageFileName(AProcEntry) = FCleanup.ProcessName
+  else if ImageFileName(AProcEntry) = FCleanup.ProcessFullName
   then { check if this exe is the same path as the one we are trying to build }
   begin
     LogMsg('Process matched by ImageName ');
@@ -326,7 +330,6 @@ begin
   end
   else
     result := false;
-
 end;
 
 function TSEProcessManager.ProcIDRunning(APID: cardinal): boolean;
@@ -346,7 +349,6 @@ begin
             exit(true);
         until (Process32Next(hSnapShot, PE) = false);
     end;
-
   finally
     CloseHandle(hSnapShot);
   end;
@@ -356,18 +358,16 @@ function TSEProcessManager.ProcListLoad: boolean;
 var
   hSnapShot: THandle;
   PE: TProcessEntry32;
-  tn: string;
 begin
   hSnapShot := CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
   try
     try
-      tn := TPath.GetFileName(FCleanup.ProcessName);
       if (hSnapShot <> THandle(-1)) then
       begin
         PE.dwSize := SizeOf(TProcessEntry32);
         if (Process32First(hSnapShot, PE)) then
           repeat // look for match by name
-            if (PE.szExeFile = tn) then
+            if (PE.szExeFile = FCleanup.ProcessName) then
               if ProcessMatched(PE) then
                 FCleanup.ProcList.Add(PE.th32ProcessID.ToString);
           until (Process32Next(hSnapShot, PE) = false);
@@ -406,11 +406,26 @@ end;
 
 { TSEProcessCleanupOptions }
 
-constructor TSEProcessCleanup.Create(const AProcName: string; const AStopCommand: TSEProcessStopCommand);
+constructor TSEProcessCleanup.Create(const AProcName: string; const AProcDirectory: string;
+  const AStopCommand: TSEProcessStopCommand);
 begin
   ProcessName := AProcName;
+  ProcessDirectory := AProcDirectory;
   StopCommand := AStopCommand;
   ProcList := TStringList.Create;
+  CloseMemLeak := true;
+  CopyMemLeak := true;
+end;
+
+destructor TSEProcessCleanup.Destroy;
+begin
+  ProcList.Free;
+  inherited;
+end;
+
+function TSEProcessCleanup.ProcessFullName: string;
+begin
+  result := TPath.Combine(self.ProcessDirectory, self.ProcessName);
 end;
 
 end.
