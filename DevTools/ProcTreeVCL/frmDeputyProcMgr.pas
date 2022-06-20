@@ -29,15 +29,24 @@ type
     procedure btnForceTerminateClick(Sender: TObject);
     procedure tmrCleanupBeginTimer(Sender: TObject);
   strict private
+    FProcMREW: TMultiReadExclusiveWriteSynchronizer;
+    FPProcCleanup: TSEProcessCleanup;
+    FPProcMgrInfo: TSEProcessManagerEnvInfo;
+    function ProcCleanupGet: TSEProcessCleanup;
+    procedure ProcCleanupSet(const Value: TSEProcessCleanup);
+    function ProcMgrInfoGet: TSEProcessManagerEnvInfo;
+    procedure ProcMgrInfoSet(const Value: TSEProcessManagerEnvInfo);
+
     procedure ClearLog;
     procedure ClearMemLeak;
   private
     FProcMgr: TSEProcessManager;
-    FProcCleanup: TSEProcessCleanup;
-    FProcMgrInfo: TSEProcessManagerEnvInfo;
     procedure LogMsg(AMessage: string);
     procedure LeakCopied(AMessage: string);
     procedure WaitPoll(APollCount: integer);
+    property ProcCleanup: TSEProcessCleanup read ProcCleanupGet write ProcCleanupSet;
+    property ProcMgrInfo: TSEProcessManagerEnvInfo read ProcMgrInfoGet write ProcMgrInfoSet;
+
   public
     procedure CleanProcess(const AProcName: string; const AProcDirectory: string;
       const AStopCommand: TSEProcessStopCommand);
@@ -60,17 +69,17 @@ begin
   ClearLog;
   lbMgrParams.Clear;
   lbMgrParams.Items.Add('Process Name');
-  lbMgrParams.Items.Add(FProcCleanup.ProcessName);
+  lbMgrParams.Items.Add(ProcCleanup.ProcessName);
 
   lbMgrParams.Items.Add('Timeout');
-  lbMgrParams.AddItem(FProcCleanup.Timeout.ToString, nil);
+  lbMgrParams.AddItem(ProcCleanup.Timeout.ToString, nil);
   lbMgrParams.Items.Add('Clean Proc Action');
-  if FProcCleanup.StopCommand = TSEProcessStopCommand.tseProcStopKill then
+  if ProcCleanup.StopCommand = TSEProcessStopCommand.tseProcStopKill then
     lbMgrParams.Items.Add('Terminate')
   else
     lbMgrParams.Items.Add('Close Window');
   lbMgrParams.Items.Add('MemLeak Action');
-  if FProcCleanup.CloseMemLeak then
+  if ProcCleanup.CloseMemLeak then
     lbMgrParams.Items.Add('Close Leak Window')
   else
     lbMgrParams.Items.Add('Leak Window Shown');
@@ -90,7 +99,7 @@ end;
 procedure TDeputyProcMgr.CleanProcess(const AProcName, AProcDirectory: string;
   const AStopCommand: TSEProcessStopCommand);
 begin
-  FProcCleanup := TSEProcessCleanup.Create(AProcName, AProcDirectory, AStopCommand);
+  ProcCleanup := TSEProcessCleanup.Create(AProcName, AProcDirectory, AStopCommand);
   LoadProcessCleanup;
 end;
 
@@ -111,7 +120,8 @@ end;
 
 procedure TDeputyProcMgr.FormCreate(Sender: TObject);
 begin
-  FProcMgrInfo := TSEProcessManagerEnvInfo.Create;
+  FProcMREW := TMultiReadExclusiveWriteSynchronizer.Create;
+  ProcMgrInfo := TSEProcessManagerEnvInfo.Create;
   FProcMgr := TSEProcessManager.Create;
   FProcMgr.OnMessage := LogMsg;
   FProcMgr.OnLeakCopied := LeakCopied;
@@ -121,8 +131,9 @@ end;
 procedure TDeputyProcMgr.FormDestroy(Sender: TObject);
 begin
   FProcMgr.Free;
-  FProcMgrInfo.Free;
-  FProcCleanup.Free;
+  FProcMREW.Free;
+  FPProcMgrInfo.Free;
+  FPProcCleanup.Free;
 end;
 
 procedure TDeputyProcMgr.LeakCopied(AMessage: string);
@@ -137,18 +148,45 @@ begin
   lbMgrStatus.Items.Add(AMessage);
 end;
 
+function TDeputyProcMgr.ProcCleanupGet: TSEProcessCleanup;
+begin
+  FProcMREW.BeginRead;
+  result := FPProcCleanup;
+  FProcMREW.EndRead;
+end;
+
+procedure TDeputyProcMgr.ProcCleanupSet(const Value: TSEProcessCleanup);
+begin
+  FProcMREW.BeginWrite;
+  FPProcCleanup := Value;
+  FProcMREW.EndWrite;
+end;
+
+function TDeputyProcMgr.ProcMgrInfoGet: TSEProcessManagerEnvInfo;
+begin
+  FProcMREW.BeginRead;
+  result := FPProcMgrInfo;
+  FProcMREW.EndRead;
+end;
+
+procedure TDeputyProcMgr.ProcMgrInfoSet(const Value: TSEProcessManagerEnvInfo);
+begin
+  FProcMREW.BeginWrite;
+  FPProcMgrInfo := Value;
+  FProcMREW.EndWrite;
+end;
+
 procedure TDeputyProcMgr.tmrCleanupBeginTimer(Sender: TObject);
 begin
   tmrCleanupBegin.Enabled := false;
-  FProcMgr.AssignMgrInfo(FProcMgrInfo);
-  FProcMgr.AssignProcCleanup(FProcCleanup);
-  FProcMgr.ProcessCleanup;    //start the thread
+  FProcMgr.AssignMgrInfo(ProcMgrInfo);
+  FProcMgr.AssignProcCleanup(ProcCleanup);
+  FProcMgr.ProcessCleanup; // start the thread
 end;
 
 procedure TDeputyProcMgr.WaitPoll(APollCount: integer);
 begin
   LogMsg(APollCount.ToString);
-
 end;
 
 { TDeputyProcMgrFactory }
