@@ -34,12 +34,14 @@ type
   private
     FProcMgr: TSEProcessManager;
     FProcCleanup: TSEProcessCleanup;
-    FProcMgrInfo : TSEProcessManagerEnvInfo;
+    FProcMgrInfo: TSEProcessManagerEnvInfo;
     procedure LogMsg(AMessage: string);
     procedure LeakCopied(AMessage: string);
     procedure WaitPoll(APollCount: integer);
   public
-    procedure AssignProcessCleanup(AProcCleanup: TSEProcessCleanup);
+    procedure CleanProcess(const AProcName: string; const AProcDirectory: string;
+      const AStopCommand: TSEProcessStopCommand);
+    procedure LoadProcessCleanup;
   end;
 
   TDeputyProcMgrFactory = class
@@ -49,14 +51,11 @@ type
 
 implementation
 
-
-
 {$R *.dfm}
 { TDeputyProcMgr }
 
-procedure TDeputyProcMgr.AssignProcessCleanup(AProcCleanup: TSEProcessCleanup);
+procedure TDeputyProcMgr.LoadProcessCleanup;
 begin
-  FProcCleanup := AProcCleanup;
   ClearMemLeak;
   ClearLog;
   lbMgrParams.Clear;
@@ -88,6 +87,13 @@ begin
   FProcMgr.StopManager;
 end;
 
+procedure TDeputyProcMgr.CleanProcess(const AProcName, AProcDirectory: string;
+  const AStopCommand: TSEProcessStopCommand);
+begin
+  FProcCleanup := TSEProcessCleanup.Create(AProcName, AProcDirectory, AStopCommand);
+  LoadProcessCleanup;
+end;
+
 procedure TDeputyProcMgr.ClearLog;
 begin
   lbMgrStatus.Clear;
@@ -115,6 +121,8 @@ end;
 procedure TDeputyProcMgr.FormDestroy(Sender: TObject);
 begin
   FProcMgr.Free;
+  FProcMgrInfo.Free;
+  FProcCleanup.Free;
 end;
 
 procedure TDeputyProcMgr.LeakCopied(AMessage: string);
@@ -132,7 +140,9 @@ end;
 procedure TDeputyProcMgr.tmrCleanupBeginTimer(Sender: TObject);
 begin
   tmrCleanupBegin.Enabled := false;
-  FProcMgr.ProcessCleanup(FProcCleanup);
+  FProcMgr.AssignMgrInfo(FProcMgrInfo);
+  FProcMgr.AssignProcCleanup(FProcCleanup);
+  FProcMgr.ProcessCleanup;    //start the thread
 end;
 
 procedure TDeputyProcMgr.WaitPoll(APollCount: integer);
