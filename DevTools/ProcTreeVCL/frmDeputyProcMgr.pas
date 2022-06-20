@@ -4,7 +4,8 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls, SE.ProcMgrUtils;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls, SE.ProcMgrUtils,
+  Vcl.CategoryButtons, Vcl.ExtCtrls;
 
 type
   EDeputyProcMgrCreate = class(Exception);
@@ -14,16 +15,29 @@ type
     StatusBar1: TStatusBar;
     lbMgrParams: TListBox;
     lbMgrStatus: TListBox;
+    pcWorkarea: TPageControl;
+    tsParameters: TTabSheet;
+    tsStatus: TTabSheet;
+    FlowPanel1: TFlowPanel;
+    btnAbortManager: TButton;
+    btnForceTerminate: TButton;
+    tmrCleanupBegin: TTimer;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    strict private
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure btnAbortManagerClick(Sender: TObject);
+    procedure btnForceTerminateClick(Sender: TObject);
+    procedure tmrCleanupBeginTimer(Sender: TObject);
+  strict private
     procedure ClearLog;
     procedure ClearMemLeak;
   private
     FProcMgr: TSEProcessManager;
     FProcCleanup: TSEProcessCleanup;
+    FProcMgrInfo : TSEProcessManagerEnvInfo;
     procedure LogMsg(AMessage: string);
     procedure LeakCopied(AMessage: string);
+    procedure WaitPoll(APollCount: integer);
   public
     procedure AssignProcessCleanup(AProcCleanup: TSEProcessCleanup);
   end;
@@ -34,6 +48,8 @@ type
   end;
 
 implementation
+
+
 
 {$R *.dfm}
 { TDeputyProcMgr }
@@ -59,25 +75,41 @@ begin
     lbMgrParams.Items.Add('Close Leak Window')
   else
     lbMgrParams.Items.Add('Leak Window Shown');
-  FProcMgr.ProcessCleanup(FProcCleanup);
+  tmrCleanupBegin.Enabled := true;
+end;
 
+procedure TDeputyProcMgr.btnAbortManagerClick(Sender: TObject);
+begin
+  FProcMgr.StopManager;
+end;
+
+procedure TDeputyProcMgr.btnForceTerminateClick(Sender: TObject);
+begin
+  FProcMgr.StopManager;
 end;
 
 procedure TDeputyProcMgr.ClearLog;
 begin
-    lbMgrStatus.Clear;
+  lbMgrStatus.Clear;
 end;
 
 procedure TDeputyProcMgr.ClearMemLeak;
 begin
-    memoLeak.Lines.Clear;
+  memoLeak.Lines.Clear;
+end;
+
+procedure TDeputyProcMgr.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  FProcMgr.StopManager;
 end;
 
 procedure TDeputyProcMgr.FormCreate(Sender: TObject);
 begin
+  FProcMgrInfo := TSEProcessManagerEnvInfo.Create;
   FProcMgr := TSEProcessManager.Create;
   FProcMgr.OnMessage := LogMsg;
   FProcMgr.OnLeakCopied := LeakCopied;
+  FProcMgr.OnWaitPoll := WaitPoll;
 end;
 
 procedure TDeputyProcMgr.FormDestroy(Sender: TObject);
@@ -87,7 +119,7 @@ end;
 
 procedure TDeputyProcMgr.LeakCopied(AMessage: string);
 begin
-  clearMemLeak;
+  ClearMemLeak;
   PostMessage(memoLeak.Handle, WM_Paste, 0, 0);
   // copy leak to hist
 end;
@@ -95,6 +127,18 @@ end;
 procedure TDeputyProcMgr.LogMsg(AMessage: string);
 begin
   lbMgrStatus.Items.Add(AMessage);
+end;
+
+procedure TDeputyProcMgr.tmrCleanupBeginTimer(Sender: TObject);
+begin
+  tmrCleanupBegin.Enabled := false;
+  FProcMgr.ProcessCleanup(FProcCleanup);
+end;
+
+procedure TDeputyProcMgr.WaitPoll(APollCount: integer);
+begin
+  LogMsg(APollCount.ToString);
+
 end;
 
 { TDeputyProcMgrFactory }
@@ -106,7 +150,7 @@ begin
   for i := 0 to Screen.FormCount - 1 do // itterate the screens
     if Screen.Forms[i].ClassType = TDeputyProcMgr then
     begin
-      result :=TDeputyProcMgr(Screen.Forms[i]);
+      result := TDeputyProcMgr(Screen.Forms[i]);
       if Screen.Forms[i].WindowState = TWindowState.wsMinimized then
         Screen.Forms[i].WindowState := TWindowState.wsNormal;
       exit;
