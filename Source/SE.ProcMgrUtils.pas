@@ -8,6 +8,13 @@ uses System.Classes, Winapi.Windows, Winapi.TlHelp32;
 type
   TSEProcessStopCommand = (tseProcStopKill, tseProcStopClose);
 
+  TSEProcessCleanStatus = class
+  public
+    ProcID: cardinal;
+    PollCount: integer;
+    MemLeakMessage: string;
+  end;
+
   TSEProcessCleanup = class
   public
     StopCommand: TSEProcessStopCommand;
@@ -60,7 +67,7 @@ type
   public
     function FindMainWindow(const APID: DWord): DWord;
     function FindLeakMsgWindow(const APID: DWord): DWord;
-    procedure ProcessCleanup(const ACleanup: TSEProcessCleanup);
+    procedure ProcessCleanup;//(const ACleanup: TSEProcessCleanup);
     property Actions: TStringList read FActions;
     destructor Destroy; override;
     procedure StopManager;
@@ -189,7 +196,7 @@ end;
 
 destructor TSEProcessManager.Destroy;
 begin
-  FCleanup.Free;
+  //FCleanup.Free; // the thread will not free this any more
   inherited;
 end;
 
@@ -327,12 +334,11 @@ begin
     FMsgProc(AMsg);
 end;
 
-procedure TSEProcessManager.ProcessCleanup(const ACleanup: TSEProcessCleanup);
+procedure TSEProcessManager.ProcessCleanup;
 begin
   FManagerStopped := false;
-  if Assigned(FCleanup) then
-    FCleanup.Free;
-  FCleanup := ACleanup;
+
+//  FCleanup := ACleanup;
   ProcListLoad;
   if FCleanup.ProcList.Count = 0 then
   begin

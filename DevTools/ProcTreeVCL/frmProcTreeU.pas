@@ -45,27 +45,25 @@ var
   lco: TSEProcessCleanup;
 begin
   lco := TSEProcessCleanup.Create(ProcName, proc_dir, TSEProcessStopCommand.tseProcStopClose);
-  FProcMgr.ProcessCleanup(lco);
+  //FProcMgr.ProcessCleanup(lco);
   PostMessage(Memo1.Handle, WM_Paste, 0, 0);
 end;
 
 procedure TfrmProcTree.btnFormClick(Sender: TObject);
 var
   fmgr: TDeputyProcMgr;
-  lco: TSEProcessCleanup;
 begin
   fmgr := TDeputyProcMgrFactory.DeputyProcMgr;
-  lco := TSEProcessCleanup.Create(ProcName, proc_dir,TSEProcessStopCommand.tseProcStopClose);
   fmgr.Show;
-  fmgr.AssignProcessCleanup(lco);
+  fmgr.CleanProcess(ProcName, proc_dir, TSEProcessStopCommand.tseProcStopClose);
 end;
 
 procedure TfrmProcTree.btnKillClick(Sender: TObject);
 var
   lco: TSEProcessCleanup;
 begin
-  lco := TSEProcessCleanup.Create(ProcName,proc_dir, TSEProcessStopCommand.tseProcStopKill);
-  FProcMgr.ProcessCleanup(lco);
+  lco := TSEProcessCleanup.Create(ProcName, proc_dir, TSEProcessStopCommand.tseProcStopKill);
+  //FProcMgr.ProcessCleanup(lco);
 end;
 
 procedure TfrmProcTree.FormCreate(Sender: TObject);
