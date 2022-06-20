@@ -21,11 +21,8 @@ object DeputyProcMgr: TDeputyProcMgr
     Align = alClient
     Lines.Strings = (
       'memoLeak')
+    ScrollBars = ssBoth
     TabOrder = 0
-    ExplicitLeft = 232
-    ExplicitTop = 200
-    ExplicitWidth = 185
-    ExplicitHeight = 89
   end
   object StatusBar1: TStatusBar
     Left = 0
@@ -37,9 +34,6 @@ object DeputyProcMgr: TDeputyProcMgr
         Text = 'Idle'
         Width = 50
       end>
-    ExplicitLeft = 320
-    ExplicitTop = 232
-    ExplicitWidth = 0
   end
   object lbMgrParams: TListBox
     Left = 0
@@ -49,9 +43,6 @@ object DeputyProcMgr: TDeputyProcMgr
     Align = alLeft
     ItemHeight = 15
     TabOrder = 2
-    ExplicitLeft = 264
-    ExplicitTop = 192
-    ExplicitHeight = 97
   end
   object lbMgrStatus: TListBox
     Left = 0
@@ -61,8 +52,5 @@ object DeputyProcMgr: TDeputyProcMgr
     Align = alBottom
     ItemHeight = 15
     TabOrder = 3
-    ExplicitLeft = 264
-    ExplicitTop = 192
-    ExplicitWidth = 121
   end
 end

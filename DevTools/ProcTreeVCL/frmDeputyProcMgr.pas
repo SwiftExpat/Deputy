@@ -7,6 +7,8 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls, SE.ProcMgrUtils;
 
 type
+  EDeputyProcMgrCreate = class(Exception);
+
   TDeputyProcMgr = class(TForm)
     memoLeak: TMemo;
     StatusBar1: TStatusBar;
@@ -14,6 +16,9 @@ type
     lbMgrStatus: TListBox;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    strict private
+    procedure ClearLog;
+    procedure ClearMemLeak;
   private
     FProcMgr: TSEProcessManager;
     FProcCleanup: TSEProcessCleanup;
@@ -23,8 +28,10 @@ type
     procedure AssignProcessCleanup(AProcCleanup: TSEProcessCleanup);
   end;
 
-var
-  DeputyProcMgr: TDeputyProcMgr;
+  TDeputyProcMgrFactory = class
+  public
+    class function DeputyProcMgr: TDeputyProcMgr;
+  end;
 
 implementation
 
@@ -34,6 +41,9 @@ implementation
 procedure TDeputyProcMgr.AssignProcessCleanup(AProcCleanup: TSEProcessCleanup);
 begin
   FProcCleanup := AProcCleanup;
+  ClearMemLeak;
+  ClearLog;
+  lbMgrParams.Clear;
   lbMgrParams.Items.Add('Process Name');
   lbMgrParams.Items.Add(FProcCleanup.ProcessName);
 
@@ -50,7 +60,17 @@ begin
   else
     lbMgrParams.Items.Add('Leak Window Shown');
   FProcMgr.ProcessCleanup(FProcCleanup);
-  memoLeak.Lines.Clear;
+
+end;
+
+procedure TDeputyProcMgr.ClearLog;
+begin
+    lbMgrStatus.Clear;
+end;
+
+procedure TDeputyProcMgr.ClearMemLeak;
+begin
+    memoLeak.Lines.Clear;
 end;
 
 procedure TDeputyProcMgr.FormCreate(Sender: TObject);
@@ -67,14 +87,41 @@ end;
 
 procedure TDeputyProcMgr.LeakCopied(AMessage: string);
 begin
-  memoLeak.Lines.Clear;
+  clearMemLeak;
   PostMessage(memoLeak.Handle, WM_Paste, 0, 0);
-  //copy leak to hist
+  // copy leak to hist
 end;
 
 procedure TDeputyProcMgr.LogMsg(AMessage: string);
 begin
   lbMgrStatus.Items.Add(AMessage);
+end;
+
+{ TDeputyProcMgrFactory }
+
+class function TDeputyProcMgrFactory.DeputyProcMgr: TDeputyProcMgr;
+var
+  i: integer;
+begin
+  for i := 0 to Screen.FormCount - 1 do // itterate the screens
+    if Screen.Forms[i].ClassType = TDeputyProcMgr then
+    begin
+      result :=TDeputyProcMgr(Screen.Forms[i]);
+      if Screen.Forms[i].WindowState = TWindowState.wsMinimized then
+        Screen.Forms[i].WindowState := TWindowState.wsNormal;
+      exit;
+    end;
+  result := nil;
+  try
+    result := TDeputyProcMgr.Create(Application);
+  except // handle anything that does not let our form show up
+    on E: Exception do
+    begin
+      if Assigned(result) then
+        result.Free;
+      raise EDeputyProcMgrCreate.Create('Create failed Deputy Proc Manager form');
+    end;
+  end;
 end;
 
 end.

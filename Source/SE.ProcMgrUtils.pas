@@ -80,7 +80,7 @@ var
   pw, wv, we, saw: boolean;
   style: Long_Ptr;
 begin
-  pw := false;
+  // pw := false;
   wv := false;
   we := false;
   saw := false;
@@ -172,7 +172,7 @@ end;
 
 destructor TSEProcessManager.Destroy;
 begin
-
+  FCleanup.Free;
   inherited;
 end;
 

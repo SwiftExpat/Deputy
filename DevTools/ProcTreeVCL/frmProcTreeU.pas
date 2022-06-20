@@ -54,10 +54,10 @@ var
   fmgr: TDeputyProcMgr;
   lco: TSEProcessCleanup;
 begin
-  fmgr := TDeputyProcMgr.Create(Application);
+  fmgr := TDeputyProcMgrFactory.DeputyProcMgr;
   lco := TSEProcessCleanup.Create(ProcName, proc_dir,TSEProcessStopCommand.tseProcStopClose);
-  fmgr.AssignProcessCleanup(lco);
   fmgr.Show;
+  fmgr.AssignProcessCleanup(lco);
 end;
 
 procedure TfrmProcTree.btnKillClick(Sender: TObject);
