@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls, SE.ProcMgrUtils,
-  Vcl.CategoryButtons, Vcl.ExtCtrls;
+  Vcl.CategoryButtons, Vcl.ExtCtrls, System.Threading;
 
 type
   EDeputyProcMgrCreate = class(Exception);
@@ -32,11 +32,11 @@ type
     FProcMREW: TMultiReadExclusiveWriteSynchronizer;
     FPProcCleanup: TSEProcessCleanup;
     FPProcMgrInfo: TSEProcessManagerEnvInfo;
+    FCleanTask: ITask;
     function ProcCleanupGet: TSEProcessCleanup;
     procedure ProcCleanupSet(const Value: TSEProcessCleanup);
     function ProcMgrInfoGet: TSEProcessManagerEnvInfo;
     procedure ProcMgrInfoSet(const Value: TSEProcessManagerEnvInfo);
-
     procedure ClearLog;
     procedure ClearMemLeak;
   private
@@ -83,7 +83,7 @@ begin
     lbMgrParams.Items.Add('Close Leak Window')
   else
     lbMgrParams.Items.Add('Leak Window Shown');
-  tmrCleanupBegin.Enabled := true;
+  // tmrCleanupBegin.Enabled := true;
 end;
 
 procedure TDeputyProcMgr.btnAbortManagerClick(Sender: TObject);
@@ -101,6 +101,31 @@ procedure TDeputyProcMgr.CleanProcess(const AProcName, AProcDirectory: string;
 begin
   ProcCleanup := TSEProcessCleanup.Create(AProcName, AProcDirectory, AStopCommand);
   LoadProcessCleanup;
+  FCleanTask := TTask.Create(
+    procedure
+    var
+      ExceptionPtr : Pointer;
+      exStr:string;
+    begin
+      try
+        FProcMgr.AssignMgrInfo(ProcMgrInfo);
+        FProcMgr.AssignProcCleanup(ProcCleanup);
+        FProcMgr.ProcessCleanup;
+      except
+      begin
+        ExceptionPtr := AcquireExceptionObject;
+        exStr :=TObject(ExceptionPtr).ToString;
+        ReleaseExceptionObject;
+        TThread.Queue(TThread.CurrentThread,
+          procedure
+          begin
+              LogMsg(exStr);
+          end);
+      end;
+    end;
+  end);
+  FCleanTask.Start;
+
 end;
 
 procedure TDeputyProcMgr.ClearLog;
@@ -193,14 +218,14 @@ end;
 
 class function TDeputyProcMgrFactory.DeputyProcMgr: TDeputyProcMgr;
 var
-  i: integer;
+  I: integer;
 begin
-  for i := 0 to Screen.FormCount - 1 do // itterate the screens
-    if Screen.Forms[i].ClassType = TDeputyProcMgr then
+  for I := 0 to Screen.FormCount - 1 do // itterate the screens
+    if Screen.Forms[I].ClassType = TDeputyProcMgr then
     begin
-      result := TDeputyProcMgr(Screen.Forms[i]);
-      if Screen.Forms[i].WindowState = TWindowState.wsMinimized then
-        Screen.Forms[i].WindowState := TWindowState.wsNormal;
+      result := TDeputyProcMgr(Screen.Forms[I]);
+      if Screen.Forms[I].WindowState = TWindowState.wsMinimized then
+        Screen.Forms[I].WindowState := TWindowState.wsNormal;
       exit;
     end;
   result := nil;
