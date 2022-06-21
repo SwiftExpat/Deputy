@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls, SE.ProcMgrUtils,
-  Vcl.CategoryButtons, Vcl.ExtCtrls, System.Threading, Generics.Collections;
+  Vcl.CategoryButtons, Vcl.ExtCtrls, System.Threading, Generics.Collections, System.Diagnostics;
 
 type
   EDeputyProcMgrCreate = class(Exception);
@@ -22,8 +22,9 @@ type
     btnAbortCleanup: TButton;
     btnForceTerminate: TButton;
     tmrCleanupStatus: TTimer;
-    pnlCleanStatus: TPanel;
-    lblPollCount: TLabel;
+    gpCleanStatus: TGridPanel;
+    lblLCHdr: TLabel;
+    lblLoopCount: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -37,6 +38,7 @@ type
     FCleanTask: ITask;
     FCleanups: TObjectList<TSEProcessCleanup>;
     FProcMgr: TSEProcessManager;
+    FStopWatch: TStopWatch;
     function ProcCleanupGet: TSEProcessCleanup;
     procedure ProcCleanupSet(const Value: TSEProcessCleanup);
     function ProcMgrInfoGet: TSEProcessManagerEnvInfo;
@@ -219,8 +221,10 @@ end;
 procedure TDeputyProcMgr.StartCleanupStatus;
 begin
   UpdateTaskStatus;
+  WaitPoll(0);
+  FStopWatch := TStopWatch.StartNew;
   tmrCleanupStatus.Enabled := true;
-  pnlCleanStatus.Visible := true;
+  gpCleanStatus.Visible := true;
 end;
 
 procedure TDeputyProcMgr.StatusBarUpdateMessage(AMsg: string);
@@ -234,7 +238,8 @@ begin
   if FCleanTask.Status = TTaskStatus.Completed then
   begin
     tmrCleanupStatus.Enabled := false;
-    pnlCleanStatus.Visible := false;
+    gpCleanStatus.Visible := false;
+    FStopWatch.Stop;
   end;
 end;
 
@@ -256,12 +261,11 @@ begin
     TTaskStatus.Exception:
       StatusBarUpdateMessage('Exception');
   end;
-
 end;
 
 procedure TDeputyProcMgr.WaitPoll(APollCount: integer);
 begin
-  lblPollCount.Caption := 'Loop Count = ' + APollCount.ToString;
+  LblLoopCount.Caption := APollCount.ToString;
 end;
 
 { TDeputyProcMgrFactory }

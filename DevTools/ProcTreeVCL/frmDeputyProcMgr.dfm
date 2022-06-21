@@ -88,29 +88,82 @@ object DeputyProcMgr: TDeputyProcMgr
       OnClick = btnForceTerminateClick
     end
   end
-  object pnlCleanStatus: TPanel
+  object gpCleanStatus: TGridPanel
     Left = 328
-    Top = 328
+    Top = 240
     Width = 185
     Height = 41
-    Caption = 'pnlCleanStatus'
+    Caption = 'gpCleanStatus'
+    ColumnCollection = <
+      item
+        Value = 50.000000000000000000
+      end
+      item
+        Value = 50.000000000000000000
+      end>
+    ControlCollection = <
+      item
+        Column = 0
+        Control = lblLCHdr
+        Row = 0
+      end
+      item
+        Column = 1
+        Control = lblLoopCount
+        Row = 0
+      end
+      item
+        Column = 1
+        Control = btnAbortCleanup
+        Row = 1
+      end>
+    RowCollection = <
+      item
+        Value = 50.000000000000000000
+      end
+      item
+        Value = 50.000000000000000000
+      end>
     ShowCaption = False
     TabOrder = 3
-    object lblPollCount: TLabel
-      Left = 64
-      Top = 8
-      Width = 66
-      Height = 15
-      Caption = 'lblPollCount'
-    end
-    object btnAbortCleanup: TButton
+    object lblLCHdr: TLabel
       Left = 1
       Top = 1
-      Width = 75
-      Height = 25
+      Width = 92
+      Height = 20
+      Align = alClient
+      Alignment = taRightJustify
+      Caption = 'Loop Count ='
+      ExplicitLeft = 14
+      ExplicitTop = 3
+      ExplicitWidth = 74
+      ExplicitHeight = 15
+    end
+    object lblLoopCount: TLabel
+      Left = 93
+      Top = 1
+      Width = 91
+      Height = 20
+      Align = alClient
+      Caption = 'lblLoopCount'
+      ExplicitLeft = 121
+      ExplicitTop = 3
+      ExplicitWidth = 73
+      ExplicitHeight = 15
+    end
+    object btnAbortCleanup: TButton
+      Left = 93
+      Top = 21
+      Width = 91
+      Height = 19
+      Align = alClient
       Caption = 'Abort Cleanup'
       TabOrder = 0
       OnClick = btnAbortCleanupClick
+      ExplicitLeft = 9
+      ExplicitTop = 16
+      ExplicitWidth = 75
+      ExplicitHeight = 25
     end
   end
   object tmrCleanupStatus: TTimer
