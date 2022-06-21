@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls, SE.ProcMgrUtils,
-  Vcl.CategoryButtons, Vcl.ExtCtrls, System.Threading;
+  Vcl.CategoryButtons, Vcl.ExtCtrls, System.Threading, Generics.Collections;
 
 type
   EDeputyProcMgrCreate = class(Exception);
@@ -33,12 +33,15 @@ type
     FPProcCleanup: TSEProcessCleanup;
     FPProcMgrInfo: TSEProcessManagerEnvInfo;
     FCleanTask: ITask;
+    FCleanups: TObjectList<TSEProcessCleanup>;
     function ProcCleanupGet: TSEProcessCleanup;
     procedure ProcCleanupSet(const Value: TSEProcessCleanup);
     function ProcMgrInfoGet: TSEProcessManagerEnvInfo;
     procedure ProcMgrInfoSet(const Value: TSEProcessManagerEnvInfo);
     procedure ClearLog;
     procedure ClearMemLeak;
+    function AddCleanup(const AProcName: string; const AProcDirectory: string;
+      const AStopCommand: TSEProcessStopCommand): TSEProcessCleanup;
   private
     FProcMgr: TSEProcessManager;
     procedure LogMsg(AMessage: string);
@@ -86,6 +89,13 @@ begin
   // tmrCleanupBegin.Enabled := true;
 end;
 
+function TDeputyProcMgr.AddCleanup(const AProcName, AProcDirectory: string;
+  const AStopCommand: TSEProcessStopCommand): TSEProcessCleanup;
+begin
+result := TSEProcessCleanup.Create(AProcName, AProcDirectory, AStopCommand);
+FCleanups.Add(result);
+end;
+
 procedure TDeputyProcMgr.btnAbortManagerClick(Sender: TObject);
 begin
   FProcMgr.StopManager;
@@ -99,7 +109,7 @@ end;
 procedure TDeputyProcMgr.CleanProcess(const AProcName, AProcDirectory: string;
   const AStopCommand: TSEProcessStopCommand);
 begin
-  ProcCleanup := TSEProcessCleanup.Create(AProcName, AProcDirectory, AStopCommand);
+  ProcCleanup := AddCleanup(AProcName, AProcDirectory, AStopCommand);
   LoadProcessCleanup;
   FCleanTask := TTask.Create(
     procedure
@@ -146,6 +156,7 @@ end;
 procedure TDeputyProcMgr.FormCreate(Sender: TObject);
 begin
   FProcMREW := TMultiReadExclusiveWriteSynchronizer.Create;
+  FCleanups:= TObjectList<TSEProcessCleanup>.Create(true);
   ProcMgrInfo := TSEProcessManagerEnvInfo.Create;
   FProcMgr := TSEProcessManager.Create;
   FProcMgr.OnMessage := LogMsg;
@@ -158,7 +169,7 @@ begin
   FProcMgr.Free;
   FProcMREW.Free;
   FPProcMgrInfo.Free;
-  FPProcCleanup.Free;
+  FCleanups.Free;
 end;
 
 procedure TDeputyProcMgr.LeakCopied(AMessage: string);
