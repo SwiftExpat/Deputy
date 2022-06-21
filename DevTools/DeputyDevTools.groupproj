@@ -9,6 +9,9 @@
         <Projects Include="..\Source\SE.IDE.Deputy.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="C:\Users\Coder\Documents\Embarcadero\Studio\Projects\OSUtils\ShowMessage\ShowMessage.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -35,14 +38,23 @@
     <Target Name="SE_IDE_Deputy:Make">
         <MSBuild Projects="..\Source\SE.IDE.Deputy.dproj" Targets="Make"/>
     </Target>
+    <Target Name="ShowMessage">
+        <MSBuild Projects="C:\Users\Coder\Documents\Embarcadero\Studio\Projects\OSUtils\ShowMessage\ShowMessage.dproj"/>
+    </Target>
+    <Target Name="ShowMessage:Clean">
+        <MSBuild Projects="C:\Users\Coder\Documents\Embarcadero\Studio\Projects\OSUtils\ShowMessage\ShowMessage.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="ShowMessage:Make">
+        <MSBuild Projects="C:\Users\Coder\Documents\Embarcadero\Studio\Projects\OSUtils\ShowMessage\ShowMessage.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="ProcTreeVCL;SE_IDE_Deputy"/>
+        <CallTarget Targets="ProcTreeVCL;SE_IDE_Deputy;ShowMessage"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="ProcTreeVCL:Clean;SE_IDE_Deputy:Clean"/>
+        <CallTarget Targets="ProcTreeVCL:Clean;SE_IDE_Deputy:Clean;ShowMessage:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="ProcTreeVCL:Make;SE_IDE_Deputy:Make"/>
+        <CallTarget Targets="ProcTreeVCL:Make;SE_IDE_Deputy:Make;ShowMessage:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

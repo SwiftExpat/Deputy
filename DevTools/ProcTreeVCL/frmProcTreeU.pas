@@ -7,6 +7,9 @@ uses
   System.Classes, Vcl.Graphics, Winapi.TlHelp32, SE.ProcMgrUtils,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls;
 
+const
+  proc_dir = 'C:\Data\GitHub\SwiftExpat\RunTime-ToolKit\RunTime-ToolKit\Samples\vcl\Win32\Debug';
+
 type
   TfrmProcTree = class(TForm)
     Panel1: TPanel;
@@ -14,14 +17,16 @@ type
     btnClose: TButton;
     Edit1: TEdit;
     btnKill: TButton;
+    btnForm: TButton;
     procedure btnCloseClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure btnKillClick(Sender: TObject);
+    procedure btnFormClick(Sender: TObject);
   private
     FProcMgr: TSEProcessManager;
     procedure LogMsg(AMessage: string);
-    function FullProcName: string;
+    function ProcName: string;
   public
     { Public declarations }
   end;
@@ -31,7 +36,7 @@ var
 
 implementation
 
-uses System.IOUtils;
+uses System.IOUtils, frmDeputyProcMgr;
 
 {$R *.dfm}
 
@@ -39,18 +44,26 @@ procedure TfrmProcTree.btnCloseClick(Sender: TObject);
 var
   lco: TSEProcessCleanup;
 begin
-  lco := TSEProcessCleanup.Create(FullProcName, TSEProcessStopCommand.tseProcStopClose);
-  FProcMgr.ProcessCleanup(lco);
+  lco := TSEProcessCleanup.Create(ProcName, proc_dir, TSEProcessStopCommand.tseProcStopClose);
+  //FProcMgr.ProcessCleanup(lco);
+  PostMessage(Memo1.Handle, WM_Paste, 0, 0);
+end;
 
+procedure TfrmProcTree.btnFormClick(Sender: TObject);
+var
+  fmgr: TDeputyProcMgr;
+begin
+  fmgr := TDeputyProcMgrFactory.DeputyProcMgr;
+  fmgr.Show;
+  fmgr.CleanProcess(ProcName, proc_dir, TSEProcessStopCommand.tseProcStopClose);
 end;
 
 procedure TfrmProcTree.btnKillClick(Sender: TObject);
 var
   lco: TSEProcessCleanup;
 begin
-  lco := TSEProcessCleanup.Create(FullProcName, TSEProcessStopCommand.tseProcStopKill);
-  FProcMgr.ProcessCleanup(lco);
-
+  lco := TSEProcessCleanup.Create(ProcName, proc_dir, TSEProcessStopCommand.tseProcStopKill);
+  //FProcMgr.ProcessCleanup(lco);
 end;
 
 procedure TfrmProcTree.FormCreate(Sender: TObject);
@@ -64,11 +77,9 @@ begin
   FProcMgr.Free;
 end;
 
-function TfrmProcTree.FullProcName: string;
-const
-  proc_dir = 'C:\Data\GitHub\SwiftExpat\RunTime-ToolKit\RunTime-ToolKit\Samples\vcl\Win32\Debug';
+function TfrmProcTree.ProcName: string;
 begin
-  result := TPath.Combine(proc_dir, Edit1.Text);
+  result := Edit1.Text;
 
 end;
 
