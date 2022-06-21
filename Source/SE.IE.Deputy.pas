@@ -39,7 +39,8 @@ uses System.Classes, ToolsAPI, VCL.Dialogs, System.SysUtils, System.TypInfo, Win
   System.IOUtils, Generics.Collections, System.DateUtils, System.JSON,
   VCL.Forms, VCL.Menus, System.Win.Registry, ShellApi, VCL.Controls,
   DW.OTA.Wizard, DW.OTA.IDENotifierOTAWizard, DW.OTA.Helpers, DW.Menus.Helpers, DW.OTA.ProjectManagerMenu,
-  DW.OTA.Notifiers, System.Net.HttpClientComponent, System.Net.URLClient, System.Net.HttpClient, System.Zip;
+  DW.OTA.Notifiers, System.Net.HttpClientComponent, System.Net.URLClient, System.Net.HttpClient, System.Zip,
+  frmDeputyProcMgr;
 
 type
 
@@ -193,32 +194,13 @@ type
     procedure NagLess(ANagCount: integer);
   end;
 
-  TSEIAProcessManagerUtil = class
-  strict private
-    FBDSId: cardinal;
-    FActions: TStringList;
-    procedure SetBDSId;
-    procedure ActionAdd(const AMessage: string);
-    function TerminateProcessByID(AProcessID: cardinal): boolean;
-  private
-    function ImageFileName(const PE: TProcessEntry32): string;
-    function ProcessKill(const AProcEntry: TProcessEntry32): boolean;
-    procedure ProcessEval(const AProcEntry: TProcessEntry32; AProjectOptions: IOTAProjectOptions);
-    function IsRunning(AProjectOptions: IOTAProjectOptions): boolean;
-  public
-    function ProcessContinue(AProjectOptions: IOTAProjectOptions): boolean;
-    property Actions: TStringList read FActions;
-    constructor Create;
-    destructor Destroy; override;
-  end;
-
   TSEIXDeputyWizard = class;
 
   TSEIADebugNotifier = class(TDebuggerNotifier)
   private
     FWizard: TSEIXDeputyWizard;
   strict private
-    FProcMgr: TSEIAProcessManagerUtil;
+    FProcMgr: TDeputyProcMgr;
     FNagCounter: TSEIXNagCounter;
     procedure CheckNagCount;
   public
@@ -242,7 +224,7 @@ type
     nm_wizard_display = 'RunTime ToolKit - Deputy';
   strict private
   FIDEStarted:boolean;
-    FProcMgr: TSEIAProcessManagerUtil;
+    FProcMgr: TDeputyProcMgr;
     FToolsMenuRootItem: TMenuItem;
     FSettings: TSEIXSettings;
     FRTTKCheck: TSERTTKCheck;
@@ -304,7 +286,6 @@ begin
   FIDEStarted := false;
   FMenuItems := TDictionary<string, TMenuItem>.Create;
   FDebugNotifier := TSEIADebugNotifier.Create(self);
-  FProcMgr := TSEIAProcessManagerUtil.Create;
   FRTTKCheck := TSERTTKCheck.Create;
   FNagCounter := TSEIXNagCounter.Create(0, 7);
   FSettings := TSEIXSettings.Create('SOFTWARE\SwiftExpat\Deputy');
@@ -316,7 +297,6 @@ begin
   FDebugNotifier.RemoveNotifier;
   FSettings.Free;
   FMenuItems.Free;
-  FProcMgr.Free;
   FRTTKCheck.Free;
   FNagCounter.Free;
   FWizardInfo.Free;
@@ -389,8 +369,8 @@ begin
 {$ENDIF}
   if FSettings.KillProcActive and (AIsCodeInsight = false) then
   begin
-    ACancel := Not(FProcMgr.ProcessContinue(AProject.ProjectOptions));
-    MessagesAdd(FProcMgr.Actions);
+    ACancel := Not(FProcMgr.IDECancel);//(AProject.ProjectOptions));
+   // MessagesAdd(FProcMgr.Actions);
 {$IFDEF GITHUBEVAL}
     if FNagCounter.NagUser then
       FNagCounter.NagLess(NagCountReached);
@@ -574,8 +554,8 @@ begin
 {$ENDIF}
   if FWizard.Settings.KillProcActive then
   begin
-    result := FProcMgr.ProcessContinue(Project.ProjectOptions);
-    FWizard.MessagesAdd(FProcMgr.Actions);
+    result := FProcMgr.IDECancel;//(Project.ProjectOptions);
+    //FWizard.MessagesAdd(FProcMgr.Actions);
   end
   else
     result := true;
@@ -593,7 +573,7 @@ constructor TSEIADebugNotifier.Create(const AWizard: TSEIXDeputyWizard);
 begin
   inherited Create;
   FWizard := AWizard;
-  FProcMgr := TSEIAProcessManagerUtil.Create;
+  //FProcMgr := TSEIAProcessManagerUtil.Create;
   FNagCounter := TSEIXNagCounter.Create(0, 4);
 end;
 
@@ -603,147 +583,6 @@ begin
   inherited;
 end;
 
-{ TSEIAProcessManagerUtil }
-
-constructor TSEIAProcessManagerUtil.Create;
-begin
-  SetBDSId;
-  FActions := TStringList.Create;
-end;
-
-destructor TSEIAProcessManagerUtil.Destroy;
-begin
-  FActions.Free;
-  inherited;
-end;
-
-function TSEIAProcessManagerUtil.ImageFileName(const PE: TProcessEntry32): string;
-var // https://stackoverflow.com/questions/59444919/delphi-how-can-i-get-list-of-running-applications-with-starting-path
-  // szImageFileName: array [0 .. MAX_PATH] of Char;
-  hProcess: THandle;
-  rLength: cardinal;
-begin
-  result := PE.szExeFile; // fallback in case the other API calls fail
-  hProcess := OpenProcess(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ, false, PE.th32ProcessID);
-  if (hProcess = 0) then
-    exit;
-  // if (GetProcessImageFileName(hProcess, @szImageFileName[0], MAX_PATH) > 0) then
-  // result := szImageFileName;
-  rLength := 512; // allocation buffer
-  SetLength(result, rLength + 1); // for trailing space
-  if QueryFullProcessImageName(hProcess, 0, @result[1], rLength) then
-    SetLength(result, rLength)
-  else
-    result := '';
-  CloseHandle(hProcess);
-
-end;
-
-function TSEIAProcessManagerUtil.IsRunning(AProjectOptions: IOTAProjectOptions): boolean;
-var
-  hSnapShot: THandle;
-  PE: TProcessEntry32;
-  tn: string;
-begin
-  hSnapShot := CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-  try
-    try
-      tn := TPath.GetFileName(AProjectOptions.TargetName);
-      if (hSnapShot <> THandle(-1)) then
-      begin
-        PE.dwSize := SizeOf(TProcessEntry32);
-        if (Process32First(hSnapShot, PE)) then
-          repeat // look for match by name
-            if (PE.szExeFile = tn) then
-              ProcessEval(PE, AProjectOptions);
-          until (Process32Next(hSnapShot, PE) = false);
-      end;
-      result := true;
-    except
-      on E: Exception do
-        raise Exception.Create('failed snapshot' + E.Message);
-    end;
-  finally
-    CloseHandle(hSnapShot);
-  end;
-end;
-
-procedure TSEIAProcessManagerUtil.ActionAdd(const AMessage: string);
-begin
-  FActions.Add(AMessage)
-end;
-
-function TSEIAProcessManagerUtil.ProcessContinue(AProjectOptions: IOTAProjectOptions): boolean;
-var
-  s: TDateTime;
-begin
-  s := now;
-  FActions.Clear; // is this slow?
-  result := TFile.Exists(AProjectOptions.TargetName);
-  if result then // file exists, then inspect the proc tree
-  begin
-    try
-      ActionAdd('File Exists, begin eval proc tree. T=' + MilliSecondsBetween(s, now).ToString);
-      result := IsRunning(AProjectOptions);
-      ActionAdd('Termination complete. T=' + MilliSecondsBetween(s, now).ToString);
-    except
-      on E: Exception do
-        result := true; // allow the IDE to do what it did before
-    end;
-  end
-  else // file does not exist, contiue with processing
-  begin
-    result := true;
-    ActionAdd('File not found, continue');
-  end;
-end;
-
-procedure TSEIAProcessManagerUtil.ProcessEval(const AProcEntry: TProcessEntry32; AProjectOptions: IOTAProjectOptions);
-begin
-  if AProcEntry.th32ParentProcessID = FBDSId then
-  begin
-    ActionAdd('Process matched by ID ');
-    ProcessKill(AProcEntry)
-  end
-  else if ImageFileName(AProcEntry) = AProjectOptions.TargetName
-  then { check if this exe is the same path as the one we are trying to build }
-  begin
-    ActionAdd('Process matched by ImageName ');
-    ProcessKill(AProcEntry)
-  end
-  else
-    ActionAdd('Process not matched ');
-end;
-
-function TSEIAProcessManagerUtil.ProcessKill(const AProcEntry: TProcessEntry32): boolean;
-begin
-  result := TerminateProcessByID(AProcEntry.th32ProcessID);
-  if result then
-    ActionAdd('Process killed ' + AProcEntry.th32ProcessID.ToString)
-  else
-    ActionAdd('Process not killed ' + AProcEntry.th32ProcessID.ToString);
-end;
-
-procedure TSEIAProcessManagerUtil.SetBDSId;
-begin
-  FBDSId := GetCurrentProcessID;
-  if FBDSId = 0 then
-    raise Exception.Create('Could not get proc id');
-end;
-
-function TSEIAProcessManagerUtil.TerminateProcessByID(AProcessID: cardinal): boolean;
-var { https://stackoverflow.com/questions/65286513/how-to-terminate-a-process-tree-delphi }
-  hProcess: THandle;
-begin
-  result := false;
-  hProcess := OpenProcess(PROCESS_TERMINATE, false, AProcessID);
-  if hProcess > 0 then
-    try
-      result := Win32Check(TerminateProcess(hProcess, 0));
-    finally
-      CloseHandle(hProcess);
-    end;
-end;
 
 { TSEIXSettings }
 

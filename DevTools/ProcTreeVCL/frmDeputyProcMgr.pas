@@ -25,12 +25,15 @@ type
     gpCleanStatus: TGridPanel;
     lblLCHdr: TLabel;
     lblLoopCount: TLabel;
+    Label1: TLabel;
+    lblElapsedMS: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure btnAbortCleanupClick(Sender: TObject);
     procedure btnForceTerminateClick(Sender: TObject);
     procedure tmrCleanupStatusTimer(Sender: TObject);
+    procedure FormShow(Sender: TObject);
   strict private
     FProcMREW: TMultiReadExclusiveWriteSynchronizer;
     FPProcCleanup: TSEProcessCleanup;
@@ -60,11 +63,16 @@ type
     procedure CleanProcess(const AProcName: string; const AProcDirectory: string;
       const AStopCommand: TSEProcessStopCommand);
     procedure LoadProcessCleanup;
+    function IDECancel:boolean;
   end;
 
   TDeputyProcMgrFactory = class
   public
     class function DeputyProcMgr: TDeputyProcMgr;
+    class procedure ShowProcMgr;
+    class procedure HideProcMgr;
+    class procedure CleanProcess(const AProcName: string; const AProcDirectory: string;
+      const AStopCommand: TSEProcessStopCommand);
   end;
 
 implementation
@@ -178,6 +186,16 @@ begin
   FCleanups.Free;
 end;
 
+procedure TDeputyProcMgr.FormShow(Sender: TObject);
+begin
+  pcWorkarea.ActivePage := tsStatus;
+end;
+
+function TDeputyProcMgr.IDECancel: boolean;
+begin
+
+end;
+
 procedure TDeputyProcMgr.LeakCopied(AMessage: string);
 begin
   ClearMemLeak;
@@ -235,6 +253,7 @@ end;
 procedure TDeputyProcMgr.tmrCleanupStatusTimer(Sender: TObject);
 begin
   UpdateTaskStatus;
+  lblElapsedMS.Caption := FStopWatch.ElapsedMilliseconds.ToString;
   if FCleanTask.Status = TTaskStatus.Completed then
   begin
     tmrCleanupStatus.Enabled := false;
@@ -265,10 +284,20 @@ end;
 
 procedure TDeputyProcMgr.WaitPoll(APollCount: integer);
 begin
-  LblLoopCount.Caption := APollCount.ToString;
+  lblLoopCount.Caption := APollCount.ToString;
 end;
 
 { TDeputyProcMgrFactory }
+
+class procedure TDeputyProcMgrFactory.CleanProcess(const AProcName, AProcDirectory: string;
+const AStopCommand: TSEProcessStopCommand);
+var
+  frmMgr: TDeputyProcMgr;
+begin
+  frmMgr := DeputyProcMgr;
+  frmMgr.Show;
+  frmMgr.CleanProcess(AProcName, AProcDirectory, AStopCommand);
+end;
 
 class function TDeputyProcMgrFactory.DeputyProcMgr: TDeputyProcMgr;
 var
@@ -293,6 +322,16 @@ begin
       raise EDeputyProcMgrCreate.Create('Create failed Deputy Proc Manager form');
     end;
   end;
+end;
+
+class procedure TDeputyProcMgrFactory.HideProcMgr;
+begin
+  DeputyProcMgr.Hide;
+end;
+
+class procedure TDeputyProcMgrFactory.ShowProcMgr;
+begin
+  DeputyProcMgr.Show;
 end;
 
 end.
