@@ -12,28 +12,31 @@ type
 
   TDeputyProcMgr = class(TForm)
     memoLeak: TMemo;
-    StatusBar1: TStatusBar;
+    sbMain: TStatusBar;
     lbMgrParams: TListBox;
     lbMgrStatus: TListBox;
     pcWorkarea: TPageControl;
     tsParameters: TTabSheet;
     tsStatus: TTabSheet;
     FlowPanel1: TFlowPanel;
-    btnAbortManager: TButton;
+    btnAbortCleanup: TButton;
     btnForceTerminate: TButton;
-    tmrCleanupBegin: TTimer;
+    tmrCleanupStatus: TTimer;
+    pnlCleanStatus: TPanel;
+    lblPollCount: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure btnAbortManagerClick(Sender: TObject);
+    procedure btnAbortCleanupClick(Sender: TObject);
     procedure btnForceTerminateClick(Sender: TObject);
-    procedure tmrCleanupBeginTimer(Sender: TObject);
+    procedure tmrCleanupStatusTimer(Sender: TObject);
   strict private
     FProcMREW: TMultiReadExclusiveWriteSynchronizer;
     FPProcCleanup: TSEProcessCleanup;
     FPProcMgrInfo: TSEProcessManagerEnvInfo;
     FCleanTask: ITask;
     FCleanups: TObjectList<TSEProcessCleanup>;
+    FProcMgr: TSEProcessManager;
     function ProcCleanupGet: TSEProcessCleanup;
     procedure ProcCleanupSet(const Value: TSEProcessCleanup);
     function ProcMgrInfoGet: TSEProcessManagerEnvInfo;
@@ -42,14 +45,15 @@ type
     procedure ClearMemLeak;
     function AddCleanup(const AProcName: string; const AProcDirectory: string;
       const AStopCommand: TSEProcessStopCommand): TSEProcessCleanup;
+    procedure StatusBarUpdateMessage(AMsg: string);
+    procedure UpdateTaskStatus;
+    procedure StartCleanupStatus;
   private
-    FProcMgr: TSEProcessManager;
     procedure LogMsg(AMessage: string);
     procedure LeakCopied(AMessage: string);
     procedure WaitPoll(APollCount: integer);
     property ProcCleanup: TSEProcessCleanup read ProcCleanupGet write ProcCleanupSet;
     property ProcMgrInfo: TSEProcessManagerEnvInfo read ProcMgrInfoGet write ProcMgrInfoSet;
-
   public
     procedure CleanProcess(const AProcName: string; const AProcDirectory: string;
       const AStopCommand: TSEProcessStopCommand);
@@ -86,17 +90,17 @@ begin
     lbMgrParams.Items.Add('Close Leak Window')
   else
     lbMgrParams.Items.Add('Leak Window Shown');
-  // tmrCleanupBegin.Enabled := true;
+
 end;
 
-function TDeputyProcMgr.AddCleanup(const AProcName, AProcDirectory: string;
-  const AStopCommand: TSEProcessStopCommand): TSEProcessCleanup;
+function TDeputyProcMgr.AddCleanup(const AProcName, AProcDirectory: string; const AStopCommand: TSEProcessStopCommand)
+  : TSEProcessCleanup;
 begin
-result := TSEProcessCleanup.Create(AProcName, AProcDirectory, AStopCommand);
-FCleanups.Add(result);
+  result := TSEProcessCleanup.Create(AProcName, AProcDirectory, AStopCommand);
+  FCleanups.Add(result);
 end;
 
-procedure TDeputyProcMgr.btnAbortManagerClick(Sender: TObject);
+procedure TDeputyProcMgr.btnAbortCleanupClick(Sender: TObject);
 begin
   FProcMgr.StopManager;
 end;
@@ -114,28 +118,28 @@ begin
   FCleanTask := TTask.Create(
     procedure
     var
-      ExceptionPtr : Pointer;
-      exStr:string;
+      ExceptionPtr: Pointer;
+      exStr: string;
     begin
       try
         FProcMgr.AssignMgrInfo(ProcMgrInfo);
         FProcMgr.AssignProcCleanup(ProcCleanup);
         FProcMgr.ProcessCleanup;
       except
-      begin
-        ExceptionPtr := AcquireExceptionObject;
-        exStr :=TObject(ExceptionPtr).ToString;
-        ReleaseExceptionObject;
-        TThread.Queue(TThread.CurrentThread,
-          procedure
-          begin
+        begin
+          ExceptionPtr := AcquireExceptionObject;
+          exStr := TObject(ExceptionPtr).ToString;
+          ReleaseExceptionObject;
+          TThread.Queue(TThread.CurrentThread,
+            procedure
+            begin
               LogMsg(exStr);
-          end);
+            end);
+        end;
       end;
-    end;
-  end);
+    end);
+  StartCleanupStatus;
   FCleanTask.Start;
-
 end;
 
 procedure TDeputyProcMgr.ClearLog;
@@ -156,7 +160,7 @@ end;
 procedure TDeputyProcMgr.FormCreate(Sender: TObject);
 begin
   FProcMREW := TMultiReadExclusiveWriteSynchronizer.Create;
-  FCleanups:= TObjectList<TSEProcessCleanup>.Create(true);
+  FCleanups := TObjectList<TSEProcessCleanup>.Create(true);
   ProcMgrInfo := TSEProcessManagerEnvInfo.Create;
   FProcMgr := TSEProcessManager.Create;
   FProcMgr.OnMessage := LogMsg;
@@ -212,17 +216,52 @@ begin
   FProcMREW.EndWrite;
 end;
 
-procedure TDeputyProcMgr.tmrCleanupBeginTimer(Sender: TObject);
+procedure TDeputyProcMgr.StartCleanupStatus;
 begin
-  tmrCleanupBegin.Enabled := false;
-  FProcMgr.AssignMgrInfo(ProcMgrInfo);
-  FProcMgr.AssignProcCleanup(ProcCleanup);
-  FProcMgr.ProcessCleanup; // start the thread
+  UpdateTaskStatus;
+  tmrCleanupStatus.Enabled := true;
+  pnlCleanStatus.Visible := true;
+end;
+
+procedure TDeputyProcMgr.StatusBarUpdateMessage(AMsg: string);
+begin
+  sbMain.Panels[0].Text := AMsg;
+end;
+
+procedure TDeputyProcMgr.tmrCleanupStatusTimer(Sender: TObject);
+begin
+  UpdateTaskStatus;
+  if FCleanTask.Status = TTaskStatus.Completed then
+  begin
+    tmrCleanupStatus.Enabled := false;
+    pnlCleanStatus.Visible := false;
+  end;
+end;
+
+procedure TDeputyProcMgr.UpdateTaskStatus;
+begin
+  case FCleanTask.Status of
+    TTaskStatus.Created:
+      StatusBarUpdateMessage('Created');
+    TTaskStatus.WaitingToRun:
+      StatusBarUpdateMessage('Waiting to Run');
+    TTaskStatus.Running:
+      StatusBarUpdateMessage('Running');
+    TTaskStatus.Completed:
+      StatusBarUpdateMessage('Completed');
+    TTaskStatus.WaitingForChildren:
+      StatusBarUpdateMessage('Waiting for Children');
+    TTaskStatus.Canceled:
+      StatusBarUpdateMessage('Canceled');
+    TTaskStatus.Exception:
+      StatusBarUpdateMessage('Exception');
+  end;
+
 end;
 
 procedure TDeputyProcMgr.WaitPoll(APollCount: integer);
 begin
-  LogMsg(APollCount.ToString);
+  lblPollCount.Caption := 'Loop Count = ' + APollCount.ToString;
 end;
 
 { TDeputyProcMgrFactory }

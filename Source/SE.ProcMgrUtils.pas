@@ -86,7 +86,7 @@ type
   public
     function FindMainWindow(const APID: DWord): DWord;
     function FindLeakMsgWindow(const APID: DWord): DWord;
-    procedure ProcessCleanup; // (const ACleanup: TSEProcessCleanup);
+    procedure ProcessCleanup;
     property Actions: TStringList read FActions;
     destructor Destroy; override;
     procedure StopManager;

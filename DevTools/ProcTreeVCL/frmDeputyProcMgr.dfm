@@ -14,7 +14,7 @@ object DeputyProcMgr: TDeputyProcMgr
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   TextHeight = 15
-  object StatusBar1: TStatusBar
+  object sbMain: TStatusBar
     Left = 0
     Top = 615
     Width = 815
@@ -78,29 +78,45 @@ object DeputyProcMgr: TDeputyProcMgr
     Align = alTop
     Caption = 'FlowPanel1'
     TabOrder = 2
-    object btnAbortManager: TButton
+    object btnForceTerminate: TButton
       Left = 1
       Top = 1
       Width = 75
       Height = 25
-      Caption = 'Abort Deputy'
-      TabOrder = 0
-      OnClick = btnAbortManagerClick
-    end
-    object btnForceTerminate: TButton
-      Left = 76
-      Top = 1
-      Width = 75
-      Height = 25
       Caption = 'Force Terminate'
-      TabOrder = 1
+      TabOrder = 0
       OnClick = btnForceTerminateClick
     end
   end
-  object tmrCleanupBegin: TTimer
+  object pnlCleanStatus: TPanel
+    Left = 328
+    Top = 328
+    Width = 185
+    Height = 41
+    Caption = 'pnlCleanStatus'
+    ShowCaption = False
+    TabOrder = 3
+    object lblPollCount: TLabel
+      Left = 64
+      Top = 8
+      Width = 66
+      Height = 15
+      Caption = 'lblPollCount'
+    end
+    object btnAbortCleanup: TButton
+      Left = 1
+      Top = 1
+      Width = 75
+      Height = 25
+      Caption = 'Abort Cleanup'
+      TabOrder = 0
+      OnClick = btnAbortCleanupClick
+    end
+  end
+  object tmrCleanupStatus: TTimer
     Enabled = False
-    Interval = 10
-    OnTimer = tmrCleanupBeginTimer
+    Interval = 100
+    OnTimer = tmrCleanupStatusTimer
     Left = 400
     Top = 328
   end
