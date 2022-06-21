@@ -24,8 +24,6 @@ object DeputyProcMgr: TDeputyProcMgr
         Text = 'Idle'
         Width = 50
       end>
-    ExplicitTop = 405
-    ExplicitWidth = 618
   end
   object pcWorkarea: TPageControl
     Left = 0
@@ -35,10 +33,6 @@ object DeputyProcMgr: TDeputyProcMgr
     ActivePage = tsStatus
     Align = alClient
     TabOrder = 1
-    ExplicitLeft = 176
-    ExplicitTop = 144
-    ExplicitWidth = 289
-    ExplicitHeight = 193
     object tsParameters: TTabSheet
       Caption = 'Parameters'
       object lbMgrParams: TListBox
@@ -49,8 +43,6 @@ object DeputyProcMgr: TDeputyProcMgr
         Align = alClient
         ItemHeight = 15
         TabOrder = 0
-        ExplicitWidth = 121
-        ExplicitHeight = 308
       end
     end
     object tsStatus: TTabSheet
@@ -66,8 +58,6 @@ object DeputyProcMgr: TDeputyProcMgr
           'memoLeak')
         ScrollBars = ssBoth
         TabOrder = 0
-        ExplicitWidth = 618
-        ExplicitHeight = 308
       end
       object lbMgrStatus: TListBox
         Left = 0
@@ -77,8 +67,6 @@ object DeputyProcMgr: TDeputyProcMgr
         Align = alBottom
         ItemHeight = 15
         TabOrder = 1
-        ExplicitTop = 308
-        ExplicitWidth = 618
       end
     end
   end
@@ -90,9 +78,6 @@ object DeputyProcMgr: TDeputyProcMgr
     Align = alTop
     Caption = 'FlowPanel1'
     TabOrder = 2
-    ExplicitLeft = 312
-    ExplicitTop = 272
-    ExplicitWidth = 185
     object btnAbortManager: TButton
       Left = 1
       Top = 1
