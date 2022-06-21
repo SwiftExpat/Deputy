@@ -13,6 +13,7 @@ object DeputyProcMgr: TDeputyProcMgr
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  OnShow = FormShow
   TextHeight = 15
   object sbMain: TStatusBar
     Left = 0
@@ -30,7 +31,7 @@ object DeputyProcMgr: TDeputyProcMgr
     Top = 41
     Width = 815
     Height = 574
-    ActivePage = tsStatus
+    ActivePage = tsParameters
     Align = alClient
     TabOrder = 1
     object tsParameters: TTabSheet
@@ -92,7 +93,7 @@ object DeputyProcMgr: TDeputyProcMgr
     Left = 328
     Top = 240
     Width = 185
-    Height = 41
+    Height = 64
     Caption = 'gpCleanStatus'
     ColumnCollection = <
       item
@@ -115,14 +116,27 @@ object DeputyProcMgr: TDeputyProcMgr
       item
         Column = 1
         Control = btnAbortCleanup
+        Row = 2
+      end
+      item
+        Column = 0
+        Control = Label1
+        Row = 1
+      end
+      item
+        Column = 1
+        Control = lblElapsedMS
         Row = 1
       end>
     RowCollection = <
       item
-        Value = 50.000000000000000000
+        Value = 27.028124982687920000
       end
       item
-        Value = 50.000000000000000000
+        Value = 31.804834819149520000
+      end
+      item
+        Value = 41.167040198162570000
       end>
     ShowCaption = False
     TabOrder = 3
@@ -130,7 +144,7 @@ object DeputyProcMgr: TDeputyProcMgr
       Left = 1
       Top = 1
       Width = 92
-      Height = 20
+      Height = 17
       Align = alClient
       Alignment = taRightJustify
       Caption = 'Loop Count ='
@@ -143,7 +157,7 @@ object DeputyProcMgr: TDeputyProcMgr
       Left = 93
       Top = 1
       Width = 91
-      Height = 20
+      Height = 17
       Align = alClient
       Caption = 'lblLoopCount'
       ExplicitLeft = 121
@@ -153,9 +167,9 @@ object DeputyProcMgr: TDeputyProcMgr
     end
     object btnAbortCleanup: TButton
       Left = 93
-      Top = 21
+      Top = 37
       Width = 91
-      Height = 19
+      Height = 26
       Align = alClient
       Caption = 'Abort Cleanup'
       TabOrder = 0
@@ -164,6 +178,28 @@ object DeputyProcMgr: TDeputyProcMgr
       ExplicitTop = 16
       ExplicitWidth = 75
       ExplicitHeight = 25
+    end
+    object Label1: TLabel
+      Left = 1
+      Top = 18
+      Width = 92
+      Height = 19
+      Align = alClient
+      Alignment = taRightJustify
+      Caption = 'Elapsed ms = '
+      ExplicitLeft = 20
+      ExplicitWidth = 73
+      ExplicitHeight = 15
+    end
+    object lblElapsedMS: TLabel
+      Left = 93
+      Top = 18
+      Width = 91
+      Height = 19
+      Align = alClient
+      Caption = '0'
+      ExplicitWidth = 6
+      ExplicitHeight = 15
     end
   end
   object tmrCleanupStatus: TTimer
