@@ -14,7 +14,7 @@ object DeputyProcMgr: TDeputyProcMgr
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   TextHeight = 15
-  object StatusBar1: TStatusBar
+  object sbMain: TStatusBar
     Left = 0
     Top = 615
     Width = 815
@@ -78,29 +78,98 @@ object DeputyProcMgr: TDeputyProcMgr
     Align = alTop
     Caption = 'FlowPanel1'
     TabOrder = 2
-    object btnAbortManager: TButton
+    object btnForceTerminate: TButton
       Left = 1
       Top = 1
       Width = 75
       Height = 25
-      Caption = 'Abort Deputy'
-      TabOrder = 0
-      OnClick = btnAbortManagerClick
-    end
-    object btnForceTerminate: TButton
-      Left = 76
-      Top = 1
-      Width = 75
-      Height = 25
       Caption = 'Force Terminate'
-      TabOrder = 1
+      TabOrder = 0
       OnClick = btnForceTerminateClick
     end
   end
-  object tmrCleanupBegin: TTimer
+  object gpCleanStatus: TGridPanel
+    Left = 328
+    Top = 240
+    Width = 185
+    Height = 41
+    Caption = 'gpCleanStatus'
+    ColumnCollection = <
+      item
+        Value = 50.000000000000000000
+      end
+      item
+        Value = 50.000000000000000000
+      end>
+    ControlCollection = <
+      item
+        Column = 0
+        Control = lblLCHdr
+        Row = 0
+      end
+      item
+        Column = 1
+        Control = lblLoopCount
+        Row = 0
+      end
+      item
+        Column = 1
+        Control = btnAbortCleanup
+        Row = 1
+      end>
+    RowCollection = <
+      item
+        Value = 50.000000000000000000
+      end
+      item
+        Value = 50.000000000000000000
+      end>
+    ShowCaption = False
+    TabOrder = 3
+    object lblLCHdr: TLabel
+      Left = 1
+      Top = 1
+      Width = 92
+      Height = 20
+      Align = alClient
+      Alignment = taRightJustify
+      Caption = 'Loop Count ='
+      ExplicitLeft = 14
+      ExplicitTop = 3
+      ExplicitWidth = 74
+      ExplicitHeight = 15
+    end
+    object lblLoopCount: TLabel
+      Left = 93
+      Top = 1
+      Width = 91
+      Height = 20
+      Align = alClient
+      Caption = 'lblLoopCount'
+      ExplicitLeft = 121
+      ExplicitTop = 3
+      ExplicitWidth = 73
+      ExplicitHeight = 15
+    end
+    object btnAbortCleanup: TButton
+      Left = 93
+      Top = 21
+      Width = 91
+      Height = 19
+      Align = alClient
+      Caption = 'Abort Cleanup'
+      TabOrder = 0
+      OnClick = btnAbortCleanupClick
+      ExplicitLeft = 9
+      ExplicitTop = 16
+      ExplicitWidth = 75
+      ExplicitHeight = 25
+    end
+  end
+  object tmrCleanupStatus: TTimer
     Enabled = False
-    Interval = 10
-    OnTimer = tmrCleanupBeginTimer
+    Interval = 100
+    OnTimer = tmrCleanupStatusTimer
     Left = 400
     Top = 328
   end

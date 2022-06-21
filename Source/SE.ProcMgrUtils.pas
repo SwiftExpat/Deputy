@@ -86,7 +86,7 @@ type
   public
     function FindMainWindow(const APID: DWord): DWord;
     function FindLeakMsgWindow(const APID: DWord): DWord;
-    procedure ProcessCleanup; // (const ACleanup: TSEProcessCleanup);
+    procedure ProcessCleanup;
     property Actions: TStringList read FActions;
     destructor Destroy; override;
     procedure StopManager;
@@ -257,7 +257,6 @@ begin
       inc(pc);
       if Assigned(FWaitPoll) then
         FWaitPoll(pc);
-      LogMsg('Exiting ' + pc.ToString);
       if LeakWindowShowing(PID) then
       begin
         LogMsg('Leak window showing');
@@ -357,7 +356,6 @@ procedure TSEProcessManager.ProcessCleanup;
 begin
   FManagerStopped := false;
 
-  // FCleanup := ACleanup;
   ProcListLoad;
   if FCleanup.ProcList.Count = 0 then
   begin
