@@ -35,17 +35,12 @@ type
     procedure tmrCleanupStatusTimer(Sender: TObject);
     procedure FormShow(Sender: TObject);
   strict private
-    FProcMREW: TMultiReadExclusiveWriteSynchronizer;
-    FPProcCleanup: TSEProcessCleanup;
-    FPProcMgrInfo: TSEProcessManagerEnvInfo;
+    FProcCleanup: TSEProcessCleanup;
+    FProcMgrInfo: TSEProcessManagerEnvInfo;
     FCleanTask: ITask;
     FCleanups: TObjectList<TSEProcessCleanup>;
     FProcMgr: TSEProcessManager;
     FStopWatch: TStopWatch;
-    function ProcCleanupGet: TSEProcessCleanup;
-    procedure ProcCleanupSet(const Value: TSEProcessCleanup);
-    function ProcMgrInfoGet: TSEProcessManagerEnvInfo;
-    procedure ProcMgrInfoSet(const Value: TSEProcessManagerEnvInfo);
     procedure ClearLog;
     procedure ClearMemLeak;
     function AddCleanup(const AProcName: string; const AProcDirectory: string;
@@ -58,8 +53,8 @@ type
     procedure LogMsg(AMessage: string);
     procedure LeakCopied(AMessage: string);
     procedure WaitPoll(APollCount: integer);
-    property ProcCleanup: TSEProcessCleanup read ProcCleanupGet write ProcCleanupSet;
-    property ProcMgrInfo: TSEProcessManagerEnvInfo read ProcMgrInfoGet write ProcMgrInfoSet;
+    property ProcCleanup: TSEProcessCleanup read FProcCleanup write FProcCleanup;
+    property ProcMgrInfo: TSEProcessManagerEnvInfo read FProcMgrInfo write FProcMgrInfo;
   public
     procedure CleanProcess(const AProcName: string; const AProcDirectory: string;
       const AStopCommand: TSEProcessStopCommand);
@@ -188,7 +183,6 @@ end;
 
 procedure TDeputyProcMgr.FormCreate(Sender: TObject);
 begin
-  FProcMREW := TMultiReadExclusiveWriteSynchronizer.Create;
   FCleanups := TObjectList<TSEProcessCleanup>.Create(true);
   ProcMgrInfo := TSEProcessManagerEnvInfo.Create;
   FProcMgr := TSEProcessManager.Create;
@@ -200,8 +194,7 @@ end;
 procedure TDeputyProcMgr.FormDestroy(Sender: TObject);
 begin
   FProcMgr.Free;
-  FProcMREW.Free;
-  FPProcMgrInfo.Free;
+  FProcMgrInfo.Free;
   FCleanups.Free;
 end;
 
@@ -227,34 +220,6 @@ procedure TDeputyProcMgr.LogMsg(AMessage: string);
 begin
   lbMgrStatus.Items.Add(AMessage);
   Application.ProcessMessages;
-end;
-
-function TDeputyProcMgr.ProcCleanupGet: TSEProcessCleanup;
-begin
-  FProcMREW.BeginRead;
-  result := FPProcCleanup;
-  FProcMREW.EndRead;
-end;
-
-procedure TDeputyProcMgr.ProcCleanupSet(const Value: TSEProcessCleanup);
-begin
-  FProcMREW.BeginWrite;
-  FPProcCleanup := Value;
-  FProcMREW.EndWrite;
-end;
-
-function TDeputyProcMgr.ProcMgrInfoGet: TSEProcessManagerEnvInfo;
-begin
-  FProcMREW.BeginRead;
-  result := FPProcMgrInfo;
-  FProcMREW.EndRead;
-end;
-
-procedure TDeputyProcMgr.ProcMgrInfoSet(const Value: TSEProcessManagerEnvInfo);
-begin
-  FProcMREW.BeginWrite;
-  FPProcMgrInfo := Value;
-  FProcMREW.EndWrite;
 end;
 
 procedure TDeputyProcMgr.StartCleanupStatus;
