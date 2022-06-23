@@ -37,7 +37,6 @@ type
   strict private
     FProcCleanup: TSEProcessCleanup;
     FProcMgrInfo: TSEProcessManagerEnvInfo;
-    FCleanTask: ITask;
     FCleanups: TObjectList<TSEProcessCleanup>;
     FProcMgr: TSEProcessManager;
     FStopWatch: TStopWatch;
@@ -46,7 +45,6 @@ type
     function AddCleanup(const AProcName: string; const AProcDirectory: string;
       const AStopCommand: TSEProcessStopCommand): TSEProcessCleanup;
     procedure StatusBarUpdateMessage(AMsg: string);
-    // procedure UpdateTaskStatus;
     procedure StartCleanupStatus;
     procedure StopCleanupStatus;
   private
@@ -56,8 +54,6 @@ type
     property ProcCleanup: TSEProcessCleanup read FProcCleanup write FProcCleanup;
     property ProcMgrInfo: TSEProcessManagerEnvInfo read FProcMgrInfo write FProcMgrInfo;
   public
-    procedure CleanProcess(const AProcName: string; const AProcDirectory: string;
-      const AStopCommand: TSEProcessStopCommand);
     function ClearProcess(const AProcName: string; const AProcDirectory: string;
       const AStopCommand: TSEProcessStopCommand): boolean;
     procedure LoadProcessCleanup;
@@ -69,8 +65,8 @@ type
     class function DeputyProcMgr: TDeputyProcMgr;
     class procedure ShowProcMgr;
     class procedure HideProcMgr;
-    class procedure CleanProcess(const AProcName: string; const AProcDirectory: string;
-      const AStopCommand: TSEProcessStopCommand);
+//    class procedure CleanProcess(const AProcName: string; const AProcDirectory: string;
+//      const AStopCommand: TSEProcessStopCommand);
   end;
 
 implementation
@@ -116,39 +112,6 @@ end;
 procedure TDeputyProcMgr.btnForceTerminateClick(Sender: TObject);
 begin
   FProcMgr.StopManager;
-end;
-
-procedure TDeputyProcMgr.CleanProcess(const AProcName, AProcDirectory: string;
-  const AStopCommand: TSEProcessStopCommand);
-begin
-  ProcCleanup := AddCleanup(AProcName, AProcDirectory, AStopCommand);
-  LoadProcessCleanup;
-  FCleanTask := TTask.Create(
-    procedure
-    var
-      ExceptionPtr: Pointer;
-      exStr: string;
-    begin
-      try
-        FProcMgr.AssignMgrInfo(ProcMgrInfo);
-        FProcMgr.AssignProcCleanup(ProcCleanup);
-        FProcMgr.ProcessCleanup;
-      except
-        begin
-          ExceptionPtr := AcquireExceptionObject;
-          exStr := TObject(ExceptionPtr).ToString;
-          ReleaseExceptionObject;
-          TThread.Queue(TThread.CurrentThread,
-            procedure
-            begin
-              LogMsg(exStr);
-            end);
-        end;
-      end;
-    end);
-  StartCleanupStatus; // timer to count with the stopwatch
-  FCleanTask.Start;
-
 end;
 
 function TDeputyProcMgr.ClearProcess(const AProcName, AProcDirectory: string;
@@ -224,7 +187,6 @@ end;
 
 procedure TDeputyProcMgr.StartCleanupStatus;
 begin
-  // UpdateTaskStatus;
   WaitPoll(0);
   FStopWatch := TStopWatch.StartNew;
   tmrCleanupStatus.Enabled := true;
@@ -245,34 +207,9 @@ end;
 
 procedure TDeputyProcMgr.tmrCleanupStatusTimer(Sender: TObject);
 begin
-  // UpdateTaskStatus;
   lblElapsedMS.Caption := FStopWatch.ElapsedMilliseconds.ToString;
   Application.ProcessMessages;
-  // if FCleanTask.Status = TTaskStatus.Completed then
-  // begin
-  // StopCleanupStatus;
-  // end;
 end;
-
-// procedure TDeputyProcMgr.UpdateTaskStatus;
-// begin
-// case FCleanTask.Status of
-// TTaskStatus.Created:
-// StatusBarUpdateMessage('Created');
-// TTaskStatus.WaitingToRun:
-// StatusBarUpdateMessage('Waiting to Run');
-// TTaskStatus.Running:
-// StatusBarUpdateMessage('Running');
-// TTaskStatus.Completed:
-// StatusBarUpdateMessage('Completed');
-// TTaskStatus.WaitingForChildren:
-// StatusBarUpdateMessage('Waiting for Children');
-// TTaskStatus.Canceled:
-// StatusBarUpdateMessage('Canceled');
-// TTaskStatus.Exception:
-// StatusBarUpdateMessage('Exception');
-// end;
-// end;
 
 procedure TDeputyProcMgr.WaitPoll(APollCount: integer);
 begin
@@ -282,15 +219,15 @@ end;
 
 { TDeputyProcMgrFactory }
 
-class procedure TDeputyProcMgrFactory.CleanProcess(const AProcName, AProcDirectory: string;
-const AStopCommand: TSEProcessStopCommand);
-var
-  frmMgr: TDeputyProcMgr;
-begin
-  frmMgr := DeputyProcMgr;
-  frmMgr.Show;
-  frmMgr.CleanProcess(AProcName, AProcDirectory, AStopCommand);
-end;
+//class procedure TDeputyProcMgrFactory.CleanProcess(const AProcName, AProcDirectory: string;
+//const AStopCommand: TSEProcessStopCommand);
+//var
+//  frmMgr: TDeputyProcMgr;
+//begin
+//  frmMgr := DeputyProcMgr;
+//  frmMgr.Show;
+//  frmMgr.ClearProcess(AProcName, AProcDirectory, AStopCommand);
+//end;
 
 class function TDeputyProcMgrFactory.DeputyProcMgr: TDeputyProcMgr;
 var

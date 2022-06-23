@@ -57,7 +57,7 @@ var
 begin
   fmgr := TDeputyProcMgrFactory.DeputyProcMgr;
   fmgr.Show;
-  fmgr.CleanProcess(ProcName, proc_dir, TSEProcessStopCommand.tseProcStopClose);
+  fmgr.ClearProcess(ProcName, proc_dir, TSEProcessStopCommand.tseProcStopClose);
 end;
 
 procedure TfrmProcTree.btnFunctionClick(Sender: TObject);
