@@ -31,7 +31,7 @@ object DeputyProcMgr: TDeputyProcMgr
     Top = 41
     Width = 815
     Height = 574
-    ActivePage = tsParameters
+    ActivePage = TabSheet1
     Align = alClient
     TabOrder = 1
     object tsParameters: TTabSheet
@@ -68,6 +68,22 @@ object DeputyProcMgr: TDeputyProcMgr
         Align = alBottom
         ItemHeight = 15
         TabOrder = 1
+      end
+    end
+    object TabSheet1: TTabSheet
+      Caption = 'TabSheet1'
+      ImageIndex = 2
+      object TreeView1: TTreeView
+        Left = 0
+        Top = 0
+        Width = 121
+        Height = 544
+        Align = alLeft
+        Indent = 19
+        TabOrder = 0
+        ExplicitLeft = 344
+        ExplicitTop = 224
+        ExplicitHeight = 97
       end
     end
   end
@@ -140,6 +156,7 @@ object DeputyProcMgr: TDeputyProcMgr
       end>
     ShowCaption = False
     TabOrder = 3
+    Visible = False
     object lblLCHdr: TLabel
       Left = 1
       Top = 1
