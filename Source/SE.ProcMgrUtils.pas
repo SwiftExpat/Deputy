@@ -13,23 +13,13 @@ type
 
   TSEProcessCleanStatus = class
   strict private
-    FCleanStatusMREW: TMultiReadExclusiveWriteSynchronizer;
     FMemLeakMessage: string;
     FPollCount: integer;
     FProcID: cardinal;
-  private
-    function MemLeakMsgGet: string;
-    procedure MemLeakMsgSet(const Value: string);
-    function PollCountGet: integer;
-    procedure PollCountSet(const Value: integer);
-    function ProcIDGet: cardinal;
-    procedure ProcIDSet(const Value: cardinal);
   public
-    property ProcID: cardinal read ProcIDGet write ProcIDSet;
-    property PollCount: integer read PollCountGet write PollCountSet;
-    property MemLeakMessage: string read MemLeakMsgGet write MemLeakMsgSet;
-    constructor Create;
-    destructor Destroy; override;
+    property ProcID: cardinal read FProcID write FProcID;
+    property PollCount: integer read FPollCount write FPollCount;
+    property MemLeakMessage: string read FMemLeakMessage write FMemLeakMessage;
   end;
 
   TSEProcessCleanup = class
@@ -37,7 +27,7 @@ type
     StopCommand: TSEProcessStopCommand;
     CloseMemLeak: boolean;
     CopyMemLeak: boolean;
-    Timeout: cardinal;
+    //Timeout: cardinal;
     ProcID: cardinal;
     ProcList: TStringList;
     ProcessName: string;
@@ -54,15 +44,11 @@ type
 
   TSEProcessManagerEnvInfo = class
   strict private
-    FEnvInfoMREW: TMultiReadExclusiveWriteSynchronizer;
     FBDSProcID: cardinal;
     procedure LoadBDSInfo;
-    function BDSProcIDGet: cardinal;
-    procedure BDSProcIDSet(const Value: cardinal);
   public
-    property BDSProcID: cardinal read BDSProcIDGet write BDSProcIDSet;
+    property BDSProcID: cardinal read FBDSProcID write FBDSProcID;
     constructor Create;
-    destructor Destroy; override;
   end;
 
   TSEProcessManager = class
@@ -498,30 +484,9 @@ end;
 
 { TSEProcessManagerEnvInfo }
 
-function TSEProcessManagerEnvInfo.BDSProcIDGet: cardinal;
-begin
-  FEnvInfoMREW.BeginRead;
-  result := FBDSProcID;
-  FEnvInfoMREW.EndRead;
-end;
-
-procedure TSEProcessManagerEnvInfo.BDSProcIDSet(const Value: cardinal);
-begin
-  FEnvInfoMREW.BeginWrite;
-  FBDSProcID := Value;
-  FEnvInfoMREW.EndWrite;
-end;
-
 constructor TSEProcessManagerEnvInfo.Create;
 begin
-  FEnvInfoMREW := TMultiReadExclusiveWriteSynchronizer.Create;
   LoadBDSInfo;
-end;
-
-destructor TSEProcessManagerEnvInfo.Destroy;
-begin
-  FEnvInfoMREW.Free;
-  inherited;
 end;
 
 procedure TSEProcessManagerEnvInfo.LoadBDSInfo;
@@ -532,61 +497,6 @@ begin
     on E: exception do
       self.BDSProcID := 0; // set it to 0 on error
   end;
-end;
-
-{ TSEProcessCleanStatus }
-
-constructor TSEProcessCleanStatus.Create;
-begin
-  FCleanStatusMREW := TMultiReadExclusiveWriteSynchronizer.Create;
-end;
-
-destructor TSEProcessCleanStatus.Destroy;
-begin
-  FCleanStatusMREW.Free;
-  inherited;
-end;
-
-function TSEProcessCleanStatus.MemLeakMsgGet: string;
-begin
-  FCleanStatusMREW.BeginRead;
-  result := FMemLeakMessage;
-  FCleanStatusMREW.EndRead;
-end;
-
-procedure TSEProcessCleanStatus.MemLeakMsgSet(const Value: string);
-begin
-  FCleanStatusMREW.BeginWrite;
-  FMemLeakMessage := Value;
-  FCleanStatusMREW.EndWrite;
-end;
-
-function TSEProcessCleanStatus.PollCountGet: integer;
-begin
-  FCleanStatusMREW.BeginRead;
-  result := FPollCount;
-  FCleanStatusMREW.EndRead;
-end;
-
-procedure TSEProcessCleanStatus.PollCountSet(const Value: integer);
-begin
-  FCleanStatusMREW.BeginWrite;
-  FPollCount := Value;
-  FCleanStatusMREW.EndWrite;
-end;
-
-function TSEProcessCleanStatus.ProcIDGet: cardinal;
-begin
-  FCleanStatusMREW.BeginRead;
-  result := FProcID;
-  FCleanStatusMREW.EndRead;
-end;
-
-procedure TSEProcessCleanStatus.ProcIDSet(const Value: cardinal);
-begin
-  FCleanStatusMREW.BeginWrite;
-  FProcID := Value;
-  FCleanStatusMREW.EndWrite;
 end;
 
 end.
