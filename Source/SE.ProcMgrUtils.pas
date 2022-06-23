@@ -6,6 +6,9 @@ interface
 uses System.SysUtils, System.Classes, Winapi.Windows, Winapi.TlHelp32;
 
 type
+  TSEProcessMgrException = class(exception);
+  TSEProcessSnapshotFailed = class(TSEProcessMgrException);
+
   TSEProcessStopCommand = (tseProcStopKill, tseProcStopClose);
 
   TSEProcessCleanStatus = class
@@ -86,7 +89,7 @@ type
   public
     function FindMainWindow(const APID: DWord): DWord;
     function FindLeakMsgWindow(const APID: DWord): DWord;
-    procedure ProcessCleanup;
+    function ProcessCleanup: boolean;
     property Actions: TStringList read FActions;
     destructor Destroy; override;
     procedure StopManager;
@@ -230,7 +233,7 @@ begin
     LogMsg('Killing ' + s);
     if TerminateProcessByID(cardinal.Parse(s)) then
       LogMsg('Terminated id ' + s)
-    else
+    else // if you ever hit this block, let the ide go?
       LogMsg('Failed to terminate ID ' + s);
   end;
 end;
@@ -328,6 +331,7 @@ begin
     if FCleanup.CopyMemLeak then
     begin
       result := PostMessage(mw, WM_COPY, 0, 0);
+      TThread.Sleep(20); //wait to let the clipboard get copied to
       if Assigned(FLeakCopied) then
         FLeakCopied('Leak Found');
     end;
@@ -352,20 +356,30 @@ begin
     FMsgProc(AMsg);
 end;
 
-procedure TSEProcessManager.ProcessCleanup;
+function TSEProcessManager.ProcessCleanup: boolean;
 begin
   FManagerStopped := false;
-
-  ProcListLoad;
-  if FCleanup.ProcList.Count = 0 then
-  begin
-    LogMsg('Process not found');
-    exit;
+  try
+    if ProcListLoad then // includes a check on proc count
+    begin
+      //call show window?
+      if FCleanup.StopCommand = TSEProcessStopCommand.tseProcStopKill then
+        ExecKill
+      else if FCleanup.StopCommand = TSEProcessStopCommand.tseProcStopClose then
+        ExecClose
+    end
+    else // snapshot success, FCleanup.ProcList.Count = 0, nothing to clean
+      LogMsg('Process not found');
+    result := true;
+  except
+    on E: TSEProcessSnapshotFailed do // if the snapshot fails, let the IDE do what it did before
+      exit(true);
+    on E: Exception do // if the snapshot fails, let the IDE do what it did before
+    begin
+      LogMsg('Proc Clean Exception ='+E.Message);// log any general exception
+      exit(true);
+    end;
   end;
-  if FCleanup.StopCommand = TSEProcessStopCommand.tseProcStopKill then
-    ExecKill
-  else if FCleanup.StopCommand = TSEProcessStopCommand.tseProcStopClose then
-    ExecClose
 end;
 
 function TSEProcessManager.ProcessMatched(const AProcEntry: TProcessEntry32): boolean;
@@ -427,8 +441,11 @@ begin
       end;
       result := FCleanup.ProcList.Count > 0;
     except
-      on E: Exception do
-        raise Exception.Create('failed snapshot' + E.Message);
+      on E: exception do
+      begin
+        LogMsg('failed snapshot' + E.Message);
+        raise TSEProcessSnapshotFailed.Create('failed snapshot' + E.Message);
+      end;
     end;
   finally
     CloseHandle(hSnapShot);
@@ -512,7 +529,7 @@ begin
   try
     self.BDSProcID := GetCurrentProcessID;
   except // if this does not work IDE / Windows needs a restart
-    on E: Exception do
+    on E: exception do
       self.BDSProcID := 0; // set it to 0 on error
   end;
 end;

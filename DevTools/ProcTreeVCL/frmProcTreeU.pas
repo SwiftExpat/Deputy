@@ -18,11 +18,13 @@ type
     Edit1: TEdit;
     btnKill: TButton;
     btnForm: TButton;
+    btnFunction: TButton;
     procedure btnCloseClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure btnKillClick(Sender: TObject);
     procedure btnFormClick(Sender: TObject);
+    procedure btnFunctionClick(Sender: TObject);
   private
     FProcMgr: TSEProcessManager;
     procedure LogMsg(AMessage: string);
@@ -58,12 +60,28 @@ begin
   fmgr.CleanProcess(ProcName, proc_dir, TSEProcessStopCommand.tseProcStopClose);
 end;
 
+procedure TfrmProcTree.btnFunctionClick(Sender: TObject);
+var
+  fmgr: TDeputyProcMgr;
+  rslt : boolean;
+begin
+  fmgr := TDeputyProcMgrFactory.DeputyProcMgr;
+//  fmgr.Show;
+  rslt := fmgr.ClearProcess(ProcName, proc_dir, TSEProcessStopCommand.tseProcStopClose);
+  if rslt  then
+  memo1.Lines.Add('Process cleared')
+  else
+  memo1.Lines.Add('Unable to clear Process')
+
+
+end;
+
 procedure TfrmProcTree.btnKillClick(Sender: TObject);
 var
-  lco: TSEProcessCleanup;
+  fmgr: TDeputyProcMgr;
 begin
-  lco := TSEProcessCleanup.Create(ProcName, proc_dir, TSEProcessStopCommand.tseProcStopKill);
-  //FProcMgr.ProcessCleanup(lco);
+  fmgr := TDeputyProcMgrFactory.DeputyProcMgr;
+  fmgr.Show;
 end;
 
 procedure TfrmProcTree.FormCreate(Sender: TObject);
