@@ -51,8 +51,9 @@ type
     function AddCleanup(const AProcName: string; const AProcDirectory: string;
       const AStopCommand: TSEProcessStopCommand): TSEProcessCleanup;
     procedure StatusBarUpdateMessage(AMsg: string);
-    procedure UpdateTaskStatus;
+    // procedure UpdateTaskStatus;
     procedure StartCleanupStatus;
+    procedure StopCleanupStatus;
   private
     procedure LogMsg(AMessage: string);
     procedure LeakCopied(AMessage: string);
@@ -62,8 +63,10 @@ type
   public
     procedure CleanProcess(const AProcName: string; const AProcDirectory: string;
       const AStopCommand: TSEProcessStopCommand);
+    function ClearProcess(const AProcName: string; const AProcDirectory: string;
+      const AStopCommand: TSEProcessStopCommand): boolean;
     procedure LoadProcessCleanup;
-    function IDECancel:boolean;
+    function IDECancel: boolean;
   end;
 
   TDeputyProcMgrFactory = class
@@ -148,8 +151,24 @@ begin
         end;
       end;
     end);
-  StartCleanupStatus;
+  StartCleanupStatus; // timer to count with the stopwatch
   FCleanTask.Start;
+
+end;
+
+function TDeputyProcMgr.ClearProcess(const AProcName, AProcDirectory: string;
+const AStopCommand: TSEProcessStopCommand): boolean;
+begin
+  ProcCleanup := AddCleanup(AProcName, AProcDirectory, AStopCommand);
+  LoadProcessCleanup;
+  FProcMgr.AssignMgrInfo(ProcMgrInfo);
+  FProcMgr.AssignProcCleanup(ProcCleanup);
+  self.Show;
+  StartCleanupStatus; // timer to count with the stopwatch
+  result := FProcMgr.ProcessCleanup;
+  tmrCleanupStatus.Enabled := false; // stop the timer
+  StopCleanupStatus;
+  self.Hide;
 end;
 
 procedure TDeputyProcMgr.ClearLog;
@@ -193,19 +212,21 @@ end;
 
 function TDeputyProcMgr.IDECancel: boolean;
 begin
-
+  result := true;
 end;
 
 procedure TDeputyProcMgr.LeakCopied(AMessage: string);
 begin
   ClearMemLeak;
+  Application.ProcessMessages;
   PostMessage(memoLeak.Handle, WM_Paste, 0, 0);
-  // copy leak to hist
+  Application.ProcessMessages;
 end;
 
 procedure TDeputyProcMgr.LogMsg(AMessage: string);
 begin
   lbMgrStatus.Items.Add(AMessage);
+  Application.ProcessMessages;
 end;
 
 function TDeputyProcMgr.ProcCleanupGet: TSEProcessCleanup;
@@ -238,7 +259,7 @@ end;
 
 procedure TDeputyProcMgr.StartCleanupStatus;
 begin
-  UpdateTaskStatus;
+  // UpdateTaskStatus;
   WaitPoll(0);
   FStopWatch := TStopWatch.StartNew;
   tmrCleanupStatus.Enabled := true;
@@ -250,41 +271,48 @@ begin
   sbMain.Panels[0].Text := AMsg;
 end;
 
-procedure TDeputyProcMgr.tmrCleanupStatusTimer(Sender: TObject);
+procedure TDeputyProcMgr.StopCleanupStatus;
 begin
-  UpdateTaskStatus;
-  lblElapsedMS.Caption := FStopWatch.ElapsedMilliseconds.ToString;
-  if FCleanTask.Status = TTaskStatus.Completed then
-  begin
-    tmrCleanupStatus.Enabled := false;
-    gpCleanStatus.Visible := false;
-    FStopWatch.Stop;
-  end;
+  tmrCleanupStatus.Enabled := false;
+  gpCleanStatus.Visible := false;
+  FStopWatch.Stop;
 end;
 
-procedure TDeputyProcMgr.UpdateTaskStatus;
+procedure TDeputyProcMgr.tmrCleanupStatusTimer(Sender: TObject);
 begin
-  case FCleanTask.Status of
-    TTaskStatus.Created:
-      StatusBarUpdateMessage('Created');
-    TTaskStatus.WaitingToRun:
-      StatusBarUpdateMessage('Waiting to Run');
-    TTaskStatus.Running:
-      StatusBarUpdateMessage('Running');
-    TTaskStatus.Completed:
-      StatusBarUpdateMessage('Completed');
-    TTaskStatus.WaitingForChildren:
-      StatusBarUpdateMessage('Waiting for Children');
-    TTaskStatus.Canceled:
-      StatusBarUpdateMessage('Canceled');
-    TTaskStatus.Exception:
-      StatusBarUpdateMessage('Exception');
-  end;
+  // UpdateTaskStatus;
+  lblElapsedMS.Caption := FStopWatch.ElapsedMilliseconds.ToString;
+  Application.ProcessMessages;
+  // if FCleanTask.Status = TTaskStatus.Completed then
+  // begin
+  // StopCleanupStatus;
+  // end;
 end;
+
+// procedure TDeputyProcMgr.UpdateTaskStatus;
+// begin
+// case FCleanTask.Status of
+// TTaskStatus.Created:
+// StatusBarUpdateMessage('Created');
+// TTaskStatus.WaitingToRun:
+// StatusBarUpdateMessage('Waiting to Run');
+// TTaskStatus.Running:
+// StatusBarUpdateMessage('Running');
+// TTaskStatus.Completed:
+// StatusBarUpdateMessage('Completed');
+// TTaskStatus.WaitingForChildren:
+// StatusBarUpdateMessage('Waiting for Children');
+// TTaskStatus.Canceled:
+// StatusBarUpdateMessage('Canceled');
+// TTaskStatus.Exception:
+// StatusBarUpdateMessage('Exception');
+// end;
+// end;
 
 procedure TDeputyProcMgr.WaitPoll(APollCount: integer);
 begin
   lblLoopCount.Caption := APollCount.ToString;
+  Application.ProcessMessages;
 end;
 
 { TDeputyProcMgrFactory }

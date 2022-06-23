@@ -148,8 +148,7 @@ object DeputyProcMgr: TDeputyProcMgr
       Align = alClient
       Alignment = taRightJustify
       Caption = 'Loop Count ='
-      ExplicitLeft = 14
-      ExplicitTop = 3
+      ExplicitLeft = 19
       ExplicitWidth = 74
       ExplicitHeight = 15
     end
@@ -160,8 +159,6 @@ object DeputyProcMgr: TDeputyProcMgr
       Height = 17
       Align = alClient
       Caption = 'lblLoopCount'
-      ExplicitLeft = 121
-      ExplicitTop = 3
       ExplicitWidth = 73
       ExplicitHeight = 15
     end
@@ -174,10 +171,6 @@ object DeputyProcMgr: TDeputyProcMgr
       Caption = 'Abort Cleanup'
       TabOrder = 0
       OnClick = btnAbortCleanupClick
-      ExplicitLeft = 9
-      ExplicitTop = 16
-      ExplicitWidth = 75
-      ExplicitHeight = 25
     end
     object Label1: TLabel
       Left = 1
