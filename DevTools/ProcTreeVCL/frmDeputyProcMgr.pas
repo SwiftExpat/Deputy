@@ -27,6 +27,8 @@ type
     lblLoopCount: TLabel;
     Label1: TLabel;
     lblElapsedMS: TLabel;
+    TabSheet1: TTabSheet;
+    TreeView1: TTreeView;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -49,7 +51,7 @@ type
     procedure StopCleanupStatus;
   private
     procedure LogMsg(AMessage: string);
-    procedure LeakCopied(AMessage: string);
+    procedure LeakCopied(AMessage: string; APID: cardinal);
     procedure WaitPoll(APollCount: integer);
     property ProcCleanup: TSEProcessCleanup read FProcCleanup write FProcCleanup;
     property ProcMgrInfo: TSEProcessManagerEnvInfo read FProcMgrInfo write FProcMgrInfo;
@@ -65,8 +67,8 @@ type
     class function DeputyProcMgr: TDeputyProcMgr;
     class procedure ShowProcMgr;
     class procedure HideProcMgr;
-//    class procedure CleanProcess(const AProcName: string; const AProcDirectory: string;
-//      const AStopCommand: TSEProcessStopCommand);
+    // class procedure CleanProcess(const AProcName: string; const AProcDirectory: string;
+    // const AStopCommand: TSEProcessStopCommand);
   end;
 
 implementation
@@ -82,8 +84,6 @@ begin
   lbMgrParams.Items.Add('Process Name');
   lbMgrParams.Items.Add(ProcCleanup.ProcessName);
 
-  lbMgrParams.Items.Add('Timeout');
-  lbMgrParams.AddItem(ProcCleanup.Timeout.ToString, nil);
   lbMgrParams.Items.Add('Clean Proc Action');
   if ProcCleanup.StopCommand = TSEProcessStopCommand.tseProcStopKill then
     lbMgrParams.Items.Add('Terminate')
@@ -115,7 +115,7 @@ begin
 end;
 
 function TDeputyProcMgr.ClearProcess(const AProcName, AProcDirectory: string;
-const AStopCommand: TSEProcessStopCommand): boolean;
+  const AStopCommand: TSEProcessStopCommand): boolean;
 begin
   ProcCleanup := AddCleanup(AProcName, AProcDirectory, AStopCommand);
   LoadProcessCleanup;
@@ -171,12 +171,16 @@ begin
   result := true;
 end;
 
-procedure TDeputyProcMgr.LeakCopied(AMessage: string);
+procedure TDeputyProcMgr.LeakCopied(AMessage: string; APID: cardinal);
 begin
   ClearMemLeak;
   Application.ProcessMessages;
   PostMessage(memoLeak.Handle, WM_Paste, 0, 0);
+  TThread.Sleep(5);// a few ms to paste
   Application.ProcessMessages;
+  TThread.Sleep(5);// a few ms to paste
+  if memoLeak.Lines.Text.IndexOf('leak') > -1 then
+    ProcCleanup.SetLeakByPID(APID, memoLeak.Lines.Text);
 end;
 
 procedure TDeputyProcMgr.LogMsg(AMessage: string);
@@ -219,15 +223,15 @@ end;
 
 { TDeputyProcMgrFactory }
 
-//class procedure TDeputyProcMgrFactory.CleanProcess(const AProcName, AProcDirectory: string;
-//const AStopCommand: TSEProcessStopCommand);
-//var
-//  frmMgr: TDeputyProcMgr;
-//begin
-//  frmMgr := DeputyProcMgr;
-//  frmMgr.Show;
-//  frmMgr.ClearProcess(AProcName, AProcDirectory, AStopCommand);
-//end;
+// class procedure TDeputyProcMgrFactory.CleanProcess(const AProcName, AProcDirectory: string;
+// const AStopCommand: TSEProcessStopCommand);
+// var
+// frmMgr: TDeputyProcMgr;
+// begin
+// frmMgr := DeputyProcMgr;
+// frmMgr.Show;
+// frmMgr.ClearProcess(AProcName, AProcDirectory, AStopCommand);
+// end;
 
 class function TDeputyProcMgrFactory.DeputyProcMgr: TDeputyProcMgr;
 var
