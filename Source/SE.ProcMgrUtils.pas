@@ -33,6 +33,8 @@ type
     ProcList: TStringList;
     ProcessName: string;
     ProcessDirectory: string;
+    StartTime, EndTime: TDateTime;
+    function ProcessFound: boolean;
     function ProcessFullName: string;
     procedure SetLeakByPID(APID: cardinal; ALeakMsg: string);
     constructor Create(const AProcName: string; const AProcDirectory: string;
@@ -348,25 +350,29 @@ function TSEProcessManager.ProcessCleanup: boolean;
 begin
   FManagerStopped := false;
   try
-    if ProcListLoad then // includes a check on proc count
-    begin
-      // call show window?
-      if FCleanup.StopCommand = TSEProcessStopCommand.tseProcStopKill then
-        ExecKill
-      else if FCleanup.StopCommand = TSEProcessStopCommand.tseProcStopClose then
-        ExecClose
-    end
-    else // snapshot success, FCleanup.ProcList.Count = 0, nothing to clean
-      LogMsg('Process not found');
-    result := true;
-  except
-    on E: TSEProcessSnapshotFailed do // if the snapshot fails, let the IDE do what it did before
-      exit(true);
-    on E: exception do // if the snapshot fails, let the IDE do what it did before
-    begin
-      LogMsg('Proc Clean Exception =' + E.Message); // log any general exception
-      exit(true);
+    try
+      if ProcListLoad then // includes a check on proc count
+      begin
+        // call show window?
+        if FCleanup.StopCommand = TSEProcessStopCommand.tseProcStopKill then
+          ExecKill
+        else if FCleanup.StopCommand = TSEProcessStopCommand.tseProcStopClose then
+          ExecClose
+      end
+      else // snapshot success, FCleanup.ProcList.Count = 0, nothing to clean
+        LogMsg('Process not found');
+      result := true;
+    except
+      on E: TSEProcessSnapshotFailed do // if the snapshot fails, let the IDE do what it did before
+        exit(true);
+      on E: exception do // if the snapshot fails, let the IDE do what it did before
+      begin
+        LogMsg('Proc Clean Exception =' + E.Message); // log any general exception
+        exit(true);
+      end;
     end;
+  finally
+    FCleanup.EndTime := now;
   end;
 end;
 
@@ -471,12 +477,18 @@ begin
   ProcList := TStringList.Create(true);
   CloseMemLeak := true;
   CopyMemLeak := true;
+  StartTime := now;
 end;
 
 destructor TSEProcessCleanup.Destroy;
 begin
   ProcList.Free;
   inherited;
+end;
+
+function TSEProcessCleanup.ProcessFound: boolean;
+begin
+  result := ProcList.Count > 0;
 end;
 
 function TSEProcessCleanup.ProcessFullName: string;

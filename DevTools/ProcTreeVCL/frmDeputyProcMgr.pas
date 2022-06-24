@@ -76,6 +76,8 @@ type
 implementation
 
 {$R *.dfm}
+
+uses DateUtils;
 { TDeputyProcMgr }
 
 procedure TDeputyProcMgr.LoadProcessCleanup;
@@ -103,20 +105,16 @@ function TDeputyProcMgr.AddCleanup(const AProcName, AProcDirectory: string; cons
   : TSEProcessCleanup;
 var
   tn: TTreeNode;
-  tli : TListItem;
+  tli: TListItem;
 begin
   result := TSEProcessCleanup.Create(AProcName, AProcDirectory, AStopCommand);
   FCleanups.Add(result);
   tn := tvHist.Items.Add(nil, AProcName);
   FHistNodes.Add(tn, result);
-  listbox1.Items.Add(AProcName);
-  tli := listview1.Items.add;
+  tli := ListView1.Items.Add;
   tli.Caption := AProcName;
-  tli.SubItems.Add('started');
+  tli.SubItems.Add(FormatDateTime('hh:nn:ss.zzz',result.StartTime));
   tli.SubItems.Add('ended');
-
-  listbox1.Items.Move(tli.Index ,0);
-
 end;
 
 procedure TDeputyProcMgr.btnAbortCleanupClick(Sender: TObject);
