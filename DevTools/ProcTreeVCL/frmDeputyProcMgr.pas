@@ -28,7 +28,8 @@ type
     Label1: TLabel;
     lblElapsedMS: TLabel;
     TabSheet1: TTabSheet;
-    TreeView1: TTreeView;
+    tvHist: TTreeView;
+    ListView1: TListView;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -40,6 +41,7 @@ type
     FProcCleanup: TSEProcessCleanup;
     FProcMgrInfo: TSEProcessManagerEnvInfo;
     FCleanups: TObjectList<TSEProcessCleanup>;
+    FHistNodes: TDictionary<TTreeNode, TSEProcessCleanup>;
     FProcMgr: TSEProcessManager;
     FStopWatch: TStopWatch;
     procedure ClearLog;
@@ -99,9 +101,22 @@ end;
 
 function TDeputyProcMgr.AddCleanup(const AProcName, AProcDirectory: string; const AStopCommand: TSEProcessStopCommand)
   : TSEProcessCleanup;
+var
+  tn: TTreeNode;
+  tli : TListItem;
 begin
   result := TSEProcessCleanup.Create(AProcName, AProcDirectory, AStopCommand);
   FCleanups.Add(result);
+  tn := tvHist.Items.Add(nil, AProcName);
+  FHistNodes.Add(tn, result);
+  listbox1.Items.Add(AProcName);
+  tli := listview1.Items.add;
+  tli.Caption := AProcName;
+  tli.SubItems.Add('started');
+  tli.SubItems.Add('ended');
+
+  listbox1.Items.Move(tli.Index ,0);
+
 end;
 
 procedure TDeputyProcMgr.btnAbortCleanupClick(Sender: TObject);
@@ -147,6 +162,7 @@ end;
 procedure TDeputyProcMgr.FormCreate(Sender: TObject);
 begin
   FCleanups := TObjectList<TSEProcessCleanup>.Create(true);
+  FHistNodes := TDictionary<TTreeNode, TSEProcessCleanup>.Create;
   ProcMgrInfo := TSEProcessManagerEnvInfo.Create;
   FProcMgr := TSEProcessManager.Create;
   FProcMgr.OnMessage := LogMsg;
@@ -159,6 +175,7 @@ begin
   FProcMgr.Free;
   FProcMgrInfo.Free;
   FCleanups.Free;
+  FHistNodes.Free;
 end;
 
 procedure TDeputyProcMgr.FormShow(Sender: TObject);
@@ -176,9 +193,9 @@ begin
   ClearMemLeak;
   Application.ProcessMessages;
   PostMessage(memoLeak.Handle, WM_Paste, 0, 0);
-  TThread.Sleep(5);// a few ms to paste
+  TThread.Sleep(5); // a few ms to paste
   Application.ProcessMessages;
-  TThread.Sleep(5);// a few ms to paste
+  TThread.Sleep(5); // a few ms to paste
   if memoLeak.Lines.Text.IndexOf('leak') > -1 then
     ProcCleanup.SetLeakByPID(APID, memoLeak.Lines.Text);
 end;

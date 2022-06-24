@@ -73,7 +73,7 @@ object DeputyProcMgr: TDeputyProcMgr
     object TabSheet1: TTabSheet
       Caption = 'TabSheet1'
       ImageIndex = 2
-      object TreeView1: TTreeView
+      object tvHist: TTreeView
         Left = 0
         Top = 0
         Width = 121
@@ -81,9 +81,24 @@ object DeputyProcMgr: TDeputyProcMgr
         Align = alLeft
         Indent = 19
         TabOrder = 0
-        ExplicitLeft = 344
-        ExplicitTop = 224
-        ExplicitHeight = 97
+      end
+      object ListView1: TListView
+        Left = 208
+        Top = 312
+        Width = 466
+        Height = 150
+        Columns = <
+          item
+            Caption = 'Process'
+          end
+          item
+            Caption = 'Start'
+          end
+          item
+            Caption = 'Stop'
+          end>
+        TabOrder = 1
+        ViewStyle = vsReport
       end
     end
   end
