@@ -1,6 +1,8 @@
-unit SERTTK.DeputyUtils;
+unit SERTTK.DeputyTypes;
 
 interface
+
+uses System.Classes, System.Win.Registry;
 
 const
   MAJ_VER = 1; // Major version nr.
@@ -157,9 +159,31 @@ type
     property Executed: boolean read CaddieIniFileExists;
   end;
 
+  TSERTTKDeputySettings = class(TRegistryIniFile)
+  const
+    nm_section_updates = 'Updates';
+    nm_updates_lastupdate = 'LastUpdateCheckDate';
+    nm_section_killprocess = 'KillProcess';
+    nm_killprocess_enabled = 'Enabled';
+    nm_killprocess_stopcommand = 'StopCommand';
+    nm_settings_regkey = 'SOFTWARE\SwiftExpat\Deputy';
+  strict private
+    function KillProcActiveGet: boolean;
+    procedure KillProcActiveSet(const Value: boolean);
+    function LastUpdateCheckGet: TDateTime;
+    procedure LastUpdateCheckSet(const Value: TDateTime);
+  private
+    function StopCommandGet: integer;
+    procedure StopCommandSet(const Value: integer);
+  public
+    property KillProcActive: boolean read KillProcActiveGet write KillProcActiveSet;
+    property LastUpdateCheck: TDateTime read LastUpdateCheckGet write LastUpdateCheckSet;
+    property StopCommand: integer read StopCommandGet write StopCommandSet;
+  end;
+
 implementation
 
-uses System.IOUtils, System.SysUtils, WinAPI.ShellAPI, WinAPI.Windows;
+uses System.IOUtils, System.SysUtils, WinAPI.ShellAPI, WinAPI.Windows, System.DateUtils;
 
 { TSERTTKDeputyUtils }
 
@@ -335,5 +359,36 @@ begin
   ShellExecuteEx(@shi);
 end;
 
+{ TSERTTKDeputySettings }
+
+function TSERTTKDeputySettings.KillProcActiveGet: boolean;
+begin
+  result := self.ReadBool(nm_section_killprocess, nm_killprocess_enabled, true);
+end;
+
+procedure TSERTTKDeputySettings.KillProcActiveSet(const Value: boolean);
+begin
+  self.WriteBool(nm_section_killprocess, nm_killprocess_enabled, Value);
+end;
+
+function TSERTTKDeputySettings.LastUpdateCheckGet: TDateTime;
+begin
+  result := self.ReadDateTime(nm_section_updates, nm_updates_lastupdate, IncDay(now, -1))
+end;
+
+procedure TSERTTKDeputySettings.LastUpdateCheckSet(const Value: TDateTime);
+begin
+  self.WriteDateTime(nm_section_updates, nm_updates_lastupdate, Value);
+end;
+
+function TSERTTKDeputySettings.StopCommandGet: integer;
+begin
+  result := self.ReadInteger(nm_section_killprocess, nm_killprocess_stopcommand, 0)
+end;
+
+procedure TSERTTKDeputySettings.StopCommandSet(const Value: integer);
+begin
+  self.WriteInteger(nm_section_killprocess, nm_killprocess_stopcommand, Value);
+end;
 
 end.
