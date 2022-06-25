@@ -112,6 +112,7 @@ object DeputyProcMgr: TDeputyProcMgr
         TabOrder = 0
         ViewStyle = vsReport
         OnInfoTip = lvHistInfoTip
+        OnSelectItem = lvHistSelectItem
         ExplicitLeft = 208
         ExplicitTop = 312
         ExplicitWidth = 466
