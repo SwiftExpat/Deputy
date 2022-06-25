@@ -14,12 +14,13 @@ type
   TSEProcessCleanStatus = class
   strict private
     FMemLeakMessage: string;
-    FPollCount: integer;
     FProcID: cardinal;
+    FLeakShown: boolean;
   public
+    PollCount: cardinal; // not sure why compiler does not like a prop here
     property ProcID: cardinal read FProcID write FProcID;
-    property PollCount: integer read FPollCount write FPollCount;
     property MemLeakMessage: string read FMemLeakMessage write FMemLeakMessage;
+    property LeakShown: boolean read FLeakShown write FLeakShown;
     constructor Create(AProcID: cardinal);
   end;
 
@@ -34,6 +35,8 @@ type
     ProcessName: string;
     ProcessDirectory: string;
     StartTime, EndTime: TDateTime;
+    function LeakDetail(AStrings: TStrings): boolean;
+    function LeakShown: boolean;
     function ProcessFound: boolean;
     function ProcessFullName: string;
     procedure SetLeakByPID(APID: cardinal; ALeakMsg: string);
@@ -230,30 +233,35 @@ end;
 
 procedure TSEProcessManager.ExecClose;
 var
-  s: string;
-  PID: cardinal;
-  pc: cardinal;
+  ps: TSEProcessCleanStatus;
+  i: integer;
 begin
-  for s in FCleanup.ProcList do
+  for i := 0 to FCleanup.ProcList.Count - 1 do
   begin
+    if Assigned(FCleanup.ProcList.Objects[i]) and (FCleanup.ProcList.Objects[i] is TSEProcessCleanStatus) then
+      ps := TSEProcessCleanStatus(FCleanup.ProcList.Objects[i])
+    else
+      exit; // should never get here
+
     if FManagerStopped then
       exit;
-    PID := cardinal.Parse(s);
-    LogMsg('Closing Main ' + s);
-    CloseMainWindow(PID);
-    pc := 0;
-    while ProcIDRunning(PID) do
+
+    LogMsg('Closing Main ' + ps.ProcID.ToString);
+    CloseMainWindow(ps.ProcID);
+    ps.PollCount := 0;
+    while ProcIDRunning(ps.ProcID) do
     begin
       if FManagerStopped then
         exit;
       TThread.Sleep(100); // sleep first, close was just sent
-      inc(pc);
+      inc(ps.PollCount);
       if Assigned(FWaitPoll) then
-        FWaitPoll(pc);
-      if LeakWindowShowing(PID) then
+        FWaitPoll(ps.PollCount);
+      if LeakWindowShowing(ps.ProcID) then
       begin
+        ps.LeakShown := true;
         LogMsg('Leak window showing');
-        if LeakWindowClose(PID) then
+        if LeakWindowClose(ps.ProcID) then
         begin // closed no need to poll any more
           LogMsg('Leak window closed');
           exit;
@@ -474,7 +482,7 @@ begin
   ProcessName := AProcName;
   ProcessDirectory := AProcDirectory;
   StopCommand := AStopCommand;
-  ProcList := TStringList.Create(true);
+  ProcList := TStringList.Create(true); // refactor to generic object list for less type casting
   CloseMemLeak := true;
   CopyMemLeak := true;
   StartTime := now;
@@ -484,6 +492,35 @@ destructor TSEProcessCleanup.Destroy;
 begin
   ProcList.Free;
   inherited;
+end;
+
+function TSEProcessCleanup.LeakDetail(AStrings: TStrings): boolean;
+var
+  pcs: TSEProcessCleanStatus;
+  i: integer;
+begin
+  for i := 0 to ProcList.Count - 1 do
+    if Assigned(ProcList.Objects[i]) and (ProcList.Objects[i] is TSEProcessCleanStatus) then
+    begin
+      pcs := TSEProcessCleanStatus(ProcList.Objects[i]);
+      AStrings.Add(pcs.MemLeakMessage);
+    end;
+
+end;
+
+function TSEProcessCleanup.LeakShown: boolean;
+var
+  i: integer;
+begin
+  if ProcessFound then
+  begin
+    for i := 0 to ProcList.Count - 1 do
+      if TSEProcessCleanStatus(ProcList.Objects[i]).LeakShown then
+        exit(true);
+    result := false;
+  end
+  else
+    result := false;
 end;
 
 function TSEProcessCleanup.ProcessFound: boolean;
@@ -499,7 +536,7 @@ end;
 procedure TSEProcessCleanup.SetLeakByPID(APID: cardinal; ALeakMsg: string);
 var
   i: integer;
-  cs: TSEProcessCleanStatus;
+  // cs: TSEProcessCleanStatus;
 begin
   i := ProcList.IndexOf(APID.ToString);
   if i > -1 then

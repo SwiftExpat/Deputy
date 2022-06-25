@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls, SE.ProcMgrUtils,
-  Vcl.CategoryButtons, Vcl.ExtCtrls, System.Threading, Generics.Collections, System.Diagnostics;
+  Vcl.CategoryButtons, Vcl.ExtCtrls, Generics.Collections, System.Diagnostics;
 
 type
   EDeputyProcMgrCreate = class(Exception);
@@ -27,9 +27,9 @@ type
     lblLoopCount: TLabel;
     Label1: TLabel;
     lblElapsedMS: TLabel;
-    TabSheet1: TTabSheet;
-    tvHist: TTreeView;
-    ListView1: TListView;
+    tsHistory: TTabSheet;
+    lvHist: TListView;
+    memoLeakHist: TMemo;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -37,6 +37,7 @@ type
     procedure btnForceTerminateClick(Sender: TObject);
     procedure tmrCleanupStatusTimer(Sender: TObject);
     procedure FormShow(Sender: TObject);
+    procedure lvHistInfoTip(Sender: TObject; Item: TListItem; var InfoTip: string);
   strict private
     FProcCleanup: TSEProcessCleanup;
     FProcMgrInfo: TSEProcessManagerEnvInfo;
@@ -57,6 +58,7 @@ type
     procedure WaitPoll(APollCount: integer);
     property ProcCleanup: TSEProcessCleanup read FProcCleanup write FProcCleanup;
     property ProcMgrInfo: TSEProcessManagerEnvInfo read FProcMgrInfo write FProcMgrInfo;
+    procedure UpdateCleanHist(AProcCleanup: TSEProcessCleanup);
   public
     function ClearProcess(const AProcName: string; const AProcDirectory: string;
       const AStopCommand: TSEProcessStopCommand): boolean;
@@ -69,8 +71,6 @@ type
     class function DeputyProcMgr: TDeputyProcMgr;
     class procedure ShowProcMgr;
     class procedure HideProcMgr;
-    // class procedure CleanProcess(const AProcName: string; const AProcDirectory: string;
-    // const AStopCommand: TSEProcessStopCommand);
   end;
 
 implementation
@@ -104,17 +104,16 @@ end;
 function TDeputyProcMgr.AddCleanup(const AProcName, AProcDirectory: string; const AStopCommand: TSEProcessStopCommand)
   : TSEProcessCleanup;
 var
-  tn: TTreeNode;
   tli: TListItem;
 begin
   result := TSEProcessCleanup.Create(AProcName, AProcDirectory, AStopCommand);
   FCleanups.Add(result);
-  tn := tvHist.Items.Add(nil, AProcName);
-  FHistNodes.Add(tn, result);
-  tli := ListView1.Items.Add;
+  tli := TListItem.Create(lvHist.Items);
+  lvHist.Items.AddItem(tli, 0);
+  tli.Data := result;
   tli.Caption := AProcName;
-  tli.SubItems.Add(FormatDateTime('hh:nn:ss.zzz',result.StartTime));
-  tli.SubItems.Add('ended');
+  tli.SubItems.Add(FormatDateTime('hh:nn:ss.zzz', result.StartTime));
+  lvHist.Tag := tli.Index;
 end;
 
 procedure TDeputyProcMgr.btnAbortCleanupClick(Sender: TObject);
@@ -129,6 +128,7 @@ end;
 
 function TDeputyProcMgr.ClearProcess(const AProcName, AProcDirectory: string;
   const AStopCommand: TSEProcessStopCommand): boolean;
+
 begin
   ProcCleanup := AddCleanup(AProcName, AProcDirectory, AStopCommand);
   LoadProcessCleanup;
@@ -138,6 +138,7 @@ begin
   StartCleanupStatus; // timer to count with the stopwatch
   result := FProcMgr.ProcessCleanup;
   tmrCleanupStatus.Enabled := false; // stop the timer
+  UpdateCleanHist(ProcCleanup);
   StopCleanupStatus;
   self.Hide;
 end;
@@ -204,6 +205,28 @@ begin
   Application.ProcessMessages;
 end;
 
+procedure TDeputyProcMgr.lvHistInfoTip(Sender: TObject; Item: TListItem; var InfoTip: string);
+var
+  pc: TSEProcessCleanup;
+begin
+  if Assigned(Item.Data) then // check Item type?
+    pc := TSEProcessCleanup(Item.Data)
+  else
+    exit;
+
+  if memoLeakHist.Tag <> Item.Index then // update the hist box based on selected item index
+  begin
+    memoLeakHist.Clear;
+    if pc.LeakShown then
+      pc.LeakDetail(memoLeakHist.Lines)
+    else
+      memoLeakHist.Lines.Add('No Leak found ' + Item.Index.ToString);
+    memoLeakHist.Tag := Item.Index;
+  end;
+  if pc.LeakShown then
+    InfoTip := 'Leak found';
+end;
+
 procedure TDeputyProcMgr.StartCleanupStatus;
 begin
   WaitPoll(0);
@@ -230,6 +253,18 @@ begin
   Application.ProcessMessages;
 end;
 
+procedure TDeputyProcMgr.UpdateCleanHist(AProcCleanup: TSEProcessCleanup);
+var
+  tli: TListItem;
+begin
+  tli := lvHist.Items[lvHist.Tag];
+  tli.SubItems.Add(FormatDateTime('hh:nn:ss.zzz', ProcCleanup.EndTime));
+  tli.SubItems.Add(FStopWatch.ElapsedMilliseconds.ToString + ' ms');
+  tli.SubItems.Add(boolToStr(ProcCleanup.ProcessFound, true));
+  tli.SubItems.Add(boolToStr(ProcCleanup.LeakShown, true));
+  memoLeakHist.Tag := -1;
+end;
+
 procedure TDeputyProcMgr.WaitPoll(APollCount: integer);
 begin
   lblLoopCount.Caption := APollCount.ToString;
@@ -250,14 +285,14 @@ end;
 
 class function TDeputyProcMgrFactory.DeputyProcMgr: TDeputyProcMgr;
 var
-  I: integer;
+  i: integer;
 begin
-  for I := 0 to Screen.FormCount - 1 do // itterate the screens
-    if Screen.Forms[I].ClassType = TDeputyProcMgr then
+  for i := 0 to Screen.FormCount - 1 do // itterate the screens
+    if Screen.Forms[i].ClassType = TDeputyProcMgr then
     begin
-      result := TDeputyProcMgr(Screen.Forms[I]);
-      if Screen.Forms[I].WindowState = TWindowState.wsMinimized then
-        Screen.Forms[I].WindowState := TWindowState.wsNormal;
+      result := TDeputyProcMgr(Screen.Forms[i]);
+      if Screen.Forms[i].WindowState = TWindowState.wsMinimized then
+        Screen.Forms[i].WindowState := TWindowState.wsNormal;
       exit;
     end;
   result := nil;
