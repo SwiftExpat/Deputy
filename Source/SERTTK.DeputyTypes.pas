@@ -165,6 +165,8 @@ type
     nm_updates_lastupdate = 'LastUpdateCheckDate';
     nm_section_killprocess = 'KillProcess';
     nm_killprocess_enabled = 'Enabled';
+    nm_killprocess_closeleak = 'CloseLeakWindow';
+    nm_killprocess_copyleak = 'CopyLeakWindow';
     nm_killprocess_stopcommand = 'StopCommand';
     nm_settings_regkey = 'SOFTWARE\SwiftExpat\Deputy';
   strict private
@@ -175,10 +177,16 @@ type
   private
     function StopCommandGet: integer;
     procedure StopCommandSet(const Value: integer);
+    function CloseLeakWindowGet: boolean;
+    procedure CloseLeakWindowSet(const Value: boolean);
+    function CopyLeakMessageGet: boolean;
+    procedure CopyLeakMessageSet(const Value: boolean);
   public
     property KillProcActive: boolean read KillProcActiveGet write KillProcActiveSet;
     property LastUpdateCheck: TDateTime read LastUpdateCheckGet write LastUpdateCheckSet;
     property StopCommand: integer read StopCommandGet write StopCommandSet;
+    property CloseLeakWindow: boolean read CloseLeakWindowGet write CloseLeakWindowSet;
+    property CopyLeakMessage: boolean read CopyLeakMessageGet write CopyLeakMessageSet;
   end;
 
 implementation
@@ -360,6 +368,26 @@ begin
 end;
 
 { TSERTTKDeputySettings }
+
+function TSERTTKDeputySettings.CloseLeakWindowGet: boolean;
+begin
+  result := self.ReadBool(nm_section_killprocess, nm_killprocess_closeleak, true);
+end;
+
+procedure TSERTTKDeputySettings.CloseLeakWindowSet(const Value: boolean);
+begin
+  self.WriteBool(nm_section_killprocess, nm_killprocess_closeleak, Value);
+end;
+
+function TSERTTKDeputySettings.CopyLeakMessageGet: boolean;
+begin
+  result := self.ReadBool(nm_section_killprocess, nm_killprocess_copyleak, true);
+end;
+
+procedure TSERTTKDeputySettings.CopyLeakMessageSet(const Value: boolean);
+begin
+  self.WriteBool(nm_section_killprocess, nm_killprocess_copyleak, Value);
+end;
 
 function TSERTTKDeputySettings.KillProcActiveGet: boolean;
 begin

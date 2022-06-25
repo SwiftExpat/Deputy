@@ -31,6 +31,8 @@ type
     rgProcStopCommand: TRadioGroup;
     Memo1: TMemo;
     rgProcTermActive: TRadioGroup;
+    cbCloseLeakWindow: TCheckBox;
+    cbCopyLeakMessage: TCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -42,6 +44,8 @@ type
     procedure lvHistSelectItem(Sender: TObject; Item: TListItem; Selected: Boolean);
     procedure rgProcStopCommandClick(Sender: TObject);
     procedure rgProcTermActiveClick(Sender: TObject);
+    procedure cbCloseLeakWindowClick(Sender: TObject);
+    procedure cbCopyLeakMessageClick(Sender: TObject);
   strict private
     FProcCleanup: TSEProcessCleanup;
     FProcMgrInfo: TSEProcessManagerEnvInfo;
@@ -66,7 +70,7 @@ type
     procedure UpdateCleanHist(AProcCleanup: TSEProcessCleanup);
   public
     function ClearProcess(const AProcName: string; const AProcDirectory: string): Boolean;
-    procedure AssignSettings(ASettings: TSEDeputySettings);
+    procedure AssignSettings(ASettings: TSERTTKDeputySettings);
     procedure LoadProcessCleanup;
     function IDECancel: Boolean;
   end;
@@ -106,8 +110,7 @@ begin
 
 end;
 
-function TDeputyProcMgr.AddCleanup(const AProcName, AProcDirectory: string)
-  : TSEProcessCleanup;
+function TDeputyProcMgr.AddCleanup(const AProcName, AProcDirectory: string): TSEProcessCleanup;
 var
   tli: TListItem;
 begin
@@ -121,7 +124,7 @@ begin
   lvHist.Tag := tli.Index;
 end;
 
-procedure TDeputyProcMgr.AssignSettings(ASettings: TSEDeputySettings);
+procedure TDeputyProcMgr.AssignSettings(ASettings: TSERTTKDeputySettings);
 begin
   FSettings := ASettings;
   if FSettings.KillProcActive then
@@ -130,7 +133,9 @@ begin
     rgProcTermActive.ItemIndex := 1;
 
   rgProcStopCommand.ItemIndex := FSettings.StopCommand;
-  FStopCommand:= TSEProcessStopCommand(FSettings.StopCommand);
+  FStopCommand := TSEProcessStopCommand(FSettings.StopCommand);
+  cbCloseLeakWindow.Checked := FSettings.CloseLeakWindow;
+  cbCopyLeakMessage.Checked := FSettings.CopyLeakMessage;
 end;
 
 procedure TDeputyProcMgr.btnAbortCleanupClick(Sender: TObject);
@@ -141,6 +146,22 @@ end;
 procedure TDeputyProcMgr.btnForceTerminateClick(Sender: TObject);
 begin
   FProcMgr.StopManager;
+end;
+
+procedure TDeputyProcMgr.cbCloseLeakWindowClick(Sender: TObject);
+begin
+  if cbCloseLeakWindow.Checked then
+    FSettings.CloseLeakWindow := true
+  else
+    FSettings.CloseLeakWindow := false;
+end;
+
+procedure TDeputyProcMgr.cbCopyLeakMessageClick(Sender: TObject);
+begin
+  if cbCopyLeakMessage.Checked then
+    FSettings.CopyLeakMessage := true
+  else
+    FSettings.CopyLeakMessage := false;
 end;
 
 function TDeputyProcMgr.ClearProcess(const AProcName: string; const AProcDirectory: string): Boolean;
