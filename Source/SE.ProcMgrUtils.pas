@@ -29,13 +29,13 @@ type
     StopCommand: TSEProcessStopCommand;
     CloseMemLeak: boolean;
     CopyMemLeak: boolean;
-    // Timeout: cardinal;
+    // Timeout: cardinal;   //should have
     ProcID: cardinal;
     ProcList: TStringList;
     ProcessName: string;
     ProcessDirectory: string;
     StartTime, EndTime: TDateTime;
-    function LeakDetail(AStrings: TStrings): boolean;
+    procedure LeakDetail(AStrings: TStrings);
     function LeakShown: boolean;
     function ProcessFound: boolean;
     function ProcessFullName: string;
@@ -494,7 +494,7 @@ begin
   inherited;
 end;
 
-function TSEProcessCleanup.LeakDetail(AStrings: TStrings): boolean;
+procedure TSEProcessCleanup.LeakDetail(AStrings: TStrings);
 var
   pcs: TSEProcessCleanStatus;
   i: integer;

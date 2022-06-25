@@ -50,7 +50,6 @@ type
     FProcCleanup: TSEProcessCleanup;
     FProcMgrInfo: TSEProcessManagerEnvInfo;
     FCleanups: TObjectList<TSEProcessCleanup>;
-    FHistNodes: TDictionary<TTreeNode, TSEProcessCleanup>;
     FProcMgr: TSEProcessManager;
     FStopWatch: TStopWatch;
     FSettings: TSERTTKDeputySettings;
@@ -192,7 +191,6 @@ end;
 procedure TDeputyProcMgr.FormCreate(Sender: TObject);
 begin
   FCleanups := TObjectList<TSEProcessCleanup>.Create(true);
-  FHistNodes := TDictionary<TTreeNode, TSEProcessCleanup>.Create;
   ProcMgrInfo := TSEProcessManagerEnvInfo.Create;
   FProcMgr := TSEProcessManager.Create;
   FProcMgr.OnMessage := LogMsg;
@@ -205,7 +203,6 @@ begin
   FProcMgr.Free;
   FProcMgrInfo.Free;
   FCleanups.Free;
-  FHistNodes.Free;
 end;
 
 procedure TDeputyProcMgr.FormShow(Sender: TObject);
