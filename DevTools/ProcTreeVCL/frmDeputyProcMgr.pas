@@ -61,6 +61,7 @@ type
     procedure StatusBarUpdateMessage(AMsg: string);
     procedure StartCleanupStatus;
     procedure StopCleanupStatus;
+    procedure UpdateSettings;
   private
     procedure LogMsg(AMessage: string);
     procedure LeakCopied(AMessage: string; APID: cardinal);
@@ -127,15 +128,7 @@ end;
 procedure TDeputyProcMgr.AssignSettings(ASettings: TSERTTKDeputySettings);
 begin
   FSettings := ASettings;
-  if FSettings.KillProcActive then
-    rgProcTermActive.ItemIndex := 0
-  else
-    rgProcTermActive.ItemIndex := 1;
-
-  rgProcStopCommand.ItemIndex := FSettings.StopCommand;
-  FStopCommand := TSEProcessStopCommand(FSettings.StopCommand);
-  cbCloseLeakWindow.Checked := FSettings.CloseLeakWindow;
-  cbCopyLeakMessage.Checked := FSettings.CopyLeakMessage;
+  UpdateSettings;
 end;
 
 procedure TDeputyProcMgr.btnAbortCleanupClick(Sender: TObject);
@@ -154,6 +147,7 @@ begin
     FSettings.CloseLeakWindow := true
   else
     FSettings.CloseLeakWindow := false;
+    UpdateSettings;
 end;
 
 procedure TDeputyProcMgr.cbCopyLeakMessageClick(Sender: TObject);
@@ -162,10 +156,10 @@ begin
     FSettings.CopyLeakMessage := true
   else
     FSettings.CopyLeakMessage := false;
+    UpdateSettings;
 end;
 
 function TDeputyProcMgr.ClearProcess(const AProcName: string; const AProcDirectory: string): Boolean;
-
 begin
   ProcCleanup := AddCleanup(AProcName, AProcDirectory);
   LoadProcessCleanup;
@@ -274,12 +268,9 @@ begin
 end;
 
 procedure TDeputyProcMgr.rgProcStopCommandClick(Sender: TObject);
-var
-  pc: TSEProcessStopCommand;
-begin // code this to save the setting
-  Memo1.Lines.Add(rgProcStopCommand.Items[rgProcStopCommand.ItemIndex]);
-  pc := TSEProcessStopCommand(1);
+begin
   FSettings.StopCommand := rgProcStopCommand.ItemIndex;
+  UpdateSettings;
 end;
 
 procedure TDeputyProcMgr.rgProcTermActiveClick(Sender: TObject);
@@ -287,7 +278,8 @@ begin
   if rgProcTermActive.ItemIndex = 0 then
     FSettings.KillProcActive := true
   else
-    FSettings.KillProcActive := false
+    FSettings.KillProcActive := false;
+  UpdateSettings;
 end;
 
 procedure TDeputyProcMgr.StartCleanupStatus;
@@ -327,6 +319,40 @@ begin
   tli.SubItems.Add(boolToStr(ProcCleanup.ProcessFound, true));
   tli.SubItems.Add(boolToStr(ProcCleanup.LeakShown, true));
   memoLeakHist.Tag := -1;
+end;
+
+procedure TDeputyProcMgr.UpdateSettings;
+begin
+  if FSettings.KillProcActive then
+  begin
+    rgProcTermActive.ItemIndex := 0;
+    rgProcStopCommand.ItemIndex := FSettings.StopCommand;
+    FStopCommand := TSEProcessStopCommand(FSettings.StopCommand);
+    rgProcStopCommand.Visible := true;
+    case FStopCommand of
+      tseProcStopKill:
+        begin
+          cbCloseLeakWindow.Visible := false;
+          cbCopyLeakMessage.Visible := false;
+        end;
+      tseProcStopClose:
+        begin
+          cbCloseLeakWindow.Checked := FSettings.CloseLeakWindow;
+          cbCopyLeakMessage.Checked := FSettings.CopyLeakMessage;
+          cbCloseLeakWindow.Visible := true;
+          cbCopyLeakMessage.Visible := cbCloseLeakWindow.Checked;
+
+        end;
+    end;
+
+  end
+  else
+  begin
+    rgProcTermActive.ItemIndex := 1;
+    rgProcStopCommand.Visible := false;
+    cbCloseLeakWindow.Visible := false;
+    cbCopyLeakMessage.Visible := false;
+  end;
 end;
 
 procedure TDeputyProcMgr.WaitPoll(APollCount: integer);
