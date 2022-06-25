@@ -31,7 +31,7 @@ object DeputyProcMgr: TDeputyProcMgr
     Top = 41
     Width = 815
     Height = 574
-    ActivePage = TabSheet1
+    ActivePage = tsHistory
     Align = alClient
     TabOrder = 1
     object tsParameters: TTabSheet
@@ -70,35 +70,63 @@ object DeputyProcMgr: TDeputyProcMgr
         TabOrder = 1
       end
     end
-    object TabSheet1: TTabSheet
-      Caption = 'TabSheet1'
+    object tsHistory: TTabSheet
+      Caption = 'History'
       ImageIndex = 2
-      object tvHist: TTreeView
+      object lvHist: TListView
         Left = 0
         Top = 0
-        Width = 121
-        Height = 544
-        Align = alLeft
-        Indent = 19
-        TabOrder = 0
-      end
-      object ListView1: TListView
-        Left = 208
-        Top = 312
-        Width = 466
-        Height = 150
+        Width = 807
+        Height = 120
+        Align = alTop
+        Checkboxes = True
         Columns = <
           item
+            AutoSize = True
             Caption = 'Process'
           end
           item
+            AutoSize = True
             Caption = 'Start'
           end
           item
+            AutoSize = True
             Caption = 'Stop'
+          end
+          item
+            AutoSize = True
+            Caption = 'Elapsed ms'
+          end
+          item
+            AutoSize = True
+            Caption = 'Proc Found'
+          end
+          item
+            AutoSize = True
+            Caption = 'Leak Shown'
           end>
-        TabOrder = 1
+        ReadOnly = True
+        RowSelect = True
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 0
         ViewStyle = vsReport
+        OnInfoTip = lvHistInfoTip
+        ExplicitLeft = 208
+        ExplicitTop = 312
+        ExplicitWidth = 466
+        ExplicitHeight = 150
+      end
+      object memoLeakHist: TMemo
+        Left = 0
+        Top = 120
+        Width = 807
+        Height = 424
+        Align = alClient
+        Lines.Strings = (
+          'memoLeakHist')
+        ScrollBars = ssBoth
+        TabOrder = 1
       end
     end
   end
