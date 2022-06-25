@@ -161,6 +161,24 @@ object DeputyProcMgr: TDeputyProcMgr
         TabOrder = 2
         OnClick = rgProcTermActiveClick
       end
+      object cbCloseLeakWindow: TCheckBox
+        Left = 448
+        Top = 56
+        Width = 179
+        Height = 17
+        Caption = 'Close Leak Window'
+        TabOrder = 3
+        OnClick = cbCloseLeakWindowClick
+      end
+      object cbCopyLeakMessage: TCheckBox
+        Left = 448
+        Top = 108
+        Width = 145
+        Height = 17
+        Caption = 'Copy Leak Message'
+        TabOrder = 4
+        OnClick = cbCopyLeakMessageClick
+      end
     end
   end
   object gpCleanStatus: TGridPanel
