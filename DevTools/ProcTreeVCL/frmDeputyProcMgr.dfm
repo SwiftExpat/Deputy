@@ -31,27 +31,14 @@ object DeputyProcMgr: TDeputyProcMgr
     Top = 41
     Width = 815
     Height = 574
-    ActivePage = tsHistory
+    ActivePage = tsStatus
     Align = alClient
     TabOrder = 1
-    object tsParameters: TTabSheet
-      Caption = 'Parameters'
-      object lbMgrParams: TListBox
-        Left = 0
-        Top = 0
-        Width = 807
-        Height = 544
-        Align = alClient
-        ItemHeight = 15
-        TabOrder = 0
-      end
-    end
     object tsStatus: TTabSheet
       Caption = 'Status'
-      ImageIndex = 1
-      object memoLeak: TMemo
+      object memoLeakStatus: TMemo
         Left = 0
-        Top = 0
+        Top = 97
         Width = 807
         Height = 447
         Align = alClient
@@ -59,15 +46,17 @@ object DeputyProcMgr: TDeputyProcMgr
           'memoLeak')
         ScrollBars = ssBoth
         TabOrder = 0
+        ExplicitTop = 0
       end
       object lbMgrStatus: TListBox
         Left = 0
-        Top = 447
+        Top = 0
         Width = 807
         Height = 97
-        Align = alBottom
+        Align = alTop
         ItemHeight = 15
         TabOrder = 1
+        ExplicitTop = 447
       end
     end
     object tsHistory: TTabSheet
@@ -128,6 +117,19 @@ object DeputyProcMgr: TDeputyProcMgr
           'memoLeakHist')
         ScrollBars = ssBoth
         TabOrder = 1
+      end
+    end
+    object tsParameters: TTabSheet
+      Caption = 'Parameters'
+      ImageIndex = 2
+      object lbMgrParams: TListBox
+        Left = 0
+        Top = 0
+        Width = 807
+        Height = 544
+        Align = alClient
+        ItemHeight = 15
+        TabOrder = 0
       end
     end
   end
