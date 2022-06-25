@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics, Winapi.TlHelp32, SE.ProcMgrUtils,
+  System.Classes, Vcl.Graphics, Winapi.TlHelp32, SE.ProcMgrUtils, SERTTK.DeputyTypes,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls;
 
 const
@@ -27,6 +27,7 @@ type
     procedure btnFunctionClick(Sender: TObject);
   private
     FProcMgr: TSEProcessManager;
+    FSettings: TSERTTKDeputySettings;
     procedure LogMsg(AMessage: string);
     function ProcName: string;
   public
@@ -43,11 +44,9 @@ uses System.IOUtils, frmDeputyProcMgr;
 {$R *.dfm}
 
 procedure TfrmProcTree.btnCloseClick(Sender: TObject);
-var
-  lco: TSEProcessCleanup;
 begin
-  lco := TSEProcessCleanup.Create(ProcName, proc_dir, TSEProcessStopCommand.tseProcStopClose);
-  //FProcMgr.ProcessCleanup(lco);
+  // lco := TSEProcessCleanup.Create(ProcName, proc_dir, TSEProcessStopCommand.tseProcStopClose);
+  // FProcMgr.ProcessCleanup(lco);
   PostMessage(Memo1.Handle, WM_Paste, 0, 0);
 end;
 
@@ -57,22 +56,21 @@ var
 begin
   fmgr := TDeputyProcMgrFactory.DeputyProcMgr;
   fmgr.Show;
-  fmgr.ClearProcess(ProcName, proc_dir, TSEProcessStopCommand.tseProcStopClose);
+  fmgr.ClearProcess(ProcName, proc_dir);
 end;
 
 procedure TfrmProcTree.btnFunctionClick(Sender: TObject);
 var
   fmgr: TDeputyProcMgr;
-  rslt : boolean;
+  rslt: boolean;
 begin
   fmgr := TDeputyProcMgrFactory.DeputyProcMgr;
-//  fmgr.Show;
-  rslt := fmgr.ClearProcess(ProcName, proc_dir, TSEProcessStopCommand.tseProcStopClose);
-  if rslt  then
-  memo1.Lines.Add('Process cleared')
+  fmgr.AssignSettings(FSettings);
+  rslt := fmgr.ClearProcess(ProcName, proc_dir);
+  if rslt then
+    Memo1.Lines.Add('Process cleared')
   else
-  memo1.Lines.Add('Unable to clear Process')
-
+    Memo1.Lines.Add('Unable to clear Process')
 
 end;
 
@@ -88,11 +86,13 @@ procedure TfrmProcTree.FormCreate(Sender: TObject);
 begin
   FProcMgr := TSEProcessManager.Create;
   FProcMgr.OnMessage := LogMsg;
+  FSettings := TSERTTKDeputySettings.Create(TSERTTKDeputySettings.nm_settings_regkey);
 end;
 
 procedure TfrmProcTree.FormDestroy(Sender: TObject);
 begin
   FProcMgr.Free;
+  FSettings.Free;
 end;
 
 function TfrmProcTree.ProcName: string;

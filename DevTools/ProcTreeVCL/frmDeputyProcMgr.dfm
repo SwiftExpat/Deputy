@@ -28,10 +28,10 @@ object DeputyProcMgr: TDeputyProcMgr
   end
   object pcWorkarea: TPageControl
     Left = 0
-    Top = 41
+    Top = 0
     Width = 815
-    Height = 574
-    ActivePage = tsStatus
+    Height = 615
+    ActivePage = tsSettings
     Align = alClient
     TabOrder = 1
     object tsStatus: TTabSheet
@@ -40,13 +40,14 @@ object DeputyProcMgr: TDeputyProcMgr
         Left = 0
         Top = 97
         Width = 807
-        Height = 447
+        Height = 488
         Align = alClient
         Lines.Strings = (
           'memoLeak')
         ScrollBars = ssBoth
         TabOrder = 0
         ExplicitTop = 0
+        ExplicitHeight = 447
       end
       object lbMgrStatus: TListBox
         Left = 0
@@ -111,44 +112,55 @@ object DeputyProcMgr: TDeputyProcMgr
         Left = 0
         Top = 120
         Width = 807
-        Height = 424
+        Height = 465
         Align = alClient
         Lines.Strings = (
           'memoLeakHist')
         ScrollBars = ssBoth
         TabOrder = 1
+        ExplicitHeight = 424
       end
     end
-    object tsParameters: TTabSheet
-      Caption = 'Parameters'
+    object tsSettings: TTabSheet
+      Caption = 'Settings'
       ImageIndex = 2
-      object lbMgrParams: TListBox
-        Left = 0
-        Top = 0
-        Width = 807
-        Height = 544
-        Align = alClient
-        ItemHeight = 15
+      object rgProcStopCommand: TRadioGroup
+        Left = 232
+        Top = 32
+        Width = 185
+        Height = 105
+        Caption = 'Terminate Action'
+        Items.Strings = (
+          'Terminate'
+          'Close')
         TabOrder = 0
+        OnClick = rgProcStopCommandClick
       end
-    end
-  end
-  object FlowPanel1: TFlowPanel
-    Left = 0
-    Top = 0
-    Width = 815
-    Height = 41
-    Align = alTop
-    Caption = 'FlowPanel1'
-    TabOrder = 2
-    object btnForceTerminate: TButton
-      Left = 1
-      Top = 1
-      Width = 75
-      Height = 25
-      Caption = 'Force Terminate'
-      TabOrder = 0
-      OnClick = btnForceTerminateClick
+      object Memo1: TMemo
+        Left = 0
+        Top = 496
+        Width = 807
+        Height = 89
+        Align = alBottom
+        Lines.Strings = (
+          'Memo1')
+        TabOrder = 1
+        ExplicitLeft = 312
+        ExplicitTop = 248
+        ExplicitWidth = 185
+      end
+      object rgProcTermActive: TRadioGroup
+        Left = 16
+        Top = 32
+        Width = 185
+        Height = 105
+        Caption = 'Proc Terminate'
+        Items.Strings = (
+          'Enabled'
+          'Disabled')
+        TabOrder = 2
+        OnClick = rgProcTermActiveClick
+      end
     end
   end
   object gpCleanStatus: TGridPanel
@@ -189,6 +201,11 @@ object DeputyProcMgr: TDeputyProcMgr
         Column = 1
         Control = lblElapsedMS
         Row = 1
+      end
+      item
+        Column = 0
+        Control = btnForceTerminate
+        Row = 2
       end>
     RowCollection = <
       item
@@ -201,7 +218,7 @@ object DeputyProcMgr: TDeputyProcMgr
         Value = 41.167040198162570000
       end>
     ShowCaption = False
-    TabOrder = 3
+    TabOrder = 2
     Visible = False
     object lblLCHdr: TLabel
       Left = 1
@@ -233,6 +250,7 @@ object DeputyProcMgr: TDeputyProcMgr
       Align = alClient
       Caption = 'Abort Cleanup'
       TabOrder = 0
+      Visible = False
       OnClick = btnAbortCleanupClick
     end
     object Label1: TLabel
@@ -256,6 +274,20 @@ object DeputyProcMgr: TDeputyProcMgr
       Caption = '0'
       ExplicitWidth = 6
       ExplicitHeight = 15
+    end
+    object btnForceTerminate: TButton
+      Left = 1
+      Top = 37
+      Width = 92
+      Height = 26
+      Align = alClient
+      Caption = 'Force Terminate'
+      TabOrder = 1
+      Visible = False
+      OnClick = btnForceTerminateClick
+      ExplicitTop = 1
+      ExplicitWidth = 75
+      ExplicitHeight = 25
     end
   end
   object tmrCleanupStatus: TTimer

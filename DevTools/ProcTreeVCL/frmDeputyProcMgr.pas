@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls, SE.ProcMgrUtils,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls, SE.ProcMgrUtils, SERTTK.DeputyTypes,
   Vcl.CategoryButtons, Vcl.ExtCtrls, Generics.Collections, System.Diagnostics;
 
 type
@@ -13,12 +13,10 @@ type
   TDeputyProcMgr = class(TForm)
     memoLeakStatus: TMemo;
     sbMain: TStatusBar;
-    lbMgrParams: TListBox;
     lbMgrStatus: TListBox;
     pcWorkarea: TPageControl;
-    tsParameters: TTabSheet;
+    tsSettings: TTabSheet;
     tsStatus: TTabSheet;
-    FlowPanel1: TFlowPanel;
     btnAbortCleanup: TButton;
     btnForceTerminate: TButton;
     tmrCleanupStatus: TTimer;
@@ -30,6 +28,9 @@ type
     tsHistory: TTabSheet;
     lvHist: TListView;
     memoLeakHist: TMemo;
+    rgProcStopCommand: TRadioGroup;
+    Memo1: TMemo;
+    rgProcTermActive: TRadioGroup;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -39,6 +40,8 @@ type
     procedure FormShow(Sender: TObject);
     procedure lvHistInfoTip(Sender: TObject; Item: TListItem; var InfoTip: string);
     procedure lvHistSelectItem(Sender: TObject; Item: TListItem; Selected: Boolean);
+    procedure rgProcStopCommandClick(Sender: TObject);
+    procedure rgProcTermActiveClick(Sender: TObject);
   strict private
     FProcCleanup: TSEProcessCleanup;
     FProcMgrInfo: TSEProcessManagerEnvInfo;
@@ -46,10 +49,11 @@ type
     FHistNodes: TDictionary<TTreeNode, TSEProcessCleanup>;
     FProcMgr: TSEProcessManager;
     FStopWatch: TStopWatch;
+    FSettings: TSERTTKDeputySettings;
+    FStopCommand: TSEProcessStopCommand;
     procedure ClearLog;
     procedure ClearMemLeak;
-    function AddCleanup(const AProcName: string; const AProcDirectory: string;
-      const AStopCommand: TSEProcessStopCommand): TSEProcessCleanup;
+    function AddCleanup(const AProcName: string; const AProcDirectory: string): TSEProcessCleanup;
     procedure StatusBarUpdateMessage(AMsg: string);
     procedure StartCleanupStatus;
     procedure StopCleanupStatus;
@@ -61,8 +65,8 @@ type
     property ProcMgrInfo: TSEProcessManagerEnvInfo read FProcMgrInfo write FProcMgrInfo;
     procedure UpdateCleanHist(AProcCleanup: TSEProcessCleanup);
   public
-    function ClearProcess(const AProcName: string; const AProcDirectory: string;
-      const AStopCommand: TSEProcessStopCommand): Boolean;
+    function ClearProcess(const AProcName: string; const AProcDirectory: string): Boolean;
+    procedure AssignSettings(ASettings: TSEDeputySettings);
     procedure LoadProcessCleanup;
     function IDECancel: Boolean;
   end;
@@ -85,29 +89,29 @@ procedure TDeputyProcMgr.LoadProcessCleanup;
 begin
   ClearMemLeak;
   ClearLog;
-  lbMgrParams.Clear;
-  lbMgrParams.Items.Add('Process Name');
-  lbMgrParams.Items.Add(ProcCleanup.ProcessName);
-
-  lbMgrParams.Items.Add('Clean Proc Action');
-  if ProcCleanup.StopCommand = TSEProcessStopCommand.tseProcStopKill then
-    lbMgrParams.Items.Add('Terminate')
-  else
-    lbMgrParams.Items.Add('Close Window');
-  lbMgrParams.Items.Add('MemLeak Action');
-  if ProcCleanup.CloseMemLeak then
-    lbMgrParams.Items.Add('Close Leak Window')
-  else
-    lbMgrParams.Items.Add('Leak Window Shown');
+  // lbMgrParams.Clear;
+  // lbMgrParams.Items.Add('Process Name');
+  // lbMgrParams.Items.Add(ProcCleanup.ProcessName);
+  //
+  // lbMgrParams.Items.Add('Clean Proc Action');
+  // if ProcCleanup.StopCommand = TSEProcessStopCommand.tseProcStopKill then
+  // lbMgrParams.Items.Add('Terminate')
+  // else
+  // lbMgrParams.Items.Add('Close Window');
+  // lbMgrParams.Items.Add('MemLeak Action');
+  // if ProcCleanup.CloseMemLeak then
+  // lbMgrParams.Items.Add('Close Leak Window')
+  // else
+  // lbMgrParams.Items.Add('Leak Window Shown');
 
 end;
 
-function TDeputyProcMgr.AddCleanup(const AProcName, AProcDirectory: string; const AStopCommand: TSEProcessStopCommand)
+function TDeputyProcMgr.AddCleanup(const AProcName, AProcDirectory: string)
   : TSEProcessCleanup;
 var
   tli: TListItem;
 begin
-  result := TSEProcessCleanup.Create(AProcName, AProcDirectory, AStopCommand);
+  result := TSEProcessCleanup.Create(AProcName, AProcDirectory, FStopCommand);
   FCleanups.Add(result);
   tli := TListItem.Create(lvHist.Items);
   lvHist.Items.AddItem(tli, 0);
@@ -115,6 +119,18 @@ begin
   tli.Caption := AProcName;
   tli.SubItems.Add(FormatDateTime('hh:nn:ss.zzz', result.StartTime));
   lvHist.Tag := tli.Index;
+end;
+
+procedure TDeputyProcMgr.AssignSettings(ASettings: TSEDeputySettings);
+begin
+  FSettings := ASettings;
+  if FSettings.KillProcActive then
+    rgProcTermActive.ItemIndex := 0
+  else
+    rgProcTermActive.ItemIndex := 1;
+
+  rgProcStopCommand.ItemIndex := FSettings.StopCommand;
+  FStopCommand:= TSEProcessStopCommand(FSettings.StopCommand);
 end;
 
 procedure TDeputyProcMgr.btnAbortCleanupClick(Sender: TObject);
@@ -127,11 +143,10 @@ begin
   FProcMgr.StopManager;
 end;
 
-function TDeputyProcMgr.ClearProcess(const AProcName, AProcDirectory: string;
-  const AStopCommand: TSEProcessStopCommand): Boolean;
+function TDeputyProcMgr.ClearProcess(const AProcName: string; const AProcDirectory: string): Boolean;
 
 begin
-  ProcCleanup := AddCleanup(AProcName, AProcDirectory, AStopCommand);
+  ProcCleanup := AddCleanup(AProcName, AProcDirectory);
   LoadProcessCleanup;
   FProcMgr.AssignMgrInfo(ProcMgrInfo);
   FProcMgr.AssignProcCleanup(ProcCleanup);
@@ -237,6 +252,23 @@ begin
   end;
 end;
 
+procedure TDeputyProcMgr.rgProcStopCommandClick(Sender: TObject);
+var
+  pc: TSEProcessStopCommand;
+begin // code this to save the setting
+  Memo1.Lines.Add(rgProcStopCommand.Items[rgProcStopCommand.ItemIndex]);
+  pc := TSEProcessStopCommand(1);
+  FSettings.StopCommand := rgProcStopCommand.ItemIndex;
+end;
+
+procedure TDeputyProcMgr.rgProcTermActiveClick(Sender: TObject);
+begin
+  if rgProcTermActive.ItemIndex = 0 then
+    FSettings.KillProcActive := true
+  else
+    FSettings.KillProcActive := false
+end;
+
 procedure TDeputyProcMgr.StartCleanupStatus;
 begin
   WaitPoll(0);
@@ -255,7 +287,7 @@ begin
   tmrCleanupStatus.Enabled := false;
   gpCleanStatus.Visible := false;
   FStopWatch.Stop;
-  StatusBarUpdateMessage('Process terminated in '+ FStopwatch.ElapsedMilliseconds.ToString +'ms');
+  StatusBarUpdateMessage('Process terminated in ' + FStopWatch.ElapsedMilliseconds.ToString + 'ms');
 end;
 
 procedure TDeputyProcMgr.tmrCleanupStatusTimer(Sender: TObject);
