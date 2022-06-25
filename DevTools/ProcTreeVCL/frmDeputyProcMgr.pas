@@ -11,7 +11,7 @@ type
   EDeputyProcMgrCreate = class(Exception);
 
   TDeputyProcMgr = class(TForm)
-    memoLeak: TMemo;
+    memoLeakStatus: TMemo;
     sbMain: TStatusBar;
     lbMgrParams: TListBox;
     lbMgrStatus: TListBox;
@@ -151,7 +151,7 @@ end;
 
 procedure TDeputyProcMgr.ClearMemLeak;
 begin
-  memoLeak.Lines.Clear;
+  memoLeakStatus.Lines.Clear;
 end;
 
 procedure TDeputyProcMgr.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -192,12 +192,12 @@ procedure TDeputyProcMgr.LeakCopied(AMessage: string; APID: cardinal);
 begin
   ClearMemLeak;
   Application.ProcessMessages;
-  PostMessage(memoLeak.Handle, WM_Paste, 0, 0);
+  PostMessage(memoLeakStatus.Handle, WM_Paste, 0, 0);
   TThread.Sleep(5); // a few ms to paste
   Application.ProcessMessages;
   TThread.Sleep(5); // a few ms to paste
-  if memoLeak.Lines.Text.IndexOf('leak') > -1 then
-    ProcCleanup.SetLeakByPID(APID, memoLeak.Lines.Text);
+  if memoLeakStatus.Lines.Text.IndexOf('leak') > -1 then
+    ProcCleanup.SetLeakByPID(APID, memoLeakStatus.Lines.Text);
 end;
 
 procedure TDeputyProcMgr.LogMsg(AMessage: string);
@@ -255,6 +255,7 @@ begin
   tmrCleanupStatus.Enabled := false;
   gpCleanStatus.Visible := false;
   FStopWatch.Stop;
+  StatusBarUpdateMessage('Process terminated in '+ FStopwatch.ElapsedMilliseconds.ToString +'ms');
 end;
 
 procedure TDeputyProcMgr.tmrCleanupStatusTimer(Sender: TObject);
