@@ -38,6 +38,7 @@ type
     procedure tmrCleanupStatusTimer(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure lvHistInfoTip(Sender: TObject; Item: TListItem; var InfoTip: string);
+    procedure lvHistSelectItem(Sender: TObject; Item: TListItem; Selected: Boolean);
   strict private
     FProcCleanup: TSEProcessCleanup;
     FProcMgrInfo: TSEProcessManagerEnvInfo;
@@ -61,9 +62,9 @@ type
     procedure UpdateCleanHist(AProcCleanup: TSEProcessCleanup);
   public
     function ClearProcess(const AProcName: string; const AProcDirectory: string;
-      const AStopCommand: TSEProcessStopCommand): boolean;
+      const AStopCommand: TSEProcessStopCommand): Boolean;
     procedure LoadProcessCleanup;
-    function IDECancel: boolean;
+    function IDECancel: Boolean;
   end;
 
   TDeputyProcMgrFactory = class
@@ -127,7 +128,7 @@ begin
 end;
 
 function TDeputyProcMgr.ClearProcess(const AProcName, AProcDirectory: string;
-  const AStopCommand: TSEProcessStopCommand): boolean;
+  const AStopCommand: TSEProcessStopCommand): Boolean;
 
 begin
   ProcCleanup := AddCleanup(AProcName, AProcDirectory, AStopCommand);
@@ -182,7 +183,7 @@ begin
   pcWorkarea.ActivePage := tsStatus;
 end;
 
-function TDeputyProcMgr.IDECancel: boolean;
+function TDeputyProcMgr.IDECancel: Boolean;
 begin
   result := true;
 end;
@@ -213,7 +214,18 @@ begin
     pc := TSEProcessCleanup(Item.Data)
   else
     exit;
+  if pc.LeakShown then
+    InfoTip := 'Leak found';
+end;
 
+procedure TDeputyProcMgr.lvHistSelectItem(Sender: TObject; Item: TListItem; Selected: Boolean);
+var
+  pc: TSEProcessCleanup;
+begin
+  if Selected and Assigned(Item.Data) then
+    pc := TSEProcessCleanup(Item.Data)
+  else
+    exit;
   if memoLeakHist.Tag <> Item.Index then // update the hist box based on selected item index
   begin
     memoLeakHist.Clear;
@@ -223,8 +235,6 @@ begin
       memoLeakHist.Lines.Add('No Leak found ' + Item.Index.ToString);
     memoLeakHist.Tag := Item.Index;
   end;
-  if pc.LeakShown then
-    InfoTip := 'Leak found';
 end;
 
 procedure TDeputyProcMgr.StartCleanupStatus;
