@@ -17,7 +17,7 @@ type
   private
     FWizard: TSERTTKDeputyWizard;
   strict private
-    //FProcMgr: TSEProcessManager;
+    // FProcMgr: TSEProcessManager;
     FNagCounter: TSERTTKNagCounter;
     procedure CheckNagCount;
   public
@@ -50,7 +50,7 @@ type
     FNagCounter: TSERTTKNagCounter;
     function MenuItemByName(const AItemName: string): TMenuItem;
     // procedure MessageKillProcStatus;
-    procedure MenuItemKillProcStatus;
+    // procedure MenuItemKillProcStatus;
     procedure MessageCaddieCheck(const AMessage: string);
     procedure CaddieCheckDownloaded(const AMessage: string);
     procedure DemoFMXDownloaded(const AMessage: string);
@@ -126,7 +126,7 @@ begin
   FWizardInfo.WizardFileName := GetWizardFileName;
   FProcMgrForm := TDeputyProcMgrFactory.DeputyProcMgr;
   FProcMgrForm.AssignSettings(FSettings);
-  // FRTTKAppUpdate.ExpertUpdatesRefresh(FWizardInfo, FSettings);
+  FRTTKAppUpdate.ExpertUpdatesRefresh(FWizardInfo, FSettings);
 end;
 
 {$REGION 'Plugin Display values'}
@@ -221,8 +221,8 @@ begin
   end;
   mi := MenuItemByName(nm_mi_killprocnabled);
   mi.OnClick := OnClickMiKillProcEnabled;
+  mi.Caption := 'Kill Process Settings';
   FToolsMenuRootItem.Add(mi);
-  MenuItemKillProcStatus;
   mi := MenuItemByName(nm_mi_run_caddie);
   mi.Caption := FRTTKAppUpdate.ButtonTextCaddie;
   mi.OnClick := FRTTKAppUpdate.OnClickCaddieRun;
@@ -265,26 +265,6 @@ begin
 {$ENDIF}
   end;
   inherited;
-
-end;
-
-procedure TSERTTKDeputyWizard.MenuItemKillProcStatus;
-var
-  mi: TMenuItem;
-begin
-  mi := MenuItemByName(nm_mi_killprocnabled);
-  mi.Checked := FSettings.KillProcActive;
-  if mi.Checked then
-  begin
-    mi.Caption := 'Kill Process Enabled';
-    MessagesAdd('Deputy Kill Process Enabled');
-  end
-  else
-  begin
-    mi.Caption := 'Kill Process Disabled';
-    MessagesAdd('Deputy Kill Process disabled');
-  end;
-
 end;
 
 procedure TSERTTKDeputyWizard.OnClickMiKillProcEnabled(Sender: TObject);
@@ -305,7 +285,7 @@ const
   t_m_nag = 'Visit http://swiftexpat.com for more information about RunTime ToolKit.' + m_dl_free;
 begin
   result := -1; // some default
-  if true then //FRTTKAppUpdate.Downloaded then
+  if true then // FRTTKAppUpdate.Downloaded then
   begin { TODO : Add nag behavior if caddie was not run recently }
     MessagesAdd('Ready to execute, please try RunTime ToolKit');
     result := -3; // log a message
@@ -328,7 +308,7 @@ begin
 {$ENDIF} of
             mrOk:
               begin
-                //FRTTKAppUpdate.ShowWebsite;
+                // FRTTKAppUpdate.ShowWebsite;
                 result := -1024; // visited the site, dont bug again for this session
               end;
             mrCancel:
@@ -363,7 +343,7 @@ begin
   CheckNagCount;
   if FWizard.Settings.KillProcActive then
   begin
-     result := FWizard.ProcMgrForm.DebugLaunch(Project.ProjectOptions.TargetName);
+    result := FWizard.ProcMgrForm.DebugLaunch(Project.ProjectOptions.TargetName);
     // FWizard.MessagesAdd(FProcMgr.Actions);
   end
   else
