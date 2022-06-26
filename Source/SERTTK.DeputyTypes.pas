@@ -1073,38 +1073,38 @@ procedure TSERTTKAppVersionUpdate.OnClickUpdateExpert(Sender: TObject);
 var
   fn: string;
 begin
-  // start a download
-  // rename dll FWizardInfo.WizardFileName
-  try
-    if not SameText(ExpertFileLocation, FWizardInfo.WizardFileName) then
-    begin // ensure the Update would be for the wizard loaded
-      FExpertUpdateMenuItem.Caption := 'Dll missmatch to registry';
-      exit;
-    end;
-    if FWizardInfo.WizardFileName = DeputyWizardBackupFilename then
-    begin // pending restart, do not continue
-      FExpertUpdateMenuItem.Caption := 'Restart IDE to load update';
-      exit;
-    end;
-    fn := TPath.GetFileName(FWizardInfo.WizardFileName);
-    if not TFile.Exists(DeputyWizardUpdateFilename(fn)) then
-    begin // no update to install, exit
-      FExpertUpdateMenuItem.Caption := 'Update not found';
-      exit;
-    end;
-    if TFile.Exists(DeputyWizardBackupFilename) then
-      TFile.Delete(DeputyWizardBackupFilename);
-    TFile.Move(FWizardInfo.WizardFileName, DeputyWizardBackupFilename);
-    TFile.Move(DeputyWizardUpdateFilename(fn), ExpertFileLocation);
-  except
-    on E: Exception do
-    begin // likely IO related
-      FExpertUpdateMenuItem.Caption := 'E:' + E.Message.Substring(0, 20);
-      LogMessage('Failed Update ' + E.Message);
-    end;
-  end;
-
-  FExpertUpdateMenuItem.Caption := 'Restart IDE pending';
+//  // start a download
+//  // rename dll FWizardInfo.WizardFileName
+//  try
+//    if not SameText(ExpertFileLocation, FWizardInfo.WizardFileName) then
+//    begin // ensure the Update would be for the wizard loaded
+//      FExpertUpdateMenuItem.Caption := 'Dll missmatch to registry';
+//      exit;
+//    end;
+//    if FWizardInfo.WizardFileName = DeputyWizardBackupFilename then
+//    begin // pending restart, do not continue
+//      FExpertUpdateMenuItem.Caption := 'Restart IDE to load update';
+//      exit;
+//    end;
+//    fn := TPath.GetFileName(FWizardInfo.WizardFileName);
+//    if not TFile.Exists(DeputyWizardUpdateFilename(fn)) then
+//    begin // no update to install, exit
+//      FExpertUpdateMenuItem.Caption := 'Update not found';
+//      exit;
+//    end;
+//    if TFile.Exists(DeputyWizardBackupFilename) then
+//      TFile.Delete(DeputyWizardBackupFilename);
+//    TFile.Move(FWizardInfo.WizardFileName, DeputyWizardBackupFilename);
+//    TFile.Move(DeputyWizardUpdateFilename(fn), ExpertFileLocation);
+//  except
+//    on E: Exception do
+//    begin // likely IO related
+//      FExpertUpdateMenuItem.Caption := 'E:' + E.Message.Substring(0, 20);
+//      LogMessage('Failed Update ' + E.Message);
+//    end;
+//  end;
+//
+//  FExpertUpdateMenuItem.Caption := 'Restart IDE pending';
 
 end;
 
