@@ -83,8 +83,14 @@ type
   public
     function FindMainWindow(const APID: DWord): DWord;
     function FindLeakMsgWindow(const APID: DWord): DWord;
+    /// <summary>
+    /// Starts the process Cleanup for assigned cleanup
+    /// </summary>
+    /// <remarks>
+    /// always returns true at this point, consider refactoring
+    /// </remarks>
     function ProcessCleanup: boolean;
-    function ProcFileExists(const AProcFullPath: string):boolean;
+    function ProcFileExists(const AProcFullPath: string; var AFileName: string; var AFileDirectory: string): boolean;
     property Actions: TStringList read FActions;
     destructor Destroy; override;
     procedure StopManager;
@@ -245,22 +251,22 @@ begin
     else
       exit; // should never get here
 
-    if FManagerStopped then   //exit on abort, to be implemented
+    if FManagerStopped then // exit on abort, to be implemented
       exit;
 
     LogMsg('Closing main window' + ps.ProcID.ToString);
     CloseMainWindow(ps.ProcID);
-    ps.PollCount := 0; //loop to display status in the IDE
+    ps.PollCount := 0; // loop to display status in the IDE
     while ProcIDRunning(ps.ProcID) do
     begin
       if FManagerStopped then
-        exit;    //exit on abort, to be implemented
+        exit; // exit on abort, to be implemented
       TThread.Sleep(100); // sleep first, close was just sent
       inc(ps.PollCount);
       if Assigned(FWaitPoll) then
         FWaitPoll(ps.PollCount);
       if LeakWindowShowing(ps.ProcID) then
-      begin     //what is the workflow, hold the IDE till the leak is closed?
+      begin // what is the workflow, hold the IDE till the leak is closed?
         ps.LeakShown := true;
         LogMsg('Leak window showing');
         if LeakWindowClose(ps.ProcID) then
@@ -363,11 +369,10 @@ begin
     try
       if ProcListLoad then // includes a check on proc count
       begin
-        // call show window?
-        if FCleanup.StopCommand = TSEProcessStopCommand.tseProcStopKill then
-          ExecKill
-        else if FCleanup.StopCommand = TSEProcessStopCommand.tseProcStopClose then
+        if FCleanup.StopCommand = TSEProcessStopCommand.tseProcStopClose then
           ExecClose
+        else
+          ExecKill
       end
       else // snapshot success, FCleanup.ProcList.Count = 0, nothing to clean
         LogMsg('Process not found');
@@ -403,9 +408,15 @@ begin
     result := false;
 end;
 
-function TSEProcessManager.ProcFileExists(const AProcFullPath: string): boolean;
+function TSEProcessManager.ProcFileExists(const AProcFullPath: string; var AFileName: string;
+  var AFileDirectory: string): boolean;
 begin
-result := TFile.Exists(AProcFullPath, true);
+  result := TFile.Exists(AProcFullPath, true);
+  if result then
+  begin
+    AFileName := TPath.GetFileName(AProcFullPath);
+    AFileDirectory := TPath.GetDirectoryName(AProcFullPath);
+  end;
 end;
 
 function TSEProcessManager.ProcIDRunning(APID: cardinal): boolean;

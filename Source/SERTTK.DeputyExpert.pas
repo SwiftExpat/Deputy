@@ -300,7 +300,46 @@ begin
 end;
 
 function TSERTTKDeputyWizard.NagCountReached: integer;
+const
+  m_dl_free = #13 + 'The download is free & is a demo of RunTime ToolKit.';
+  t_m_title = 'RunTime ToolKit Caddie not found!';
+  t_m_download = 'Are you ready to download RunTime ToolKit Caddie?' + m_dl_free;
+  t_m_nag = 'Visit http://swiftexpat.com for more information about RunTime ToolKit.' + m_dl_free;
 begin
+  result := -1; // some default
+  if true then //FRTTKAppUpdate.Downloaded then
+  begin { TODO : Add nag behavior if caddie was not run recently }
+    MessagesAdd('Ready to execute, please try RunTime ToolKit');
+    result := -3; // log a message
+  end
+  else
+    case TaskMessageDlg(t_m_title, t_m_download, mtConfirmation, [mbOK, mbCancel], 0) of
+      mrOk:
+        begin
+          FRTTKAppUpdate.DownloadCaddie;
+          result := -4096; // if the IDE runs more than that, wow
+        end;
+      mrCancel:
+        begin // Write code here for pressing button Cancel
+          case
+{$IF COMPILERVERSION > 33}
+            MessageDlg(t_m_nag, mtInformation, [mbOK, mbCancel, mbRetry], 0, mbOK,
+            ['Visit Site', 'Cancel', 'Later please'])
+{$ELSE}
+            MessageDlg(t_m_nag, mtInformation, [mbOK, mbCancel, mbRetry], 0, mbOK)
+{$ENDIF} of
+            mrOk:
+              begin
+                //FRTTKAppUpdate.ShowWebsite;
+                result := -1024; // visited the site, dont bug again for this session
+              end;
+            mrCancel:
+              result := 0; // prompt at next interval
+            mrRetry:
+              result := -5; // the asked for later
+          end;
+        end;
+    end;
 
 end;
 
@@ -329,7 +368,7 @@ begin
 {$ENDIF}
   if FWizard.Settings.KillProcActive then
   begin
-     result := FWizard.ProcMgrForm.ClearProcess(Project.ProjectOptions.TargetName);
+     result := FWizard.ProcMgrForm.DebugLaunch(Project.ProjectOptions.TargetName);
     // FWizard.MessagesAdd(FProcMgr.Actions);
   end
   else

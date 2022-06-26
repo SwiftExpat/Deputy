@@ -69,8 +69,26 @@ type
     property ProcMgrInfo: TSEProcessManagerEnvInfo read FProcMgrInfo write FProcMgrInfo;
     procedure UpdateCleanHist(AProcCleanup: TSEProcessCleanup);
   public
+    /// <summary>
+    /// Returns  C:\Users\%USERNAME%\AppData\Local\Programs\RunTime_ToolKit\RT_Caddie.exe
+    /// </summary>
+    /// <remarks>
+    /// uses RttkAppFolder C:\Users\%USERNAME%\AppData\Local\Programs\RunTime_ToolKit
+    /// </remarks>
     function ClearProcess(const AProcName: string; const AProcDirectory: string): Boolean;
+    /// <summary>
+    /// Called before IDE Compile
+    /// </summary>
+    /// <remarks>
+    /// return false to contine, ture to cancel
+    /// </remarks>
     function CompileContinue(const AProcFullPath: string): Boolean;
+    /// <summary>
+    /// Called by the IDE Debug launch
+    /// </summary>
+    /// <remarks>
+    /// return true to continue, false to cancel
+    /// </remarks>
     function DebugLaunch(const AProcFullPath: string): Boolean;
     procedure AssignSettings(ASettings: TSERTTKDeputySettings);
     procedure ShowSettings;
@@ -142,33 +160,50 @@ end;
 
 function TDeputyProcMgr.ClearProcess(const AProcName: string; const AProcDirectory: string): Boolean;
 begin
-  ProcCleanup := AddCleanup(AProcName, AProcDirectory);
-  ClearMemLeak;
-  ClearLog;
-  FProcMgr.AssignMgrInfo(ProcMgrInfo);
-  FProcMgr.AssignProcCleanup(ProcCleanup);
-  self.Show;
-  StartCleanupStatus; // timer to count with the stopwatch
-  result := FProcMgr.ProcessCleanup;
-  tmrCleanupStatus.Enabled := false; // stop the timer
-  UpdateCleanHist(ProcCleanup);
-  StopCleanupStatus;
-  self.Hide;
+  try
+    ProcCleanup := AddCleanup(AProcName, AProcDirectory);
+    ClearMemLeak;
+    ClearLog;
+    FProcMgr.AssignMgrInfo(ProcMgrInfo);
+    FProcMgr.AssignProcCleanup(ProcCleanup);
+    if ProcCleanup.StopCommand = TSEProcessStopCommand.tseProcStopClose then
+      self.Show;
+    StartCleanupStatus; // timer to count with the stopwatch
+    result := FProcMgr.ProcessCleanup;
+    tmrCleanupStatus.Enabled := false; // stop the timer
+    UpdateCleanHist(ProcCleanup);
+    StopCleanupStatus;
+  finally
+    tmrCleanupStatus.Enabled := false;
+    self.Hide;        //hide the form
+  end;
 end;
 
 // ide is asking if ACancel
+// return false to contine, ture to cancel
 function TDeputyProcMgr.CompileContinue(const AProcFullPath: string): Boolean;
+var
+  fn, fd: string;
 begin
-  result := FProcMgr.ProcFileExists(AProcFullPath);
-  if not result then // exit false,  IDE continue if the file does not exist
+  result := FProcMgr.ProcFileExists(AProcFullPath, fn, fd);
+  if not result then // exit false, IDE continue if the file does not exist
     exit(false);
+
+  ClearProcess(fn, fd);
+  result := false;
 end;
 
+// return true to continue, false to cancel
 function TDeputyProcMgr.DebugLaunch(const AProcFullPath: string): Boolean;
+var
+  fn, fd: string;
 begin
-  result := FProcMgr.ProcFileExists(AProcFullPath);
-  if not result then // exit false,  IDE continue if the file does not exist
+  result := FProcMgr.ProcFileExists(AProcFullPath, fn, fd);
+  if not result then // exit true, IDE continue if the file does not exist
     exit(true);
+
+  ClearProcess(fn, fd);
+  result := true;
 end;
 
 procedure TDeputyProcMgr.ClearLog;
@@ -207,11 +242,6 @@ procedure TDeputyProcMgr.FormShow(Sender: TObject);
 begin
   pcWorkarea.ActivePage := tsStatus;
 end;
-
-// function TDeputyProcMgr.IDECancel: Boolean;
-// begin
-// result := true;
-// end;
 
 procedure TDeputyProcMgr.LeakCopied(AMessage: string; APID: cardinal);
 begin
