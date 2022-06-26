@@ -6,10 +6,9 @@ library SE.IDE.Deputy;
 uses
   System.SysUtils,
   System.Classes,
-  SE.IE.Deputy in 'SE.IE.Deputy.pas',
-  frmDeputyProcMgr in '..\DevTools\ProcTreeVCL\frmDeputyProcMgr.pas' {DeputyProcMgr},
   SERTTK.DeputyTypes in 'SERTTK.DeputyTypes.pas',
-  SERTTK.DeputyExpert in 'SERTTK.DeputyExpert.pas';
+  SERTTK.DeputyExpert in 'SERTTK.DeputyExpert.pas',
+  frmDeputyProcMgr in '..\DevTools\ProcTreeVCL\frmDeputyProcMgr.pas' {DeputyProcMgr};
 
 {$R *.res}
 

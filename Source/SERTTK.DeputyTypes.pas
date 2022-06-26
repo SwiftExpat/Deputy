@@ -285,13 +285,13 @@ type
     //property Downloaded: boolean read CaddieAppExists;
    // property Executed: boolean read CaddieIniFileExists;
     //property Licensed: boolean read FLicensed write FLicensed;
-//    function CaddieButtonText: string;
-//    function DemoVCLButtonText: string;
-//    function DemoFMXButtonText: string;
-//    procedure OnClickCaddieRun(Sender: TObject);
-//    procedure OnClickDemoVCL(Sender: TObject);
-//    procedure OnClickDemoFMX(Sender: TObject);
-//    procedure OnClickShowWebsite(Sender: TObject);
+    function ButtonTextCaddie: string;
+    function ButtonTextDemoVCL: string;
+    function ButtonTextDemoFMX: string;
+    procedure OnClickCaddieRun(Sender: TObject);
+    procedure OnClickDemoVCL(Sender: TObject);
+    procedure OnClickDemoFMX(Sender: TObject);
+    procedure OnClickShowWebsite(Sender: TObject);
     property OnMessage: TSECaddieCheckOnMessage read FOnMessage write FOnMessage;
     property OnDownloadDone: TSECaddieCheckOnDownloadDone read FOnDownloadDone write FOnDownloadDone;
     property OnDownloadDemoVCLDone: TSECaddieCheckOnDownloadDone read FOnDownloadVCLDemoDone
@@ -572,6 +572,21 @@ end;
 
 { TSERTTKAppVersionUpdate }
 
+function TSERTTKAppVersionUpdate.ButtonTextCaddie: string;
+begin
+
+end;
+
+function TSERTTKAppVersionUpdate.ButtonTextDemoFMX: string;
+begin
+
+end;
+
+function TSERTTKAppVersionUpdate.ButtonTextDemoVCL: string;
+begin
+
+end;
+
 destructor TSERTTKAppVersionUpdate.Destroy;
 begin
 
@@ -697,6 +712,26 @@ begin
 end;
 
 procedure TSERTTKAppVersionUpdate.LogMessage(AMessage: string);
+begin
+
+end;
+
+procedure TSERTTKAppVersionUpdate.OnClickCaddieRun(Sender: TObject);
+begin
+
+end;
+
+procedure TSERTTKAppVersionUpdate.OnClickDemoFMX(Sender: TObject);
+begin
+
+end;
+
+procedure TSERTTKAppVersionUpdate.OnClickDemoVCL(Sender: TObject);
+begin
+
+end;
+
+procedure TSERTTKAppVersionUpdate.OnClickShowWebsite(Sender: TObject);
 begin
 
 end;

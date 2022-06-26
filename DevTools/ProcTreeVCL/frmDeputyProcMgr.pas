@@ -70,9 +70,11 @@ type
     procedure UpdateCleanHist(AProcCleanup: TSEProcessCleanup);
   public
     function ClearProcess(const AProcName: string; const AProcDirectory: string): Boolean;
+    function CompileContinue(const AProcFullPath: string): Boolean;
+    function DebugLaunch(const AProcFullPath: string): Boolean;
     procedure AssignSettings(ASettings: TSERTTKDeputySettings);
-    procedure LoadProcessCleanup;
-    function IDECancel: Boolean;
+    procedure ShowSettings;
+    // function IDECancel: Boolean;
   end;
 
   TDeputyProcMgrFactory = class
@@ -89,33 +91,12 @@ implementation
 uses DateUtils;
 { TDeputyProcMgr }
 
-procedure TDeputyProcMgr.LoadProcessCleanup;
-begin
-  ClearMemLeak;
-  ClearLog;
-  // lbMgrParams.Clear;
-  // lbMgrParams.Items.Add('Process Name');
-  // lbMgrParams.Items.Add(ProcCleanup.ProcessName);
-  //
-  // lbMgrParams.Items.Add('Clean Proc Action');
-  // if ProcCleanup.StopCommand = TSEProcessStopCommand.tseProcStopKill then
-  // lbMgrParams.Items.Add('Terminate')
-  // else
-  // lbMgrParams.Items.Add('Close Window');
-  // lbMgrParams.Items.Add('MemLeak Action');
-  // if ProcCleanup.CloseMemLeak then
-  // lbMgrParams.Items.Add('Close Leak Window')
-  // else
-  // lbMgrParams.Items.Add('Leak Window Shown');
-
-end;
-
 function TDeputyProcMgr.AddCleanup(const AProcName, AProcDirectory: string): TSEProcessCleanup;
 var
   tli: TListItem;
 begin
   result := TSEProcessCleanup.Create(AProcName, AProcDirectory, FStopCommand);
-  result.OptionsSet(FStopCommand, cbCopyLeakMessage.Checked ,cbCloseLeakWindow.Checked );
+  result.OptionsSet(FStopCommand, cbCopyLeakMessage.Checked, cbCloseLeakWindow.Checked);
   FCleanups.Add(result);
   tli := TListItem.Create(lvHist.Items);
   lvHist.Items.AddItem(tli, 0);
@@ -147,7 +128,7 @@ begin
     FSettings.CloseLeakWindow := true
   else
     FSettings.CloseLeakWindow := false;
-    UpdateSettings;
+  UpdateSettings;
 end;
 
 procedure TDeputyProcMgr.cbCopyLeakMessageClick(Sender: TObject);
@@ -156,13 +137,14 @@ begin
     FSettings.CopyLeakMessage := true
   else
     FSettings.CopyLeakMessage := false;
-    UpdateSettings;
+  UpdateSettings;
 end;
 
 function TDeputyProcMgr.ClearProcess(const AProcName: string; const AProcDirectory: string): Boolean;
 begin
   ProcCleanup := AddCleanup(AProcName, AProcDirectory);
-  LoadProcessCleanup;
+  ClearMemLeak;
+  ClearLog;
   FProcMgr.AssignMgrInfo(ProcMgrInfo);
   FProcMgr.AssignProcCleanup(ProcCleanup);
   self.Show;
@@ -172,6 +154,21 @@ begin
   UpdateCleanHist(ProcCleanup);
   StopCleanupStatus;
   self.Hide;
+end;
+
+// ide is asking if ACancel
+function TDeputyProcMgr.CompileContinue(const AProcFullPath: string): Boolean;
+begin
+  result := FProcMgr.ProcFileExists(AProcFullPath);
+  if not result then // exit false,  IDE continue if the file does not exist
+    exit(false);
+end;
+
+function TDeputyProcMgr.DebugLaunch(const AProcFullPath: string): Boolean;
+begin
+  result := FProcMgr.ProcFileExists(AProcFullPath);
+  if not result then // exit false,  IDE continue if the file does not exist
+    exit(true);
 end;
 
 procedure TDeputyProcMgr.ClearLog;
@@ -211,10 +208,10 @@ begin
   pcWorkarea.ActivePage := tsStatus;
 end;
 
-function TDeputyProcMgr.IDECancel: Boolean;
-begin
-  result := true;
-end;
+// function TDeputyProcMgr.IDECancel: Boolean;
+// begin
+// result := true;
+// end;
 
 procedure TDeputyProcMgr.LeakCopied(AMessage: string; APID: cardinal);
 begin
@@ -280,6 +277,12 @@ begin
   UpdateSettings;
 end;
 
+procedure TDeputyProcMgr.ShowSettings;
+begin
+  self.Show;
+  pcWorkarea.ActivePage := tsSettings;
+end;
+
 procedure TDeputyProcMgr.StartCleanupStatus;
 begin
   WaitPoll(0);
@@ -339,10 +342,8 @@ begin
           cbCopyLeakMessage.Checked := FSettings.CopyLeakMessage;
           cbCloseLeakWindow.Visible := true;
           cbCopyLeakMessage.Visible := cbCloseLeakWindow.Checked;
-
         end;
     end;
-
   end
   else
   begin

@@ -84,6 +84,7 @@ type
     function FindMainWindow(const APID: DWord): DWord;
     function FindLeakMsgWindow(const APID: DWord): DWord;
     function ProcessCleanup: boolean;
+    function ProcFileExists(const AProcFullPath: string):boolean;
     property Actions: TStringList read FActions;
     destructor Destroy; override;
     procedure StopManager;
@@ -400,6 +401,11 @@ begin
   end
   else
     result := false;
+end;
+
+function TSEProcessManager.ProcFileExists(const AProcFullPath: string): boolean;
+begin
+result := TFile.Exists(AProcFullPath, true);
 end;
 
 function TSEProcessManager.ProcIDRunning(APID: cardinal): boolean;
