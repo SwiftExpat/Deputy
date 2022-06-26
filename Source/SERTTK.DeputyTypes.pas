@@ -2,8 +2,8 @@ unit SERTTK.DeputyTypes;
 
 interface
 
-uses System.Classes, System.SysUtils , System.Win.Registry, System.Net.HttpClient,
-System.Net.HttpClientComponent, System.Net.URLClient ;
+uses System.Classes, System.SysUtils, System.Win.Registry, System.Net.HttpClient,
+  System.Net.HttpClientComponent, System.Net.URLClient;
 
 const
   MAJ_VER = 1; // Major version nr.
@@ -214,7 +214,7 @@ type
     function AgentString: string;
   end;
 
-    TSECaddieCheckOnMessage = procedure(const AMessage: string) of object;
+  TSECaddieCheckOnMessage = procedure(const AMessage: string) of object;
   TSECaddieCheckOnDownloadDone = procedure(const AMessage: string) of object;
 
   TSERTTKAppVersionUpdate = class
@@ -241,9 +241,10 @@ type
     url_deputy_version = url_lic + '/deputy/' + fl_nm_deputy_version;
 
   strict private
+    FDeputyUtils: TSERTTKDeputyUtils;
     FLicensed: boolean;
-    //FSettings: TSEIXSettings;
-    //FWizardInfo: TSEIXWizardInfo;
+    // FSettings: TSEIXSettings;
+    // FWizardInfo: TSEIXWizardInfo;
     FWizardVersion, FUpdateVersion: TSERTTKVersionInfo;
     FHTTPReqCaddie, FHTTPReqDemoFMX, FHTTPReqDemoVCL, FHTTPReqDeputyVersion, FHTTPReqDeputyDL: TNetHTTPRequest;
     FHTTPClient: TNetHTTPClient;
@@ -252,6 +253,7 @@ type
     procedure LogMessage(AMessage: string);
     procedure DownloadDemoFMX;
     procedure DownloadDemoVCL;
+    procedure DownloadCaddie;
     procedure InitHttpClient;
     procedure DistServerAuthEvent(const Sender: TObject; AnAuthTarget: TAuthTargetType; const ARealm, AURL: string;
       var AUserName, APassword: string; var AbortAuth: boolean; var Persistence: TAuthPersistenceType);
@@ -261,6 +263,7 @@ type
     procedure HttpDemoVCLDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
     procedure HttpDemoFMXDLException(const Sender: TObject; const AError: Exception);
     procedure HttpDemoFMXDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
+    procedure HttpClientException(const Sender: TObject; const AError: Exception);
     procedure HttpDeputyExpertDownload;
     procedure HttpDeputyVersionDownload;
     procedure HttpDeputyDLException(const Sender: TObject; const AError: Exception);
@@ -269,22 +272,20 @@ type
     procedure HttpDeputyVersionCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
     procedure ExpertLogUsage(const AUsageStep: string);
   private
-    //FExpertUpdateMenuItem: TMenuItem;
-   // function DemoAppFMXFile: string;
-    //function ExpertFileLocation: string;
+    // FExpertUpdateMenuItem: TMenuItem;
+    // function ExpertFileLocation: string;
     function ExpertUpdateAvailable: boolean;
     function ExpertUpdateDownloaded: boolean;
-   // procedure ExpertUpdateMenuItemSet(const Value: TMenuItem);
+    // procedure ExpertUpdateMenuItemSet(const Value: TMenuItem);
     procedure LoadDeputyUpdateVersion;
     procedure OnClickUpdateExpert(Sender: TObject);
     function UpdateExpertButtonText: string;
   public
+    constructor Create;
     destructor Destroy; override;
-    //procedure ShowWebsite;
-    procedure DownloadCaddie;
-    //property Downloaded: boolean read CaddieAppExists;
-   // property Executed: boolean read CaddieIniFileExists;
-    //property Licensed: boolean read FLicensed write FLicensed;
+    // property Downloaded: boolean read CaddieAppExists;
+    // property Executed: boolean read CaddieIniFileExists;
+    // property Licensed: boolean read FLicensed write FLicensed;
     function ButtonTextCaddie: string;
     function ButtonTextDemoVCL: string;
     function ButtonTextDemoFMX: string;
@@ -298,13 +299,13 @@ type
       write FOnDownloadVCLDemoDone;
     property OnDownloadDemoFMXDone: TSECaddieCheckOnDownloadDone read FOnDownloadFMXDemoDone
       write FOnDownloadFMXDemoDone;
-    //procedure ExpertUpdatesRefresh(const AWizardInfo: TSEIXWizardInfo; const ASettings: TSEIXSettings);
-    //property ExpertUpdateMenuItem: TMenuItem read FExpertUpdateMenuItem write ExpertUpdateMenuItemSet;
+    // procedure ExpertUpdatesRefresh(const AWizardInfo: TSEIXWizardInfo; const ASettings: TSEIXSettings);
+    // property ExpertUpdateMenuItem: TMenuItem read FExpertUpdateMenuItem write ExpertUpdateMenuItemSet;
   end;
 
 implementation
 
-uses System.IOUtils, WinAPI.ShellAPI, WinAPI.Windows, System.DateUtils;
+uses System.IOUtils, WinAPI.ShellAPI, WinAPI.Windows, System.DateUtils, System.Zip;
 
 { TSERTTKDeputyUtils }
 
@@ -559,7 +560,7 @@ end;
 
 function TSERTTKVersionInfo.VersionString: string;
 begin
-result := VerMaj.ToString + '.' + VerMin.ToString + '.' + VerRel.ToString;
+  result := VerMaj.ToString + '.' + VerMin.ToString + '.' + VerRel.ToString;
 end;
 
 { TSERTTKWizardInfo }
@@ -574,107 +575,271 @@ end;
 
 function TSERTTKAppVersionUpdate.ButtonTextCaddie: string;
 begin
-
+  if FDeputyUtils.CaddieAppExists then
+    result := 'Run Caddie'
+  else
+    result := 'Download & Install Caddie'
 end;
 
 function TSERTTKAppVersionUpdate.ButtonTextDemoFMX: string;
 begin
-
+  if FDeputyUtils.DemoFMXExists then
+    result := 'Run FMX Demo'
+  else
+    result := 'Download & Install FMX Demo'
 end;
 
 function TSERTTKAppVersionUpdate.ButtonTextDemoVCL: string;
 begin
+  if FDeputyUtils.DemoVCLExists then
+    result := 'Run VCL Demo'
+  else
+    result := 'Download & Install VCL Demo'
+end;
 
+constructor TSERTTKAppVersionUpdate.Create;
+begin
+  FLicensed := false;
+  FDeputyUtils := TSERTTKDeputyUtils.Create;
 end;
 
 destructor TSERTTKAppVersionUpdate.Destroy;
 begin
-
+  FDeputyUtils.Free;
   inherited;
 end;
 
-procedure TSERTTKAppVersionUpdate.DistServerAuthEvent(const Sender: TObject;
-  AnAuthTarget: TAuthTargetType; const ARealm, AURL: string; var AUserName,
-  APassword: string; var AbortAuth: boolean;
+procedure TSERTTKAppVersionUpdate.DistServerAuthEvent(const Sender: TObject; AnAuthTarget: TAuthTargetType;
+  const ARealm, AURL: string; var AUserName, APassword: string; var AbortAuth: boolean;
   var Persistence: TAuthPersistenceType);
 begin
-
+  if AnAuthTarget = TAuthTargetType.Server then
+  begin
+    AUserName := 'DeputyExpert';
+    APassword := 'Illbeyourhuckleberry';
+  end;
 end;
 
 procedure TSERTTKAppVersionUpdate.DownloadCaddie;
 begin
-
+  InitHttpClient;
+  if not Assigned(FHTTPReqCaddie) then
+    FHTTPReqCaddie := TNetHTTPRequest.Create(nil);
+{$IF COMPILERVERSION > 33}
+  FHTTPReqCaddie.OnRequestException := HttpCaddieDLException;
+  FHTTPReqCaddie.SynchronizeEvents := false;
+{$ELSE}
+  // FHTTPReqCaddie.OnRequestError := HttpCaddieDLException;
+  FHTTPReqCaddie.Asynchronous := true;
+{$ENDIF}
+  FHTTPReqCaddie.Client := FHTTPClient;
+  FHTTPReqCaddie.OnRequestCompleted := HttpCaddieDLCompleted;
+  FHTTPReqCaddie.Asynchronous := true;
+  FHTTPReqCaddie.Get('https://swiftexpat.com/downloads/' + dl_fl_name);
 end;
 
 procedure TSERTTKAppVersionUpdate.DownloadDemoFMX;
 begin
-
+  InitHttpClient;
+  if not Assigned(FHTTPReqDemoFMX) then
+    FHTTPReqDemoFMX := TNetHTTPRequest.Create(nil);
+{$IF COMPILERVERSION > 33}
+  FHTTPReqDemoFMX.OnRequestException := HttpDemoFMXDLException;
+  FHTTPReqDemoFMX.SynchronizeEvents := false;
+{$ELSE}
+  // FHTTPReqCaddie.OnRequestError := HttpCaddieDLException;
+  FHTTPReqDemoFMX.Asynchronous := true;
+{$ENDIF}
+  FHTTPReqDemoFMX.Client := FHTTPClient;
+  FHTTPReqDemoFMX.OnRequestCompleted := HttpDemoFMXDLCompleted;
+  FHTTPReqDemoFMX.Asynchronous := true;
+  FHTTPReqDemoFMX.Get(url_demo_downloads + dl_fl_demo_fmx);
 end;
 
 procedure TSERTTKAppVersionUpdate.DownloadDemoVCL;
 begin
-
+  InitHttpClient;
+  if not Assigned(FHTTPReqDemoVCL) then
+    FHTTPReqDemoVCL := TNetHTTPRequest.Create(nil);
+{$IF COMPILERVERSION > 33}
+  FHTTPReqDemoVCL.OnRequestException := HttpDemoVCLDLException;
+  FHTTPReqDemoVCL.SynchronizeEvents := false;
+{$ELSE}
+  // FHTTPReqCaddie.OnRequestError := HttpCaddieDLException;
+  FHTTPReqDemoVCL.Asynchronous := true;
+{$ENDIF}
+  FHTTPReqDemoVCL.Client := FHTTPClient;
+  FHTTPReqDemoVCL.OnRequestCompleted := HttpDemoVCLDLCompleted;
+  FHTTPReqDemoVCL.Asynchronous := true;
+  FHTTPReqDemoVCL.Get(url_demo_downloads + dl_fl_demo_vcl);
 end;
 
 procedure TSERTTKAppVersionUpdate.ExpertLogUsage(const AUsageStep: string);
+var
+  hdr: TNetHeaders;
 begin
-
+  InitHttpClient;
+  SetLength(hdr, 1);
+  hdr[0] := TNameValuePair.Create('Referer', 'LogUsage:' + AUsageStep);
+  FHTTPClient.Asynchronous := true;
+  FHTTPClient.Head(url_deputy_version, hdr);
+  { TODO : Implement exception & success for this? }
 end;
 
 function TSERTTKAppVersionUpdate.ExpertUpdateAvailable: boolean;
 begin
-
+  result := true; // fix this
 end;
 
 function TSERTTKAppVersionUpdate.ExpertUpdateDownloaded: boolean;
 begin
-
+  result := true; // fix this
 end;
 
-procedure TSERTTKAppVersionUpdate.HttpCaddieDLCompleted(const Sender: TObject;
-  const AResponse: IHTTPResponse);
+procedure TSERTTKAppVersionUpdate.HttpCaddieDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
+var
+  lfs: TFileStream;
+begin
+  if AResponse.StatusCode = 200 then
+  begin
+    lfs := TFileStream.Create(FDeputyUtils.CaddieDownloadFile, fmCreate);
+    lfs.CopyFrom(AResponse.ContentStream, 0);
+    lfs.Free;
+    LogMessage('Download Complete, Extracting');
+    if TZipFile.IsValid(FDeputyUtils.CaddieDownloadFile) then
+    begin
+      LogMessage('Zip File is valid');
+      TZipFile.ExtractZipFile(FDeputyUtils.CaddieDownloadFile, FDeputyUtils.RttkAppFolder);
+      if TFile.Exists(FDeputyUtils.CaddieAppFile) then
+      begin
+        FDeputyUtils.RunCaddie;
+        TThread.Queue(nil,
+          procedure
+          begin
+            if Assigned(OnDownloadDone) then
+              OnDownloadDone('Downloaded');
+          end);
+      end
+      else // for file exists
+        LogMessage('Caddie not found after');
+    end
+    else // Zip file invalid
+      LogMessage('Zip File not valid')
+  end
+  else
+    LogMessage('Download Http result = ' + AResponse.StatusCode.ToString);
+end;
+
+procedure TSERTTKAppVersionUpdate.HttpCaddieDLException(const Sender: TObject; const AError: Exception);
+var
+  msg: string;
+begin
+  msg := 'Download Caddie~Server Exception:' + AError.Message;
+  LogMessage(msg);
+end;
+
+procedure TSERTTKAppVersionUpdate.HttpClientException(const Sender: TObject; const AError: Exception);
+var
+  msg: string;
+begin
+  msg := 'Http Client Deputy Expert~Server Exception:' + AError.Message;
+  LogMessage(msg);
+end;
+
+procedure TSERTTKAppVersionUpdate.HttpDemoFMXDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
+const
+  nm_log_id = 'Demo FMX';
+var
+  lfs: TFileStream;
+begin
+  if AResponse.StatusCode = 200 then
+  begin
+    lfs := TFileStream.Create(FDeputyUtils.DemoDownloadFMXFile, fmCreate);
+    lfs.CopyFrom(AResponse.ContentStream, 0);
+    lfs.Free;
+    LogMessage('Download Complete, Extracting ' + nm_log_id);
+    if TZipFile.IsValid(FDeputyUtils.DemoDownloadFMXFile) then
+    begin
+      LogMessage('Zip File is valid ' + FDeputyUtils.DemoDownloadFMXFile);
+      TZipFile.ExtractZipFile(FDeputyUtils.DemoDownloadFMXFile, FDeputyUtils.RttkAppFolder);
+      if TFile.Exists(FDeputyUtils.DemoAppFMXFile) then
+      begin
+        FDeputyUtils.RunDemoFMX;
+        TThread.Queue(nil,
+          procedure
+          begin
+            if Assigned(OnDownloadDemoFMXDone) then
+              OnDownloadDemoFMXDone('Downloaded ' + nm_log_id);
+          end);
+      end
+      else // for file exists
+        LogMessage(nm_log_id + ' not found after extract. ' + FDeputyUtils.DemoAppFMXFile);
+    end
+    else // Zip file invalid
+      LogMessage('Zip File not valid ' + FDeputyUtils.DemoDownloadFMXFile)
+  end
+  else
+    LogMessage('Download ' + nm_log_id + ' Http result = ' + AResponse.StatusCode.ToString);
+end;
+
+procedure TSERTTKAppVersionUpdate.HttpDemoFMXDLException(const Sender: TObject; const AError: Exception);
+var
+  msg: string;
+begin
+  msg := 'Download Demo FMX~Server Exception:' + AError.Message;
+  LogMessage(msg);
+end;
+
+procedure TSERTTKAppVersionUpdate.HttpDemoVCLDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
+const
+  nm_log_id = 'Demo VCL';
+var
+  lfs: TFileStream;
+begin
+  if AResponse.StatusCode = 200 then
+  begin
+    lfs := TFileStream.Create(FDeputyUtils.DemoDownloadVCLFile, fmCreate);
+    lfs.CopyFrom(AResponse.ContentStream, 0);
+    lfs.Free;
+    LogMessage('Download Complete, Extracting ' + nm_log_id);
+    if TZipFile.IsValid(FDeputyUtils.DemoDownloadVCLFile) then
+    begin
+      LogMessage('Zip File is valid ' + FDeputyUtils.DemoDownloadVCLFile);
+      TZipFile.ExtractZipFile(FDeputyUtils.DemoDownloadVCLFile, FDeputyUtils.RttkAppFolder);
+      if TFile.Exists(FDeputyUtils.DemoAppVCLFile) then
+      begin
+        FDeputyUtils.RunDemoVCL;
+        TThread.Queue(nil,
+          procedure
+          begin
+            if Assigned(OnDownloadDemoVCLDone) then
+              OnDownloadDemoVCLDone('Downloaded ' + nm_log_id);
+          end);
+      end
+      else // for file exists
+        LogMessage(nm_log_id + ' not found after extract. ' + FDeputyUtils.DemoAppVCLFile);
+    end
+    else // Zip file invalid
+      LogMessage('Zip File not valid ' + FDeputyUtils.DemoDownloadVCLFile)
+  end
+  else
+    LogMessage('Download ' + nm_log_id + ' Http result = ' + AResponse.StatusCode.ToString);
+end;
+
+procedure TSERTTKAppVersionUpdate.HttpDemoVCLDLException(const Sender: TObject; const AError: Exception);
+var
+  msg: string;
+begin
+  msg := 'Download Demo VCL~Server Exception:' + AError.Message;
+  LogMessage(msg);
+end;
+
+procedure TSERTTKAppVersionUpdate.HttpDeputyDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
 begin
 
 end;
 
-procedure TSERTTKAppVersionUpdate.HttpCaddieDLException(const Sender: TObject;
-  const AError: Exception);
-begin
-
-end;
-
-procedure TSERTTKAppVersionUpdate.HttpDemoFMXDLCompleted(const Sender: TObject;
-  const AResponse: IHTTPResponse);
-begin
-
-end;
-
-procedure TSERTTKAppVersionUpdate.HttpDemoFMXDLException(const Sender: TObject;
-  const AError: Exception);
-begin
-
-end;
-
-procedure TSERTTKAppVersionUpdate.HttpDemoVCLDLCompleted(const Sender: TObject;
-  const AResponse: IHTTPResponse);
-begin
-
-end;
-
-procedure TSERTTKAppVersionUpdate.HttpDemoVCLDLException(const Sender: TObject;
-  const AError: Exception);
-begin
-
-end;
-
-procedure TSERTTKAppVersionUpdate.HttpDeputyDLCompleted(const Sender: TObject;
-  const AResponse: IHTTPResponse);
-begin
-
-end;
-
-procedure TSERTTKAppVersionUpdate.HttpDeputyDLException(const Sender: TObject;
-  const AError: Exception);
+procedure TSERTTKAppVersionUpdate.HttpDeputyDLException(const Sender: TObject; const AError: Exception);
 begin
 
 end;
@@ -684,8 +849,7 @@ begin
 
 end;
 
-procedure TSERTTKAppVersionUpdate.HttpDeputyVersionCompleted(
-  const Sender: TObject; const AResponse: IHTTPResponse);
+procedure TSERTTKAppVersionUpdate.HttpDeputyVersionCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
 begin
 
 end;
@@ -695,15 +859,27 @@ begin
 
 end;
 
-procedure TSERTTKAppVersionUpdate.HttpDeputyVersionException(
-  const Sender: TObject; const AError: Exception);
+procedure TSERTTKAppVersionUpdate.HttpDeputyVersionException(const Sender: TObject; const AError: Exception);
 begin
 
 end;
 
 procedure TSERTTKAppVersionUpdate.InitHttpClient;
 begin
-
+  if not Assigned(FHTTPClient) then
+  begin
+    FHTTPClient := TNetHTTPClient.Create(nil);
+    FHTTPClient.OnAuthEvent := DistServerAuthEvent;
+{$IF COMPILERVERSION > 33}
+    FHTTPClient.SecureProtocols := [THTTPSecureProtocol.TLS12, THTTPSecureProtocol.TLS13];
+    FHTTPClient.OnRequestException := HttpClientException;
+    FHTTPClient.UseDefaultCredentials := false;
+{$ELSEIF COMPILERVERSION = 33}
+    FHTTPClient.SecureProtocols := [THTTPSecureProtocol.TLS12];
+{$ENDIF}
+    FHTTPClient.UserAgent := nm_user_agent + ' ' + FWizardInfo.AgentString;
+    { TODO : Create a hash of Username / Computer name }
+  end;
 end;
 
 procedure TSERTTKAppVersionUpdate.LoadDeputyUpdateVersion;
@@ -712,28 +888,45 @@ begin
 end;
 
 procedure TSERTTKAppVersionUpdate.LogMessage(AMessage: string);
+var
+  msg: string;
 begin
-
+  msg := 'Msg RTTK_App_Update: ' + AMessage;
+  TThread.Queue(nil,
+    procedure
+    begin
+      if Assigned(FOnMessage) then
+        FOnMessage(msg);
+    end);
 end;
 
 procedure TSERTTKAppVersionUpdate.OnClickCaddieRun(Sender: TObject);
 begin
-
+  if FDeputyUtils.CaddieAppExists then
+    FDeputyUtils.RunCaddie
+  else
+    DownloadCaddie;
 end;
 
 procedure TSERTTKAppVersionUpdate.OnClickDemoFMX(Sender: TObject);
 begin
-
+  if FDeputyUtils.DemoFMXExists then
+    FDeputyUtils.RunDemoFMX
+  else
+    DownloadDemoFMX;
 end;
 
 procedure TSERTTKAppVersionUpdate.OnClickDemoVCL(Sender: TObject);
 begin
-
+  if FDeputyUtils.DemoVCLExists then
+    FDeputyUtils.RunDemoVCL
+  else
+    DownloadDemoVCL;
 end;
 
 procedure TSERTTKAppVersionUpdate.OnClickShowWebsite(Sender: TObject);
 begin
-
+  FDeputyUtils.ShowWebsite;
 end;
 
 procedure TSERTTKAppVersionUpdate.OnClickUpdateExpert(Sender: TObject);

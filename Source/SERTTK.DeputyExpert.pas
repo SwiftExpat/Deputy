@@ -245,7 +245,8 @@ begin
   FRTTKAppUpdate.OnDownloadDemoFMXDone := DemoFMXDownloaded;
   FToolsMenuRootItem.Add(mi);
   mi := MenuItemByName(nm_mi_update_status);
-  mi.Caption := 'Loading Version'; // FRTTKCheck.UpdateExpertButtonText;
+  mi.Caption := 'Loading Version';
+  // FRTTKCheck.UpdateExpertButtonText;
   // FRTTKAppUpdate.ExpertUpdateMenuItem := mi;
   FToolsMenuRootItem.Add(mi);
 
@@ -255,9 +256,6 @@ procedure TSERTTKDeputyWizard.IDENotifierBeforeCompile(const AProject: IOTAProje
   var ACancel: boolean);
 begin
   TOTAHelper.ClearMessageGroup(nm_message_group);
-{$IFDEF DEBUG}
-  MessagesAdd('Before Compile');
-{$ENDIF}
   if FSettings.KillProcActive and (AIsCodeInsight = false) then
   begin
     ACancel := FProcMgrForm.CompileContinue(AProject.ProjectOptions.TargetName);
@@ -363,9 +361,6 @@ end;
 function TSERTTKDeputyDebugNotifier.BeforeProgramLaunch(const Project: IOTAProject): boolean;
 begin
   CheckNagCount;
-{$IFDEF DEBUG}
-  FWizard.MessagesAdd('Before Program Launch');
-{$ENDIF}
   if FWizard.Settings.KillProcActive then
   begin
      result := FWizard.ProcMgrForm.DebugLaunch(Project.ProjectOptions.TargetName);
