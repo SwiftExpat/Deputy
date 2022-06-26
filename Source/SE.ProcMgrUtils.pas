@@ -39,6 +39,7 @@ type
     function LeakShown: boolean;
     function ProcessFound: boolean;
     function ProcessFullName: string;
+    procedure OptionsSet(const AStopCommand: TSEProcessStopCommand; ACloseMemLeak, ACopyMemLeak: boolean);
     procedure SetLeakByPID(APID: cardinal; ALeakMsg: string);
     constructor Create(const AProcName: string; const AProcDirectory: string;
       const AStopCommand: TSEProcessStopCommand);
@@ -243,22 +244,22 @@ begin
     else
       exit; // should never get here
 
-    if FManagerStopped then
+    if FManagerStopped then   //exit on abort, to be implemented
       exit;
 
-    LogMsg('Closing Main ' + ps.ProcID.ToString);
+    LogMsg('Closing main window' + ps.ProcID.ToString);
     CloseMainWindow(ps.ProcID);
-    ps.PollCount := 0;
+    ps.PollCount := 0; //loop to display status in the IDE
     while ProcIDRunning(ps.ProcID) do
     begin
       if FManagerStopped then
-        exit;
+        exit;    //exit on abort, to be implemented
       TThread.Sleep(100); // sleep first, close was just sent
       inc(ps.PollCount);
       if Assigned(FWaitPoll) then
         FWaitPoll(ps.PollCount);
       if LeakWindowShowing(ps.ProcID) then
-      begin
+      begin     //what is the workflow, hold the IDE till the leak is closed?
         ps.LeakShown := true;
         LogMsg('Leak window showing');
         if LeakWindowClose(ps.ProcID) then
@@ -521,6 +522,13 @@ begin
   end
   else
     result := false;
+end;
+
+procedure TSEProcessCleanup.OptionsSet(const AStopCommand: TSEProcessStopCommand; ACloseMemLeak, ACopyMemLeak: boolean);
+begin
+  StopCommand := AStopCommand;
+  CloseMemLeak := ACloseMemLeak;
+  CopyMemLeak := ACopyMemLeak;
 end;
 
 function TSEProcessCleanup.ProcessFound: boolean;

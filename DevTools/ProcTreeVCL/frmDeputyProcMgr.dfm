@@ -46,8 +46,6 @@ object DeputyProcMgr: TDeputyProcMgr
           'memoLeak')
         ScrollBars = ssBoth
         TabOrder = 0
-        ExplicitTop = 0
-        ExplicitHeight = 447
       end
       object lbMgrStatus: TListBox
         Left = 0
@@ -57,7 +55,6 @@ object DeputyProcMgr: TDeputyProcMgr
         Align = alTop
         ItemHeight = 15
         TabOrder = 1
-        ExplicitTop = 447
       end
     end
     object tsHistory: TTabSheet
@@ -103,10 +100,6 @@ object DeputyProcMgr: TDeputyProcMgr
         ViewStyle = vsReport
         OnInfoTip = lvHistInfoTip
         OnSelectItem = lvHistSelectItem
-        ExplicitLeft = 208
-        ExplicitTop = 312
-        ExplicitWidth = 466
-        ExplicitHeight = 150
       end
       object memoLeakHist: TMemo
         Left = 0
@@ -118,7 +111,6 @@ object DeputyProcMgr: TDeputyProcMgr
           'memoLeakHist')
         ScrollBars = ssBoth
         TabOrder = 1
-        ExplicitHeight = 424
       end
     end
     object tsSettings: TTabSheet
@@ -145,9 +137,6 @@ object DeputyProcMgr: TDeputyProcMgr
         Lines.Strings = (
           'Memo1')
         TabOrder = 1
-        ExplicitLeft = 312
-        ExplicitTop = 248
-        ExplicitWidth = 185
       end
       object rgProcTermActive: TRadioGroup
         Left = 16
@@ -303,9 +292,6 @@ object DeputyProcMgr: TDeputyProcMgr
       TabOrder = 1
       Visible = False
       OnClick = btnForceTerminateClick
-      ExplicitTop = 1
-      ExplicitWidth = 75
-      ExplicitHeight = 25
     end
   end
   object tmrCleanupStatus: TTimer

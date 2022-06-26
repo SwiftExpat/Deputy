@@ -115,6 +115,7 @@ var
   tli: TListItem;
 begin
   result := TSEProcessCleanup.Create(AProcName, AProcDirectory, FStopCommand);
+  result.OptionsSet(FStopCommand, cbCopyLeakMessage.Checked ,cbCloseLeakWindow.Checked );
   FCleanups.Add(result);
   tli := TListItem.Create(lvHist.Items);
   lvHist.Items.AddItem(tli, 0);

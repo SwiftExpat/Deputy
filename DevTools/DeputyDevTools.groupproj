@@ -9,7 +9,7 @@
         <Projects Include="..\Source\SE.IDE.Deputy.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="C:\Users\Coder\Documents\Embarcadero\Studio\Projects\OSUtils\ShowMessage\ShowMessage.dproj">
+        <Projects Include="C:\Users\Coder\Documents\Embarcadero\Studio\Projects\OSUtils\ShowMessage\ShowLeakMessage.dproj">
             <Dependencies/>
         </Projects>
     </ItemGroup>
@@ -38,23 +38,23 @@
     <Target Name="SE_IDE_Deputy:Make">
         <MSBuild Projects="..\Source\SE.IDE.Deputy.dproj" Targets="Make"/>
     </Target>
-    <Target Name="ShowMessage">
-        <MSBuild Projects="C:\Users\Coder\Documents\Embarcadero\Studio\Projects\OSUtils\ShowMessage\ShowMessage.dproj"/>
+    <Target Name="ShowLeakMessage">
+        <MSBuild Projects="C:\Users\Coder\Documents\Embarcadero\Studio\Projects\OSUtils\ShowMessage\ShowLeakMessage.dproj"/>
     </Target>
-    <Target Name="ShowMessage:Clean">
-        <MSBuild Projects="C:\Users\Coder\Documents\Embarcadero\Studio\Projects\OSUtils\ShowMessage\ShowMessage.dproj" Targets="Clean"/>
+    <Target Name="ShowLeakMessage:Clean">
+        <MSBuild Projects="C:\Users\Coder\Documents\Embarcadero\Studio\Projects\OSUtils\ShowMessage\ShowLeakMessage.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="ShowMessage:Make">
-        <MSBuild Projects="C:\Users\Coder\Documents\Embarcadero\Studio\Projects\OSUtils\ShowMessage\ShowMessage.dproj" Targets="Make"/>
+    <Target Name="ShowLeakMessage:Make">
+        <MSBuild Projects="C:\Users\Coder\Documents\Embarcadero\Studio\Projects\OSUtils\ShowMessage\ShowLeakMessage.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="ProcTreeVCL;SE_IDE_Deputy;ShowMessage"/>
+        <CallTarget Targets="ProcTreeVCL;SE_IDE_Deputy;ShowLeakMessage"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="ProcTreeVCL:Clean;SE_IDE_Deputy:Clean;ShowMessage:Clean"/>
+        <CallTarget Targets="ProcTreeVCL:Clean;SE_IDE_Deputy:Clean;ShowLeakMessage:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="ProcTreeVCL:Make;SE_IDE_Deputy:Make;ShowMessage:Make"/>
+        <CallTarget Targets="ProcTreeVCL:Make;SE_IDE_Deputy:Make;ShowLeakMessage:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>
