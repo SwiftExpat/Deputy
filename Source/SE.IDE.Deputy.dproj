@@ -144,9 +144,9 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Build>84</VerInfo_Build>
+        <VerInfo_Build>87</VerInfo_Build>
         <VerInfo_MajorVer>2</VerInfo_MajorVer>
-        <VerInfo_Keys>CompanyName=SwiftExpat;FileDescription=$(MSBuildProjectName);FileVersion=2.4.2.84;InternalName=Deputy;LegalCopyright=SwiftExpat;LegalTrademarks=;OriginalFilename=SE.IDE.Deputy;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=2.4.2.0;Comments=Deputy - IDE plugin for Delphi</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=SwiftExpat;FileDescription=$(MSBuildProjectName);FileVersion=2.4.2.87;InternalName=Deputy;LegalCopyright=SwiftExpat;LegalTrademarks=;OriginalFilename=SE.IDE.Deputy;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=2.4.2.0;Comments=Deputy - IDE plugin for Delphi</VerInfo_Keys>
         <VerInfo_MinorVer>4</VerInfo_MinorVer>
         <VerInfo_DLL>true</VerInfo_DLL>
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
@@ -177,13 +177,12 @@
         <RcCompile Include="Resources\Icon.rc">
             <Form>Icon.res</Form>
         </RcCompile>
-        <DCCReference Include="SE.IE.Deputy.pas"/>
+        <DCCReference Include="SERTTK.DeputyTypes.pas"/>
+        <DCCReference Include="SERTTK.DeputyExpert.pas"/>
         <DCCReference Include="..\DevTools\ProcTreeVCL\frmDeputyProcMgr.pas">
             <Form>DeputyProcMgr</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="SERTTK.DeputyTypes.pas"/>
-        <DCCReference Include="SERTTK.DeputyExpert.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

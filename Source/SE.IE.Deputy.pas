@@ -369,7 +369,7 @@ begin
 {$ENDIF}
   if FSettings.KillProcActive and (AIsCodeInsight = false) then
   begin
-    ACancel := Not(FProcMgr.IDECancel);//(AProject.ProjectOptions));
+    //ACancel := Not(FProcMgr.IDECancel);//(AProject.ProjectOptions));
    // MessagesAdd(FProcMgr.Actions);
 {$IFDEF GITHUBEVAL}
     if FNagCounter.NagUser then
@@ -551,7 +551,7 @@ begin
 {$ENDIF}
   if FWizard.Settings.KillProcActive then
   begin
-    result := FProcMgr.IDECancel;//(Project.ProjectOptions);
+   // result := FProcMgr.IDECancel;//(Project.ProjectOptions);
     //FWizard.MessagesAdd(FProcMgr.Actions);
   end
   else
