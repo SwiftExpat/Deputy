@@ -2,7 +2,8 @@ unit SERTTK.DeputyTypes;
 
 interface
 
-uses System.Classes, System.Win.Registry;
+uses System.Classes, System.SysUtils , System.Win.Registry, System.Net.HttpClient,
+System.Net.HttpClientComponent, System.Net.URLClient ;
 
 const
   MAJ_VER = 1; // Major version nr.
@@ -189,9 +190,121 @@ type
     property CopyLeakMessage: boolean read CopyLeakMessageGet write CopyLeakMessageSet;
   end;
 
+  TSERTTKNagCounter = class
+  strict private
+    FNagCount, FNagLevel: integer;
+  public
+    constructor Create(const ANagCount: integer = 0; const ANagLevel: integer = 5);
+    function NagUser: boolean;
+    procedure NagLess(ANagCount: integer);
+  end;
+
+  TSERTTKVersionInfo = class
+  public
+    VerMaj: integer;
+    VerMin: integer;
+    VerRel: integer;
+    function VersionString: string;
+  end;
+
+  TSERTTKWizardInfo = class
+  public
+    WizardFileName: string; // make this a dynamic call to reflect the rename
+    WizardVersion: string;
+    function AgentString: string;
+  end;
+
+    TSECaddieCheckOnMessage = procedure(const AMessage: string) of object;
+  TSECaddieCheckOnDownloadDone = procedure(const AMessage: string) of object;
+
+  TSERTTKAppVersionUpdate = class
+  const
+    dl_fl_name = 'SERTTK_Caddie_dl.zip';
+    dl_fl_demo_vcl = 'RTTK_Demo_VCL.zip';
+    dl_fl_demo_fmx = 'RTTK_Demo_FMX.zip';
+    nm_user_agent = 'Deputy Expert';
+    fl_nm_demo_vcl = 'RTTK.VCL.exe';
+    fl_nm_demo_fmx = 'RTTK_FMX.exe';
+    fl_nm_expert_update_cache = 'expertupdates.xml';
+    fl_nm_deputy_version = 'deputyversion.json';
+    fl_nm_deputy_expert_zip = 'DeputyExpert.zip';
+    rk_nm_expert = 'SwiftExpat Deputy';
+    nm_json_object = 'DeputyVersion';
+    nm_json_prop_major = 'VerMajor';
+    nm_json_prop_minor = 'VerMinor';
+    nm_json_prop_release = 'VerRelease';
+    url_domain = '.swiftexpat.com';
+    url_demos = 'https://demos' + url_domain;
+    url_lic = 'https://licadmin' + url_domain;
+    url_demo_downloads = url_demos + '/downloads/';
+    url_version = url_lic + '/deputy/';
+    url_deputy_version = url_lic + '/deputy/' + fl_nm_deputy_version;
+
+  strict private
+    FLicensed: boolean;
+    //FSettings: TSEIXSettings;
+    //FWizardInfo: TSEIXWizardInfo;
+    FWizardVersion, FUpdateVersion: TSERTTKVersionInfo;
+    FHTTPReqCaddie, FHTTPReqDemoFMX, FHTTPReqDemoVCL, FHTTPReqDeputyVersion, FHTTPReqDeputyDL: TNetHTTPRequest;
+    FHTTPClient: TNetHTTPClient;
+    FOnMessage: TSECaddieCheckOnMessage;
+    FOnDownloadDone, FOnDownloadFMXDemoDone, FOnDownloadVCLDemoDone: TSECaddieCheckOnDownloadDone;
+    procedure LogMessage(AMessage: string);
+    procedure DownloadDemoFMX;
+    procedure DownloadDemoVCL;
+    procedure InitHttpClient;
+    procedure DistServerAuthEvent(const Sender: TObject; AnAuthTarget: TAuthTargetType; const ARealm, AURL: string;
+      var AUserName, APassword: string; var AbortAuth: boolean; var Persistence: TAuthPersistenceType);
+    procedure HttpCaddieDLException(const Sender: TObject; const AError: Exception);
+    procedure HttpCaddieDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
+    procedure HttpDemoVCLDLException(const Sender: TObject; const AError: Exception);
+    procedure HttpDemoVCLDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
+    procedure HttpDemoFMXDLException(const Sender: TObject; const AError: Exception);
+    procedure HttpDemoFMXDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
+    procedure HttpDeputyExpertDownload;
+    procedure HttpDeputyVersionDownload;
+    procedure HttpDeputyDLException(const Sender: TObject; const AError: Exception);
+    procedure HttpDeputyDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
+    procedure HttpDeputyVersionException(const Sender: TObject; const AError: Exception);
+    procedure HttpDeputyVersionCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
+    procedure ExpertLogUsage(const AUsageStep: string);
+  private
+    //FExpertUpdateMenuItem: TMenuItem;
+   // function DemoAppFMXFile: string;
+    //function ExpertFileLocation: string;
+    function ExpertUpdateAvailable: boolean;
+    function ExpertUpdateDownloaded: boolean;
+   // procedure ExpertUpdateMenuItemSet(const Value: TMenuItem);
+    procedure LoadDeputyUpdateVersion;
+    procedure OnClickUpdateExpert(Sender: TObject);
+    function UpdateExpertButtonText: string;
+  public
+    destructor Destroy; override;
+    //procedure ShowWebsite;
+    procedure DownloadCaddie;
+    //property Downloaded: boolean read CaddieAppExists;
+   // property Executed: boolean read CaddieIniFileExists;
+    //property Licensed: boolean read FLicensed write FLicensed;
+//    function CaddieButtonText: string;
+//    function DemoVCLButtonText: string;
+//    function DemoFMXButtonText: string;
+//    procedure OnClickCaddieRun(Sender: TObject);
+//    procedure OnClickDemoVCL(Sender: TObject);
+//    procedure OnClickDemoFMX(Sender: TObject);
+//    procedure OnClickShowWebsite(Sender: TObject);
+    property OnMessage: TSECaddieCheckOnMessage read FOnMessage write FOnMessage;
+    property OnDownloadDone: TSECaddieCheckOnDownloadDone read FOnDownloadDone write FOnDownloadDone;
+    property OnDownloadDemoVCLDone: TSECaddieCheckOnDownloadDone read FOnDownloadVCLDemoDone
+      write FOnDownloadVCLDemoDone;
+    property OnDownloadDemoFMXDone: TSECaddieCheckOnDownloadDone read FOnDownloadFMXDemoDone
+      write FOnDownloadFMXDemoDone;
+    //procedure ExpertUpdatesRefresh(const AWizardInfo: TSEIXWizardInfo; const ASettings: TSEIXSettings);
+    //property ExpertUpdateMenuItem: TMenuItem read FExpertUpdateMenuItem write ExpertUpdateMenuItemSet;
+  end;
+
 implementation
 
-uses System.IOUtils, System.SysUtils, WinAPI.ShellAPI, WinAPI.Windows, System.DateUtils;
+uses System.IOUtils, WinAPI.ShellAPI, WinAPI.Windows, System.DateUtils;
 
 { TSERTTKDeputyUtils }
 
@@ -417,6 +530,185 @@ end;
 procedure TSERTTKDeputySettings.StopCommandSet(const Value: integer);
 begin
   self.WriteInteger(nm_section_killprocess, nm_killprocess_stopcommand, Value);
+end;
+
+{ TSERTTKNagCounter }
+
+constructor TSERTTKNagCounter.Create(const ANagCount, ANagLevel: integer);
+begin
+  FNagCount := ANagCount;
+  FNagLevel := ANagLevel;
+end;
+
+procedure TSERTTKNagCounter.NagLess(ANagCount: integer);
+begin
+  FNagCount := ANagCount;
+end;
+
+function TSERTTKNagCounter.NagUser: boolean;
+begin
+{$IFDEF GITHUBEVAL}
+  inc(FNagCount);
+{$ENDIF}
+  result := FNagLevel = FNagCount;
+  if result then
+    FNagCount := 0;
+end;
+
+{ TSERTTKVersionInfo }
+
+function TSERTTKVersionInfo.VersionString: string;
+begin
+result := VerMaj.ToString + '.' + VerMin.ToString + '.' + VerRel.ToString;
+end;
+
+{ TSERTTKWizardInfo }
+
+function TSERTTKWizardInfo.AgentString: string;
+begin
+  result := 'Ver=' + WizardVersion;
+  result := result + ' Platform=' + TPath.GetFileName(WizardFileName)
+end;
+
+{ TSERTTKAppVersionUpdate }
+
+destructor TSERTTKAppVersionUpdate.Destroy;
+begin
+
+  inherited;
+end;
+
+procedure TSERTTKAppVersionUpdate.DistServerAuthEvent(const Sender: TObject;
+  AnAuthTarget: TAuthTargetType; const ARealm, AURL: string; var AUserName,
+  APassword: string; var AbortAuth: boolean;
+  var Persistence: TAuthPersistenceType);
+begin
+
+end;
+
+procedure TSERTTKAppVersionUpdate.DownloadCaddie;
+begin
+
+end;
+
+procedure TSERTTKAppVersionUpdate.DownloadDemoFMX;
+begin
+
+end;
+
+procedure TSERTTKAppVersionUpdate.DownloadDemoVCL;
+begin
+
+end;
+
+procedure TSERTTKAppVersionUpdate.ExpertLogUsage(const AUsageStep: string);
+begin
+
+end;
+
+function TSERTTKAppVersionUpdate.ExpertUpdateAvailable: boolean;
+begin
+
+end;
+
+function TSERTTKAppVersionUpdate.ExpertUpdateDownloaded: boolean;
+begin
+
+end;
+
+procedure TSERTTKAppVersionUpdate.HttpCaddieDLCompleted(const Sender: TObject;
+  const AResponse: IHTTPResponse);
+begin
+
+end;
+
+procedure TSERTTKAppVersionUpdate.HttpCaddieDLException(const Sender: TObject;
+  const AError: Exception);
+begin
+
+end;
+
+procedure TSERTTKAppVersionUpdate.HttpDemoFMXDLCompleted(const Sender: TObject;
+  const AResponse: IHTTPResponse);
+begin
+
+end;
+
+procedure TSERTTKAppVersionUpdate.HttpDemoFMXDLException(const Sender: TObject;
+  const AError: Exception);
+begin
+
+end;
+
+procedure TSERTTKAppVersionUpdate.HttpDemoVCLDLCompleted(const Sender: TObject;
+  const AResponse: IHTTPResponse);
+begin
+
+end;
+
+procedure TSERTTKAppVersionUpdate.HttpDemoVCLDLException(const Sender: TObject;
+  const AError: Exception);
+begin
+
+end;
+
+procedure TSERTTKAppVersionUpdate.HttpDeputyDLCompleted(const Sender: TObject;
+  const AResponse: IHTTPResponse);
+begin
+
+end;
+
+procedure TSERTTKAppVersionUpdate.HttpDeputyDLException(const Sender: TObject;
+  const AError: Exception);
+begin
+
+end;
+
+procedure TSERTTKAppVersionUpdate.HttpDeputyExpertDownload;
+begin
+
+end;
+
+procedure TSERTTKAppVersionUpdate.HttpDeputyVersionCompleted(
+  const Sender: TObject; const AResponse: IHTTPResponse);
+begin
+
+end;
+
+procedure TSERTTKAppVersionUpdate.HttpDeputyVersionDownload;
+begin
+
+end;
+
+procedure TSERTTKAppVersionUpdate.HttpDeputyVersionException(
+  const Sender: TObject; const AError: Exception);
+begin
+
+end;
+
+procedure TSERTTKAppVersionUpdate.InitHttpClient;
+begin
+
+end;
+
+procedure TSERTTKAppVersionUpdate.LoadDeputyUpdateVersion;
+begin
+
+end;
+
+procedure TSERTTKAppVersionUpdate.LogMessage(AMessage: string);
+begin
+
+end;
+
+procedure TSERTTKAppVersionUpdate.OnClickUpdateExpert(Sender: TObject);
+begin
+
+end;
+
+function TSERTTKAppVersionUpdate.UpdateExpertButtonText: string;
+begin
+
 end;
 
 end.

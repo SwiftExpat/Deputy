@@ -314,7 +314,7 @@ begin
 end;
 
 function TSEIXDeputyWizard.GetState: TWizardState;
-begin { TODO : Save this as a setting and switch accordingly }
+begin
   result := [wsEnabled]
 end;
 
@@ -380,17 +380,14 @@ begin
 end;
 
 procedure TSEIXDeputyWizard.IDEStarted;
-
 begin
   inherited;
   FIDEStarted := true;
   MessagesAdd('Deputy Started');
-
   FWizardInfo := TSEIXWizardInfo.Create;
   FWizardInfo.WizardVersion := GetWizardVersion;
   FWizardInfo.WizardFileName := GetWizardFileName;
   FRTTKCheck.ExpertUpdatesRefresh(FWizardInfo, FSettings);
-
 end;
 
 procedure TSEIXDeputyWizard.InitToolsMenu;
