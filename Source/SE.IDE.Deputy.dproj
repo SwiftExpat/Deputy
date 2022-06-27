@@ -146,9 +146,9 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Build>90</VerInfo_Build>
+        <VerInfo_Build>91</VerInfo_Build>
         <VerInfo_MajorVer>2</VerInfo_MajorVer>
-        <VerInfo_Keys>CompanyName=SwiftExpat;FileDescription=$(MSBuildProjectName);FileVersion=2.5.1.90;InternalName=Deputy;LegalCopyright=SwiftExpat;LegalTrademarks=;OriginalFilename=SE.IDE.Deputy;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=2.5.1.0;Comments=Deputy - IDE plugin for Delphi</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=SwiftExpat;FileDescription=$(MSBuildProjectName);FileVersion=2.5.1.91;InternalName=Deputy;LegalCopyright=SwiftExpat;LegalTrademarks=;OriginalFilename=SE.IDE.Deputy;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=2.5.1.0;Comments=Deputy - IDE plugin for Delphi</VerInfo_Keys>
         <VerInfo_MinorVer>5</VerInfo_MinorVer>
         <VerInfo_DLL>true</VerInfo_DLL>
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
@@ -181,6 +181,10 @@
         <DCCReference Include="SERTTK.DeputyExpert.pas"/>
         <DCCReference Include="frmDeputyProcMgr.pas">
             <Form>DeputyProcMgr</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="frmDeputyUpdates.pas">
+            <Form>DeputyUpdates</Form>
             <FormType>dfm</FormType>
         </DCCReference>
         <BuildConfiguration Include="Base">

@@ -1072,9 +1072,7 @@ end;
 procedure TSERTTKAppVersionUpdate.OnClickUpdateExpert(Sender: TObject);
 var
   fn: string;
-begin
-//  // start a download
-//  // rename dll FWizardInfo.WizardFileName
+begin  // rename dll FWizardInfo.WizardFileName
 //  try
 //    if not SameText(ExpertFileLocation, FWizardInfo.WizardFileName) then
 //    begin // ensure the Update would be for the wizard loaded
@@ -1086,7 +1084,7 @@ begin
 //      FExpertUpdateMenuItem.Caption := 'Restart IDE to load update';
 //      exit;
 //    end;
-//    fn := TPath.GetFileName(FWizardInfo.WizardFileName);
+    fn := TPath.GetFileName(FWizardInfo.WizardFileName);
 //    if not TFile.Exists(DeputyWizardUpdateFilename(fn)) then
 //    begin // no update to install, exit
 //      FExpertUpdateMenuItem.Caption := 'Update not found';

@@ -1,7 +1,7 @@
 object DeputyProcMgr: TDeputyProcMgr
   Left = 0
   Top = 0
-  Caption = 'DeputyProcMgr'
+  Caption = 'Deputy Process Manager'
   ClientHeight = 634
   ClientWidth = 815
   Color = clBtnFace

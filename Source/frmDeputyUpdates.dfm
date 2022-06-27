@@ -1,0 +1,392 @@
+object DeputyUpdates: TDeputyUpdates
+  Left = 0
+  Top = 0
+  Caption = 'Deputy Updates'
+  ClientHeight = 424
+  ClientWidth = 618
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -12
+  Font.Name = 'Segoe UI'
+  Font.Style = []
+  TextHeight = 15
+  object gpUpdates: TGridPanel
+    Left = 0
+    Top = 0
+    Width = 618
+    Height = 120
+    Align = alTop
+    Caption = 'gpUpdates'
+    ColumnCollection = <
+      item
+        Value = 25.974025974025970000
+      end
+      item
+        Value = 31.168831168831170000
+      end
+      item
+        Value = 14.285714285714290000
+      end
+      item
+        Value = 28.571428571428570000
+      end>
+    ControlCollection = <
+      item
+        Column = 0
+        Control = lblHdrItem
+        Row = 0
+      end
+      item
+        Column = 1
+        Control = lblHdrVerCurr
+        Row = 0
+      end
+      item
+        Column = 3
+        Control = lblHdrUpdate
+        Row = 0
+      end
+      item
+        Column = 2
+        Control = lblHdrVerAvail
+        Row = 0
+      end
+      item
+        Column = 0
+        Control = lblDeputy
+        Row = 1
+      end
+      item
+        Column = 0
+        Control = lblCaddie
+        Row = 2
+      end
+      item
+        Column = 0
+        Control = lblDemoFMX
+        Row = 3
+      end
+      item
+        Column = 0
+        Control = lblDemoVCL
+        Row = 4
+      end
+      item
+        Column = 1
+        Control = lblDeputyInst
+        Row = 1
+      end
+      item
+        Column = 2
+        Control = lblDeputyAvail
+        Row = 1
+      end
+      item
+        Column = 3
+        Control = Button1
+        Row = 1
+      end
+      item
+        Column = 1
+        Control = lblCaddieInst
+        Row = 2
+      end
+      item
+        Column = 2
+        Control = lblCaddieAvail
+        Row = 2
+      end
+      item
+        Column = 3
+        Control = Button2
+        Row = 2
+      end
+      item
+        Column = 1
+        Control = lblDemoFmxInst
+        Row = 3
+      end
+      item
+        Column = 2
+        Control = lblDemoFMXAvail
+        Row = 3
+      end
+      item
+        Column = 3
+        Control = Button3
+        Row = 3
+      end
+      item
+        Column = 1
+        Control = lblDemoVCLInst
+        Row = 4
+      end
+      item
+        Column = 2
+        Control = lblDemoVCLAvail
+        Row = 4
+      end
+      item
+        Column = 3
+        Control = Button4
+        Row = 4
+      end>
+    RowCollection = <
+      item
+        Value = 19.124847001223990000
+      end
+      item
+        Value = 24.479804161566710000
+      end
+      item
+        Value = 19.124847001223990000
+      end
+      item
+        Value = 19.216646266829870000
+      end
+      item
+        Value = 18.053855569155450000
+      end>
+    ShowCaption = False
+    TabOrder = 0
+    ExplicitTop = -6
+    DesignSize = (
+      618
+      120)
+    object lblHdrItem: TLabel
+      Left = 1
+      Top = 1
+      Width = 160
+      Height = 23
+      Align = alClient
+      Alignment = taCenter
+      Caption = 'Item'
+      ExplicitWidth = 24
+      ExplicitHeight = 15
+    end
+    object lblHdrVerCurr: TLabel
+      Left = 161
+      Top = 1
+      Width = 192
+      Height = 23
+      Align = alClient
+      Alignment = taCenter
+      Caption = 'Current Version'
+      ExplicitWidth = 81
+      ExplicitHeight = 15
+    end
+    object lblHdrUpdate: TLabel
+      Left = 441
+      Top = 1
+      Width = 176
+      Height = 23
+      Align = alClient
+      Alignment = taCenter
+      Caption = 'Update'
+      ExplicitWidth = 38
+      ExplicitHeight = 15
+    end
+    object lblHdrVerAvail: TLabel
+      Left = 353
+      Top = 1
+      Width = 88
+      Height = 23
+      Align = alClient
+      Alignment = taCenter
+      Caption = 'Available Version'
+      ExplicitWidth = 89
+      ExplicitHeight = 15
+    end
+    object lblDeputy: TLabel
+      Left = 1
+      Top = 24
+      Width = 160
+      Height = 28
+      Align = alClient
+      Alignment = taCenter
+      Caption = 'Deputy'
+      ExplicitTop = 11
+      ExplicitWidth = 38
+      ExplicitHeight = 15
+    end
+    object lblCaddie: TLabel
+      Left = 1
+      Top = 52
+      Width = 160
+      Height = 23
+      Align = alClient
+      Alignment = taCenter
+      Caption = 'Caddie'
+      ExplicitTop = 21
+      ExplicitWidth = 37
+      ExplicitHeight = 15
+    end
+    object lblDemoFMX: TLabel
+      Left = 1
+      Top = 75
+      Width = 160
+      Height = 23
+      Align = alClient
+      Alignment = taCenter
+      Caption = 'FMX Demo'
+      ExplicitTop = 29
+      ExplicitWidth = 59
+      ExplicitHeight = 15
+    end
+    object lblDemoVCL: TLabel
+      Left = 1
+      Top = 98
+      Width = 160
+      Height = 21
+      Align = alClient
+      Alignment = taCenter
+      Caption = 'VCL Demo'
+      ExplicitTop = 35
+      ExplicitWidth = 56
+      ExplicitHeight = 15
+    end
+    object lblDeputyInst: TLabel
+      Left = 161
+      Top = 24
+      Width = 192
+      Height = 28
+      Align = alClient
+      Alignment = taCenter
+      Caption = 'DeputyInst'
+      ExplicitWidth = 57
+      ExplicitHeight = 15
+    end
+    object lblDeputyAvail: TLabel
+      Left = 353
+      Top = 24
+      Width = 88
+      Height = 28
+      Align = alClient
+      Alignment = taCenter
+      Caption = 'deputyavail'
+      ExplicitWidth = 61
+      ExplicitHeight = 15
+    end
+    object Button1: TButton
+      Left = 491
+      Top = 25
+      Width = 75
+      Height = 25
+      Anchors = []
+      Caption = 'Button1'
+      TabOrder = 0
+      ExplicitLeft = 272
+      ExplicitTop = 48
+    end
+    object lblCaddieInst: TLabel
+      Left = 161
+      Top = 52
+      Width = 192
+      Height = 23
+      Align = alClient
+      Alignment = taCenter
+      Caption = 'caddieInst'
+      ExplicitWidth = 54
+      ExplicitHeight = 15
+    end
+    object lblCaddieAvail: TLabel
+      Left = 353
+      Top = 52
+      Width = 88
+      Height = 23
+      Align = alClient
+      Alignment = taCenter
+      Caption = 'CaddieAvail'
+      ExplicitWidth = 63
+      ExplicitHeight = 15
+    end
+    object Button2: TButton
+      Left = 491
+      Top = 52
+      Width = 75
+      Height = 25
+      Anchors = []
+      Caption = 'Button2'
+      TabOrder = 1
+      ExplicitLeft = 272
+      ExplicitTop = 48
+    end
+    object lblDemoFmxInst: TLabel
+      Left = 161
+      Top = 75
+      Width = 192
+      Height = 23
+      Align = alClient
+      Alignment = taCenter
+      Caption = 'fmxInst'
+      ExplicitWidth = 40
+      ExplicitHeight = 15
+    end
+    object lblDemoFMXAvail: TLabel
+      Left = 353
+      Top = 75
+      Width = 88
+      Height = 23
+      Align = alClient
+      Alignment = taCenter
+      Caption = 'FmxAvail'
+      ExplicitWidth = 49
+      ExplicitHeight = 15
+    end
+    object Button3: TButton
+      Left = 491
+      Top = 75
+      Width = 75
+      Height = 25
+      Anchors = []
+      Caption = 'Button3'
+      TabOrder = 2
+      ExplicitLeft = 272
+      ExplicitTop = 48
+    end
+    object lblDemoVCLInst: TLabel
+      Left = 161
+      Top = 98
+      Width = 192
+      Height = 21
+      Align = alClient
+      Alignment = taCenter
+      Caption = 'vclInst'
+      ExplicitWidth = 34
+      ExplicitHeight = 15
+    end
+    object lblDemoVCLAvail: TLabel
+      Left = 353
+      Top = 98
+      Width = 88
+      Height = 21
+      Align = alClient
+      Alignment = taCenter
+      Caption = 'vclAvail'
+      ExplicitWidth = 41
+      ExplicitHeight = 15
+    end
+    object Button4: TButton
+      Left = 491
+      Top = 98
+      Width = 75
+      Height = 25
+      Anchors = []
+      Caption = 'Button4'
+      TabOrder = 3
+      ExplicitLeft = 272
+      ExplicitTop = 48
+    end
+  end
+  object Memo1: TMemo
+    Left = 0
+    Top = 120
+    Width = 618
+    Height = 304
+    Align = alClient
+    Lines.Strings = (
+      'Memo1')
+    TabOrder = 1
+  end
+end
