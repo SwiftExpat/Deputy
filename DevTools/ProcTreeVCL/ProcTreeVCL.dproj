@@ -108,11 +108,11 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="..\..\Source\SE.ProcMgrUtils.pas"/>
-        <DCCReference Include="frmDeputyProcMgr.pas">
+        <DCCReference Include="..\..\Source\SERTTK.DeputyTypes.pas"/>
+        <DCCReference Include="..\..\Source\frmDeputyProcMgr.pas">
             <Form>DeputyProcMgr</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="..\..\Source\SERTTK.DeputyTypes.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
