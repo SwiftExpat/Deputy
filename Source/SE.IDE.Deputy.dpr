@@ -8,7 +8,8 @@ uses
   System.Classes,
   SERTTK.DeputyTypes in 'SERTTK.DeputyTypes.pas',
   SERTTK.DeputyExpert in 'SERTTK.DeputyExpert.pas',
-  frmDeputyProcMgr in 'frmDeputyProcMgr.pas' {DeputyProcMgr};
+  frmDeputyProcMgr in 'frmDeputyProcMgr.pas' {DeputyProcMgr},
+  frmDeputyUpdates in 'frmDeputyUpdates.pas' {DeputyUpdates};
 
 {$R *.res}
 
