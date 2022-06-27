@@ -5,7 +5,7 @@ interface
 implementation
 
 uses System.Classes, ToolsAPI, VCL.Dialogs, System.SysUtils, System.TypInfo, Winapi.Windows, Winapi.TlHelp32,
-  System.IOUtils, Generics.Collections, System.DateUtils, System.JSON, frmDeputyProcMgr,
+  System.IOUtils, Generics.Collections, System.DateUtils, System.JSON, frmDeputyProcMgr, frmDeputyUpdates,
   VCL.Forms, VCL.Menus, System.Win.Registry, ShellApi, VCL.Controls,
   DW.OTA.Wizard, DW.OTA.IDENotifierOTAWizard, DW.OTA.Helpers, DW.Menus.Helpers, DW.OTA.ProjectManagerMenu,
   DW.OTA.Notifiers, SERTTK.DeputyTypes, SE.ProcMgrUtils;
@@ -42,6 +42,7 @@ type
   strict private
     FIDEStarted: boolean;
     FProcMgrForm: TDeputyProcMgr;
+    FDeputyUpdates: TDeputyUpdates;
     FToolsMenuRootItem: TMenuItem;
     FSettings: TSERTTKDeputySettings;
     FRTTKAppUpdate: TSERTTKAppVersionUpdate;
@@ -55,6 +56,7 @@ type
     procedure CaddieCheckDownloaded(const AMessage: string);
     procedure DemoFMXDownloaded(const AMessage: string);
     procedure DemoVCLDownloaded(const AMessage: string);
+    procedure OnClickDeputyUpdates(Sender: TObject);
   private
     FDebugNotifier: ITOTALNotifier;
     procedure InitToolsMenu;
@@ -126,7 +128,8 @@ begin
   FWizardInfo.WizardFileName := GetWizardFileName;
   FProcMgrForm := TDeputyProcMgrFactory.DeputyProcMgr;
   FProcMgrForm.AssignSettings(FSettings);
-  FRTTKAppUpdate.ExpertUpdatesRefresh(FWizardInfo, FSettings);
+  FDeputyUpdates := TDeputyUpdatesFactory.DeputyUpdates;
+  FDeputyUpdates.ExpertUpdatesRefresh(FWizardInfo, FSettings);
 end;
 
 {$REGION 'Plugin Display values'}
@@ -245,9 +248,8 @@ begin
   FRTTKAppUpdate.OnDownloadDemoFMXDone := DemoFMXDownloaded;
   FToolsMenuRootItem.Add(mi);
   mi := MenuItemByName(nm_mi_update_status);
-  mi.Caption := 'Loading Version';
-  // FRTTKCheck.UpdateExpertButtonText;
-  // FRTTKAppUpdate.ExpertUpdateMenuItem := mi;
+  mi.Caption := 'Deputy Updates';
+  mi.OnClick := OnClickDeputyUpdates;
   FToolsMenuRootItem.Add(mi);
 
 end;
@@ -265,6 +267,11 @@ begin
 {$ENDIF}
   end;
   inherited;
+end;
+
+procedure TSERTTKDeputyWizard.OnClickDeputyUpdates(Sender: TObject);
+begin
+  TDeputyUpdatesFactory.ShowDeputyUpdates;
 end;
 
 procedure TSERTTKDeputyWizard.OnClickMiKillProcEnabled(Sender: TObject);

@@ -84,7 +84,7 @@ object DeputyUpdates: TDeputyUpdates
       end
       item
         Column = 3
-        Control = Button1
+        Control = btnUpdateDeputy
         Row = 1
       end
       item
@@ -99,7 +99,7 @@ object DeputyUpdates: TDeputyUpdates
       end
       item
         Column = 3
-        Control = Button2
+        Control = btnUpdateCaddie
         Row = 2
       end
       item
@@ -114,7 +114,7 @@ object DeputyUpdates: TDeputyUpdates
       end
       item
         Column = 3
-        Control = Button3
+        Control = btnUpdateDemoFMX
         Row = 3
       end
       item
@@ -129,7 +129,7 @@ object DeputyUpdates: TDeputyUpdates
       end
       item
         Column = 3
-        Control = Button4
+        Control = bntUpdateDemoVCL
         Row = 4
       end>
     RowCollection = <
@@ -151,9 +151,6 @@ object DeputyUpdates: TDeputyUpdates
     ShowCaption = False
     TabOrder = 0
     ExplicitTop = -6
-    DesignSize = (
-      618
-      120)
     object lblHdrItem: TLabel
       Left = 1
       Top = 1
@@ -268,16 +265,19 @@ object DeputyUpdates: TDeputyUpdates
       ExplicitWidth = 61
       ExplicitHeight = 15
     end
-    object Button1: TButton
-      Left = 491
-      Top = 25
-      Width = 75
-      Height = 25
-      Anchors = []
-      Caption = 'Button1'
+    object btnUpdateDeputy: TButton
+      AlignWithMargins = True
+      Left = 444
+      Top = 27
+      Width = 170
+      Height = 22
+      Align = alClient
+      Caption = 'Update Deputy'
       TabOrder = 0
       ExplicitLeft = 272
       ExplicitTop = 48
+      ExplicitWidth = 75
+      ExplicitHeight = 25
     end
     object lblCaddieInst: TLabel
       Left = 161
@@ -301,16 +301,19 @@ object DeputyUpdates: TDeputyUpdates
       ExplicitWidth = 63
       ExplicitHeight = 15
     end
-    object Button2: TButton
-      Left = 491
-      Top = 52
-      Width = 75
-      Height = 25
-      Anchors = []
-      Caption = 'Button2'
+    object btnUpdateCaddie: TButton
+      AlignWithMargins = True
+      Left = 444
+      Top = 55
+      Width = 170
+      Height = 17
+      Align = alClient
+      Caption = 'Update Caddie'
       TabOrder = 1
       ExplicitLeft = 272
       ExplicitTop = 48
+      ExplicitWidth = 75
+      ExplicitHeight = 25
     end
     object lblDemoFmxInst: TLabel
       Left = 161
@@ -334,16 +337,19 @@ object DeputyUpdates: TDeputyUpdates
       ExplicitWidth = 49
       ExplicitHeight = 15
     end
-    object Button3: TButton
-      Left = 491
-      Top = 75
-      Width = 75
-      Height = 25
-      Anchors = []
-      Caption = 'Button3'
+    object btnUpdateDemoFMX: TButton
+      AlignWithMargins = True
+      Left = 444
+      Top = 78
+      Width = 170
+      Height = 17
+      Align = alClient
+      Caption = 'Update FMX Demo'
       TabOrder = 2
       ExplicitLeft = 272
       ExplicitTop = 48
+      ExplicitWidth = 75
+      ExplicitHeight = 25
     end
     object lblDemoVCLInst: TLabel
       Left = 161
@@ -367,16 +373,19 @@ object DeputyUpdates: TDeputyUpdates
       ExplicitWidth = 41
       ExplicitHeight = 15
     end
-    object Button4: TButton
-      Left = 491
-      Top = 98
-      Width = 75
-      Height = 25
-      Anchors = []
-      Caption = 'Button4'
+    object bntUpdateDemoVCL: TButton
+      AlignWithMargins = True
+      Left = 444
+      Top = 101
+      Width = 170
+      Height = 15
+      Align = alClient
+      Caption = 'Update VCL Demo'
       TabOrder = 3
       ExplicitLeft = 272
       ExplicitTop = 48
+      ExplicitWidth = 75
+      ExplicitHeight = 25
     end
   end
   object Memo1: TMemo
