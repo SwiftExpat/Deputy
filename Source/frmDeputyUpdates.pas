@@ -29,13 +29,18 @@ type
     btnUpdateDemoFMX: TButton;
     lblDemoVCLInst: TLabel;
     lblDemoVCLAvail: TLabel;
-    bntUpdateDemoVCL: TButton;
+    btnUpdateDemoVCL: TButton;
     lblHdrUpdateRefresh: TLabel;
     lblUpdateRefresh: TLabel;
+    procedure btnUpdateDemoFMXClick(Sender: TObject);
+    procedure btnUpdateDemoVCLClick(Sender: TObject);
+    procedure btnUpdateCaddieClick(Sender: TObject);
+    procedure btnUpdateDeputyClick(Sender: TObject);
   private
-    // FSettings: TSERTTKDeputySettings;
-    // FWizardInfo: TSERTTKWizardInfo;
     FAppUpdate: TSERTTKAppVersionUpdate;
+    procedure DownloadDoneCaddie(const AMessage: string);
+    procedure DownloadDoneDemoFMX(const AMessage: string);
+    procedure DownloadDoneDemoVCL(const AMessage: string);
     procedure OnVersionUpdateMessage(const AMessage: string);
   public
     procedure ExpertUpdatesRefresh(const AAppUpdate: TSERTTKAppVersionUpdate);
@@ -58,11 +63,52 @@ implementation
 {$R *.dfm}
 { TDeputyUpdates }
 
+procedure TDeputyUpdates.btnUpdateCaddieClick(Sender: TObject);
+begin
+  FAppUpdate.DownloadCaddie;
+end;
+
+procedure TDeputyUpdates.btnUpdateDemoFMXClick(Sender: TObject);
+begin
+  FAppUpdate.DownloadDemoFMX;
+end;
+
+procedure TDeputyUpdates.btnUpdateDemoVCLClick(Sender: TObject);
+begin
+  FAppUpdate.DownloadDemoVCL;
+end;
+
+procedure TDeputyUpdates.btnUpdateDeputyClick(Sender: TObject);
+begin
+  FAppUpdate.UpdateDeputyExpert
+end;
+
+procedure TDeputyUpdates.DownloadDoneCaddie(const AMessage: string);
+begin
+  btnUpdateCaddie.Caption := 'Run Caddie';
+  btnUpdateCaddie.OnClick := FAppUpdate.OnClickCaddieRun;
+end;
+
+procedure TDeputyUpdates.DownloadDoneDemoFMX(const AMessage: string);
+begin
+  btnUpdateDemoFMX.Caption := 'Run Demo FMX';
+  btnUpdateDemoFMX.OnClick := FAppUpdate.OnClickDemoFMX;
+end;
+
+procedure TDeputyUpdates.DownloadDoneDemoVCL(const AMessage: string);
+begin
+  btnUpdateDemoVCL.Caption := 'Run Demo VCL';
+  btnUpdateDemoVCL.OnClick := FAppUpdate.OnClickDemoVCL;
+end;
+
 procedure TDeputyUpdates.ExpertUpdatesRefresh(const AAppUpdate: TSERTTKAppVersionUpdate);
 begin
   FAppUpdate := AAppUpdate;
   FAppUpdate.OnMessage := OnVersionUpdateMessage;
-  FAppUpdate.ExpertUpdatesRefresh()
+  FAppUpdate.ExpertUpdatesRefresh();
+  FAppUpdate.OnDownloadDemoVCLDone := DownloadDoneDemoVCL;
+  FAppUpdate.OnDownloadDemoFMXDone := DownloadDoneDemoFMX;
+  FAppUpdate.OnDownloadDemoVCLDone := DownloadDoneCaddie;
 end;
 
 procedure TDeputyUpdates.OnVersionUpdateMessage(const AMessage: string);
