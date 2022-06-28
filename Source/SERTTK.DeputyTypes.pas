@@ -214,7 +214,7 @@ type
     function AgentString: string;
   end;
 
-  TSECaddieCheckOnMessage = procedure(const AMessage: string) of object;
+  TSERTTKAppVerUpdateOnMessage = procedure(const AMessage: string) of object;
   TSECaddieCheckOnDownloadDone = procedure(const AMessage: string) of object;
 
   TSERTTKAppVersionUpdate = class
@@ -248,7 +248,7 @@ type
     FWizardVersion, FUpdateVersion: TSERTTKVersionInfo;
     FHTTPReqCaddie, FHTTPReqDemoFMX, FHTTPReqDemoVCL, FHTTPReqDeputyVersion, FHTTPReqDeputyDL: TNetHTTPRequest;
     FHTTPClient: TNetHTTPClient;
-    FOnMessage: TSECaddieCheckOnMessage;
+    FOnMessage: TSERTTKAppVerUpdateOnMessage;
     FOnDownloadDone, FOnDownloadFMXDemoDone, FOnDownloadVCLDemoDone: TSECaddieCheckOnDownloadDone;
     procedure LogMessage(AMessage: string);
     procedure DownloadDemoFMX;
@@ -294,13 +294,15 @@ type
     procedure OnClickDemoVCL(Sender: TObject);
     procedure OnClickDemoFMX(Sender: TObject);
     procedure OnClickShowWebsite(Sender: TObject);
-    property OnMessage: TSECaddieCheckOnMessage read FOnMessage write FOnMessage;
+    property OnMessage: TSERTTKAppVerUpdateOnMessage read FOnMessage write FOnMessage;
     property OnDownloadDone: TSECaddieCheckOnDownloadDone read FOnDownloadDone write FOnDownloadDone;
     property OnDownloadDemoVCLDone: TSECaddieCheckOnDownloadDone read FOnDownloadVCLDemoDone
       write FOnDownloadVCLDemoDone;
     property OnDownloadDemoFMXDone: TSECaddieCheckOnDownloadDone read FOnDownloadFMXDemoDone
       write FOnDownloadFMXDemoDone;
-    procedure ExpertUpdatesRefresh(const AWizardInfo: TSERTTKWizardInfo; const ASettings: TSERTTKDeputySettings);
+    procedure ExpertUpdatesRefresh;
+    procedure AssignWizardInfo(const AWizardInfo: TSERTTKWizardInfo);
+    procedure AssignSettings(const ASettings: TSERTTKDeputySettings);
     // property ExpertUpdateMenuItem: TMenuItem read FExpertUpdateMenuItem write ExpertUpdateMenuItemSet;
   end;
 
@@ -574,6 +576,16 @@ end;
 
 { TSERTTKAppVersionUpdate }
 
+procedure TSERTTKAppVersionUpdate.AssignSettings(const ASettings: TSERTTKDeputySettings);
+begin
+  FSettings := ASettings;
+end;
+
+procedure TSERTTKAppVersionUpdate.AssignWizardInfo(const AWizardInfo: TSERTTKWizardInfo);
+begin
+  FWizardInfo := AWizardInfo;
+end;
+
 function TSERTTKAppVersionUpdate.ButtonTextCaddie: string;
 begin
   if FDeputyUtils.CaddieAppExists then
@@ -726,20 +738,19 @@ begin
   result := true; // fix this
 end;
 
-procedure TSERTTKAppVersionUpdate.ExpertUpdatesRefresh(const AWizardInfo: TSERTTKWizardInfo;
-  const ASettings: TSERTTKDeputySettings);
+procedure TSERTTKAppVersionUpdate.ExpertUpdatesRefresh;
 begin
-  FSettings := ASettings;
-  FWizardInfo := AWizardInfo;
+//  FSettings := ASettings;
+//  FWizardInfo := AWizardInfo;
   ExpertLogUsage('Refresh-Updates');
 
   if Assigned(FWizardVersion) then
     FWizardVersion.Free;
 
   FWizardVersion := TSERTTKVersionInfo.Create;
-  FWizardVersion.VerMaj := AWizardInfo.WizardVersion.Split(['.'])[0].ToInteger;
-  FWizardVersion.VerMin := AWizardInfo.WizardVersion.Split(['.'])[1].ToInteger;
-  FWizardVersion.VerRel := AWizardInfo.WizardVersion.Split(['.'])[2].ToInteger;
+  FWizardVersion.VerMaj := FWizardInfo.WizardVersion.Split(['.'])[0].ToInteger;
+  FWizardVersion.VerMin := FWizardInfo.WizardVersion.Split(['.'])[1].ToInteger;
+  FWizardVersion.VerRel := FWizardInfo.WizardVersion.Split(['.'])[2].ToInteger;
   // check the settings for last update dts
   if (HoursBetween(FSettings.LastUpdateCheck, now) < 8) and FDeputyUtils.DeputyVersionFileExists then
   begin
@@ -941,7 +952,7 @@ begin
 end;
 
 procedure TSERTTKAppVersionUpdate.HttpDeputyVersionCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
-      var
+var
   lfs: TFileStream;
 begin
   if AResponse.StatusCode = 200 then
@@ -955,7 +966,7 @@ begin
       procedure
       begin
         LoadDeputyUpdateVersion;
-        //FExpertUpdateMenuItem.Caption := UpdateExpertButtonText;
+        // FExpertUpdateMenuItem.Caption := UpdateExpertButtonText;
         if ExpertUpdateAvailable and not ExpertUpdateDownloaded then
           HttpDeputyExpertDownload;
         FSettings.LastUpdateCheck := now;
@@ -967,15 +978,14 @@ end;
 
 procedure TSERTTKAppVersionUpdate.HttpDeputyVersionDownload;
 begin
-     InitHttpClient;
+  InitHttpClient;
   if not Assigned(FHTTPReqDeputyVersion) then
     FHTTPReqDeputyVersion := TNetHTTPRequest.Create(nil);
 {$IF COMPILERVERSION > 33}
   FHTTPReqDeputyVersion.OnRequestException := HttpDeputyVersionException;
   FHTTPReqDeputyVersion.SynchronizeEvents := false;
 {$ELSE}
-  FHTTPReqDeputyVersion.OnRequestError :=
-  FHTTPReqDeputyVersion.Asynchronous := true;
+  FHTTPReqDeputyVersion.OnRequestError := FHTTPReqDeputyVersion.Asynchronous := true;
 {$ENDIF}
   FHTTPReqDeputyVersion.Client := FHTTPClient;
   FHTTPReqDeputyVersion.OnRequestCompleted := HttpDeputyVersionCompleted;
@@ -1072,43 +1082,43 @@ end;
 procedure TSERTTKAppVersionUpdate.OnClickUpdateExpert(Sender: TObject);
 var
   fn: string;
-begin  // rename dll FWizardInfo.WizardFileName
-//  try
-//    if not SameText(ExpertFileLocation, FWizardInfo.WizardFileName) then
-//    begin // ensure the Update would be for the wizard loaded
-//      FExpertUpdateMenuItem.Caption := 'Dll missmatch to registry';
-//      exit;
-//    end;
-//    if FWizardInfo.WizardFileName = DeputyWizardBackupFilename then
-//    begin // pending restart, do not continue
-//      FExpertUpdateMenuItem.Caption := 'Restart IDE to load update';
-//      exit;
-//    end;
-    fn := TPath.GetFileName(FWizardInfo.WizardFileName);
-//    if not TFile.Exists(DeputyWizardUpdateFilename(fn)) then
-//    begin // no update to install, exit
-//      FExpertUpdateMenuItem.Caption := 'Update not found';
-//      exit;
-//    end;
-//    if TFile.Exists(DeputyWizardBackupFilename) then
-//      TFile.Delete(DeputyWizardBackupFilename);
-//    TFile.Move(FWizardInfo.WizardFileName, DeputyWizardBackupFilename);
-//    TFile.Move(DeputyWizardUpdateFilename(fn), ExpertFileLocation);
-//  except
-//    on E: Exception do
-//    begin // likely IO related
-//      FExpertUpdateMenuItem.Caption := 'E:' + E.Message.Substring(0, 20);
-//      LogMessage('Failed Update ' + E.Message);
-//    end;
-//  end;
-//
-//  FExpertUpdateMenuItem.Caption := 'Restart IDE pending';
+begin // rename dll FWizardInfo.WizardFileName
+  // try
+  // if not SameText(ExpertFileLocation, FWizardInfo.WizardFileName) then
+  // begin // ensure the Update would be for the wizard loaded
+  // FExpertUpdateMenuItem.Caption := 'Dll missmatch to registry';
+  // exit;
+  // end;
+  // if FWizardInfo.WizardFileName = DeputyWizardBackupFilename then
+  // begin // pending restart, do not continue
+  // FExpertUpdateMenuItem.Caption := 'Restart IDE to load update';
+  // exit;
+  // end;
+  fn := TPath.GetFileName(FWizardInfo.WizardFileName);
+  // if not TFile.Exists(DeputyWizardUpdateFilename(fn)) then
+  // begin // no update to install, exit
+  // FExpertUpdateMenuItem.Caption := 'Update not found';
+  // exit;
+  // end;
+  // if TFile.Exists(DeputyWizardBackupFilename) then
+  // TFile.Delete(DeputyWizardBackupFilename);
+  // TFile.Move(FWizardInfo.WizardFileName, DeputyWizardBackupFilename);
+  // TFile.Move(DeputyWizardUpdateFilename(fn), ExpertFileLocation);
+  // except
+  // on E: Exception do
+  // begin // likely IO related
+  // FExpertUpdateMenuItem.Caption := 'E:' + E.Message.Substring(0, 20);
+  // LogMessage('Failed Update ' + E.Message);
+  // end;
+  // end;
+  //
+  // FExpertUpdateMenuItem.Caption := 'Restart IDE pending';
 
 end;
 
 function TSERTTKAppVersionUpdate.UpdateExpertButtonText: string;
 begin
-     if ExpertUpdateAvailable then
+  if ExpertUpdateAvailable then
     result := 'Update Available to  ' + FUpdateVersion.VersionString
   else
     result := 'Version is current ' + FWizardVersion.VersionString;
