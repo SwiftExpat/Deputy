@@ -129,7 +129,7 @@ begin
   FProcMgrForm := TDeputyProcMgrFactory.DeputyProcMgr;
   FProcMgrForm.AssignSettings(FSettings);
   FDeputyUpdates := TDeputyUpdatesFactory.DeputyUpdates;
-  FDeputyUpdates.ExpertUpdatesRefresh(FWizardInfo, FSettings);
+  FDeputyUpdates.ExpertUpdatesRefresh(FRTTKAppUpdate);
 end;
 
 {$REGION 'Plugin Display values'}

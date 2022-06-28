@@ -740,8 +740,6 @@ end;
 
 procedure TSERTTKAppVersionUpdate.ExpertUpdatesRefresh;
 begin
-//  FSettings := ASettings;
-//  FWizardInfo := AWizardInfo;
   ExpertLogUsage('Refresh-Updates');
 
   if Assigned(FWizardVersion) then
@@ -994,8 +992,11 @@ begin
 end;
 
 procedure TSERTTKAppVersionUpdate.HttpDeputyVersionException(const Sender: TObject; const AError: Exception);
+var
+  msg: string;
 begin
-
+  msg := 'Download Deputy Version~Server Exception:' + AError.Message;
+  LogMessage(msg);
 end;
 
 procedure TSERTTKAppVersionUpdate.InitHttpClient;
