@@ -150,7 +150,6 @@ object DeputyUpdates: TDeputyUpdates
       end>
     ShowCaption = False
     TabOrder = 0
-    ExplicitTop = -6
     object lblHdrItem: TLabel
       Left = 1
       Top = 1
@@ -203,7 +202,6 @@ object DeputyUpdates: TDeputyUpdates
       Align = alClient
       Alignment = taCenter
       Caption = 'Deputy'
-      ExplicitTop = 11
       ExplicitWidth = 38
       ExplicitHeight = 15
     end
@@ -215,7 +213,6 @@ object DeputyUpdates: TDeputyUpdates
       Align = alClient
       Alignment = taCenter
       Caption = 'Caddie'
-      ExplicitTop = 21
       ExplicitWidth = 37
       ExplicitHeight = 15
     end
@@ -227,7 +224,6 @@ object DeputyUpdates: TDeputyUpdates
       Align = alClient
       Alignment = taCenter
       Caption = 'FMX Demo'
-      ExplicitTop = 29
       ExplicitWidth = 59
       ExplicitHeight = 15
     end
@@ -239,7 +235,6 @@ object DeputyUpdates: TDeputyUpdates
       Align = alClient
       Alignment = taCenter
       Caption = 'VCL Demo'
-      ExplicitTop = 35
       ExplicitWidth = 56
       ExplicitHeight = 15
     end
@@ -274,10 +269,6 @@ object DeputyUpdates: TDeputyUpdates
       Align = alClient
       Caption = 'Update Deputy'
       TabOrder = 0
-      ExplicitLeft = 272
-      ExplicitTop = 48
-      ExplicitWidth = 75
-      ExplicitHeight = 25
     end
     object lblCaddieInst: TLabel
       Left = 161
@@ -310,10 +301,6 @@ object DeputyUpdates: TDeputyUpdates
       Align = alClient
       Caption = 'Update Caddie'
       TabOrder = 1
-      ExplicitLeft = 272
-      ExplicitTop = 48
-      ExplicitWidth = 75
-      ExplicitHeight = 25
     end
     object lblDemoFmxInst: TLabel
       Left = 161
@@ -346,10 +333,6 @@ object DeputyUpdates: TDeputyUpdates
       Align = alClient
       Caption = 'Update FMX Demo'
       TabOrder = 2
-      ExplicitLeft = 272
-      ExplicitTop = 48
-      ExplicitWidth = 75
-      ExplicitHeight = 25
     end
     object lblDemoVCLInst: TLabel
       Left = 161
@@ -382,10 +365,6 @@ object DeputyUpdates: TDeputyUpdates
       Align = alClient
       Caption = 'Update VCL Demo'
       TabOrder = 3
-      ExplicitLeft = 272
-      ExplicitTop = 48
-      ExplicitWidth = 75
-      ExplicitHeight = 25
     end
   end
   object Memo1: TMemo

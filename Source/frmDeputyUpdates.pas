@@ -31,9 +31,12 @@ type
     lblDemoVCLAvail: TLabel;
     bntUpdateDemoVCL: TButton;
   private
-    FSettings: TSERTTKDeputySettings;
+    // FSettings: TSERTTKDeputySettings;
+    // FWizardInfo: TSERTTKWizardInfo;
+    FAppUpdate: TSERTTKAppVersionUpdate;
+    procedure OnVersionUpdateMessage(const AMessage: string);
   public
-    procedure ExpertUpdatesRefresh(const AWizardInfo: TSERTTKWizardInfo; const ASettings: TSERTTKDeputySettings);
+    procedure ExpertUpdatesRefresh(const AAppUpdate: TSERTTKAppVersionUpdate);
   end;
 
   EDeputyUpdatesCreate = class(Exception);
@@ -53,10 +56,18 @@ implementation
 {$R *.dfm}
 { TDeputyUpdates }
 
-procedure TDeputyUpdates.ExpertUpdatesRefresh(const AWizardInfo: TSERTTKWizardInfo;
-  const ASettings: TSERTTKDeputySettings);
+procedure TDeputyUpdates.ExpertUpdatesRefresh(const AAppUpdate: TSERTTKAppVersionUpdate);
 begin
-  FSettings := ASettings;
+  FAppUpdate := AAppUpdate;
+  // FSettings := ASettings;
+  // FWizardInfo := AWizardInfo;
+  FAppUpdate.OnMessage := OnVersionUpdateMessage;
+  FAppUpdate.ExpertUpdatesRefresh()
+end;
+
+procedure TDeputyUpdates.OnVersionUpdateMessage(const AMessage: string);
+begin
+  Memo1.Lines.Add(AMessage)
 end;
 
 { TDeputyUpdatesFactory }
