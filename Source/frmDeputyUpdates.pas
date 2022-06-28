@@ -30,6 +30,8 @@ type
     lblDemoVCLInst: TLabel;
     lblDemoVCLAvail: TLabel;
     bntUpdateDemoVCL: TButton;
+    lblHdrUpdateRefresh: TLabel;
+    lblUpdateRefresh: TLabel;
   private
     // FSettings: TSERTTKDeputySettings;
     // FWizardInfo: TSERTTKWizardInfo;
@@ -59,8 +61,6 @@ implementation
 procedure TDeputyUpdates.ExpertUpdatesRefresh(const AAppUpdate: TSERTTKAppVersionUpdate);
 begin
   FAppUpdate := AAppUpdate;
-  // FSettings := ASettings;
-  // FWizardInfo := AWizardInfo;
   FAppUpdate.OnMessage := OnVersionUpdateMessage;
   FAppUpdate.ExpertUpdatesRefresh()
 end;
