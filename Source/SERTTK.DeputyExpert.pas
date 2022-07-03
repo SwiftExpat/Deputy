@@ -120,7 +120,7 @@ procedure TSERTTKDeputyWizard.IDEStarted;
 begin
   inherited;
   FIDEStarted := true;
-  MessagesAdd('Deputy Started');
+  //MessagesAdd('Deputy Started');
   FWizardInfo := TSERTTKWizardInfo.Create;
   FWizardInfo.WizardVersion := GetWizardVersion;
   FWizardInfo.WizardFileName := GetWizardFileName;
