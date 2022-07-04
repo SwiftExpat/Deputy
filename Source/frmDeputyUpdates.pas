@@ -55,8 +55,9 @@ type
     procedure OnVersionUpdateMessage(const AMessage: string);
     procedure LogMessage(AMessage: string);
   public
-    procedure ExpertUpdatesRefresh(const AAppUpdate: TSERTTKAppVersionUpdate);
+    procedure ExpertUpdatesRefresh;
     procedure AssignSettings(ASettings: TSERTTKDeputySettings);
+    procedure AssignAppUpdate(const AAppUpdate: TSERTTKAppVersionUpdate);
     procedure AssignMenuItems(AMiCaddie, AMiDemoFMX, AMiDemoVCL: TMenuItem);
   end;
 
@@ -65,7 +66,7 @@ type
   TDeputyUpdatesFactory = class
   public
     class function DeputyUpdates: TDeputyUpdates;
-    class procedure ShowDeputyUpdates;
+    class function ShowDeputyUpdates: TDeputyUpdates;
     class procedure HideDeputyUpdates;
   end;
 
@@ -76,6 +77,11 @@ implementation
 
 {$R *.dfm}
 { TDeputyUpdates }
+
+procedure TDeputyUpdates.AssignAppUpdate(const AAppUpdate: TSERTTKAppVersionUpdate);
+begin
+   FAppUpdate := AAppUpdate;
+end;
 
 procedure TDeputyUpdates.AssignMenuItems(AMiCaddie, AMiDemoFMX, AMiDemoVCL: TMenuItem);
 begin
@@ -152,7 +158,7 @@ begin
     lblDemoFmxInst.Caption := ACacheEntry.LastModified;
   end;
   btnUpdateDemoFMX.Caption := 'Run Demo FMX or refresh';
-
+    SaveCacheMgr;
 end;
 
 procedure TDeputyUpdates.DownloadDoneDemoVCL(AMessage: string; ACacheEntry: TSEUrlCacheEntry);
@@ -163,13 +169,12 @@ begin
     lblDemoVCLInst.Caption := ACacheEntry.LastModified;
   end;
   btnUpdateDemoVCL.Caption := 'Run Demo VCL or refresh';
-
+    SaveCacheMgr;
 end;
 
-procedure TDeputyUpdates.ExpertUpdatesRefresh(const AAppUpdate: TSERTTKAppVersionUpdate);
+procedure TDeputyUpdates.ExpertUpdatesRefresh;
 begin
   FUrlCacheMgr.JsonString := FSettings.UrlCacheJson;
-  FAppUpdate := AAppUpdate;
   FAppUpdate.OnMessage := OnVersionUpdateMessage;
   FAppUpdate.ExpertUpdatesRefresh();
   RefreshDemoFMX;
@@ -281,9 +286,10 @@ begin
   DeputyUpdates.Hide;
 end;
 
-class procedure TDeputyUpdatesFactory.ShowDeputyUpdates;
+class function TDeputyUpdatesFactory.ShowDeputyUpdates :TDeputyUpdates;
 begin
-  DeputyUpdates.Show;
+  result := DeputyUpdates;
+  result.Show;
 end;
 
 end.

@@ -282,6 +282,9 @@ begin
   LogMessage('Refreshing cache of ' + self.URL);
   if not CacheValid or not LocalFileExists then
     DownloadUrl
+    else
+      LogMessage('Cache valid for ' + self.URL);
+
 end;
 
 function TSEUrlCacheEntry.RefreshDtsGet: TDateTime;
