@@ -10,12 +10,12 @@ const
   hdr_lastmodified = 'Last-Modified';
 
 type
+  TSEUrlCacheEntry = class;
+  TSEUrlCacheRefreshDone = procedure(AMessage: string; ACacheEntry: TSEUrlCacheEntry) of object;
 
-  TUrlCacheRefreshDone = procedure(AMessage: string) of object;
+  TSEUrlCacheManagerMessage = procedure(AMessage: string) of object;
 
-  TUrlCacheManagerMessage = procedure(AMessage: string) of object;
-
-  TUrlCacheEntry = class
+  TSEUrlCacheEntry = class
   const
     dt_lastmod_default = 'Fri, 01 Apr 2010 23:15:56 GMT';
     nm_json_object = 'UrlCacheEntry';
@@ -34,9 +34,10 @@ type
     FLocalPath, FExtractPath: string;
     FExtractZip: boolean;
     FCacheAgeSeconds: integer;
+    FLastHttpCode: integer;
     FHTTPRequest: TNetHTTPRequest;
-    FCacheMgrMsg: TUrlCacheManagerMessage;
-    FOnRefreshDone: TUrlCacheRefreshDone;
+    FCacheMgrMsg: TSEUrlCacheManagerMessage;
+    FOnRefreshDone: TSEUrlCacheRefreshDone;
   strict private
     function LastModifiedGet: string;
     procedure LastModifiedSet(const Value: string);
@@ -67,26 +68,27 @@ type
     function LocalFileExists: boolean;
     procedure RefreshCache;
     procedure AssignHttpClient(AHttpClient: TNetHTTPClient);
-    property OnRequestMessage: TUrlCacheManagerMessage read FCacheMgrMsg write FCacheMgrMsg;
-    property OnRefreshDone: TUrlCacheRefreshDone read FOnRefreshDone write FOnRefreshDone;
+    property OnRequestMessage: TSEUrlCacheManagerMessage read FCacheMgrMsg write FCacheMgrMsg;
+    property OnRefreshDone: TSEUrlCacheRefreshDone read FOnRefreshDone write FOnRefreshDone;
     property ExtractZip: boolean read ExtractZipGet write ExtractZipSet;
     property ExtractPath: string read ExtractPathGet write ExtractPathSet;
+    property LastHttpCode:integer read FLastHttpCode write FLastHttpCode;
   end;
 
-  TUrlCacheManager = class
+  TSEUrlCacheManager = class
 
   const
     nm_json_object = 'UrlCacheManager';
     nm_json_prop_caches = 'caches';
   strict private
     FMREW: TMultiReadExclusiveWriteSynchronizer;
-    FCaches: TObjectDictionary<string, TUrlCacheEntry>;
+    FCaches: TObjectDictionary<string, TSEUrlCacheEntry>;
     // FRequests: TObjectDictionary<TNetHTTPRequest, TUrlCacheEntry>;
     FHTTPClient: TNetHTTPClient;
-    FCacheMgrMsg: TUrlCacheManagerMessage;
+    FCacheMgrMsg: TSEUrlCacheManagerMessage;
     procedure InitHttpClient;
-    function CachesGet: TObjectDictionary<string, TUrlCacheEntry>;
-    procedure CachesSet(const Value: TObjectDictionary<string, TUrlCacheEntry>);
+    function CachesGet: TObjectDictionary<string, TSEUrlCacheEntry>;
+    procedure CachesSet(const Value: TObjectDictionary<string, TSEUrlCacheEntry>);
     function JsonStringGet: string;
     procedure JsonStringSet(const Value: string);
     procedure LogMessage(AMessage: string);
@@ -96,15 +98,15 @@ type
     function HttpClientGet: TNetHTTPClient;
   private
     property HttpClient: TNetHTTPClient read HttpClientGet;
-
   public
     KeyName: string;
     constructor Create;
     destructor Destroy; override;
-    function CacheByUrl(AHttpUrl: string): TUrlCacheEntry;
-    property Caches: TObjectDictionary<string, TUrlCacheEntry> read CachesGet write CachesSet;
+    function CacheByUrl(AHttpUrl: string): TSEUrlCacheEntry;
+    property Caches: TObjectDictionary<string, TSEUrlCacheEntry> read CachesGet write CachesSet;
     property JsonString: string read JsonStringGet write JsonStringSet;
-    property OnManagerMessage: TUrlCacheManagerMessage read FCacheMgrMsg write FCacheMgrMsg;
+    property OnManagerMessage: TSEUrlCacheManagerMessage read FCacheMgrMsg write FCacheMgrMsg;
+//    property LastRefreshDate: TDateTime read FLastRefreshDate write FLastRefreshDate;
   end;
 
 implementation
@@ -113,40 +115,40 @@ uses System.Zip, DateUtils, System.IOUtils, System.JSON, System.JSON.Writers, Sy
 
 { TUrlCacheEntry }
 
-procedure TUrlCacheEntry.AssignHttpClient(AHttpClient: TNetHTTPClient);
+procedure TSEUrlCacheEntry.AssignHttpClient(AHttpClient: TNetHTTPClient);
 begin
   FHTTPRequest := TNetHTTPRequest.Create(nil);
   FHTTPRequest.Client := AHttpClient;
 end;
 
-function TUrlCacheEntry.CacheAgeSecondsGet: integer;
+function TSEUrlCacheEntry.CacheAgeSecondsGet: integer;
 begin
   FMREW.BeginRead;
   result := FCacheAgeSeconds;
   FMREW.EndRead;
 end;
 
-procedure TUrlCacheEntry.CacheAgeSecondsSet(const Value: integer);
+procedure TSEUrlCacheEntry.CacheAgeSecondsSet(const Value: integer);
 begin
   FMREW.BeginWrite;
   FCacheAgeSeconds := Value;
   FMREW.EndWrite;
 end;
 
-constructor TUrlCacheEntry.Create;
+constructor TSEUrlCacheEntry.Create;
 begin
   FMREW := TMultiReadExclusiveWriteSynchronizer.Create;
   CacheAgeSeconds := def_cacheagesec;
 end;
 
-destructor TUrlCacheEntry.Destroy;
+destructor TSEUrlCacheEntry.Destroy;
 begin
   FHTTPRequest.Free;
   FMREW.Free;
   inherited;
 end;
 
-procedure TUrlCacheEntry.DownloadUrl;
+procedure TSEUrlCacheEntry.DownloadUrl;
 begin
   if not Assigned(FHTTPRequest) then // FHTTPRequest.Client
     LogMessage('client not assigned');
@@ -158,38 +160,39 @@ begin
   FHTTPRequest.Get(URL);
 end;
 
-function TUrlCacheEntry.ExtractPathGet: string;
+function TSEUrlCacheEntry.ExtractPathGet: string;
 begin
   FMREW.BeginRead;
   result := FExtractPath;
   FMREW.EndRead;
 end;
 
-procedure TUrlCacheEntry.ExtractPathSet(const Value: string);
+procedure TSEUrlCacheEntry.ExtractPathSet(const Value: string);
 begin
   FMREW.BeginWrite;
   FExtractPath := Value;
   FMREW.EndWrite;
 end;
 
-function TUrlCacheEntry.ExtractZipGet: boolean;
+function TSEUrlCacheEntry.ExtractZipGet: boolean;
 begin
   FMREW.BeginRead;
   result := FExtractZip;
   FMREW.EndRead;
 end;
 
-procedure TUrlCacheEntry.ExtractZipSet(const Value: boolean);
+procedure TSEUrlCacheEntry.ExtractZipSet(const Value: boolean);
 begin
   FMREW.BeginWrite;
   FExtractZip := Value;
   FMREW.EndWrite;
 end;
 
-procedure TUrlCacheEntry.HttpCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
+procedure TSEUrlCacheEntry.HttpCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
 var
   lfs: TFileStream;
 begin
+  LastHttpCode:=         AResponse.StatusCode;
   if AResponse.StatusCode = 200 then
   begin
     LastModified := AResponse.HeaderValue[hdr_lastmodified];
@@ -216,20 +219,20 @@ begin
     LogMessage('File not modified Http result = ' + AResponse.StatusCode.ToString);
   end
   else
-    LogMessage('Download Deputy Expert Http result = ' + AResponse.StatusCode.ToString);
+    LogMessage('URL Cache Http result = ' + AResponse.StatusCode.ToString);
   if Assigned(OnRefreshDone) then
-    OnRefreshDone('all done');
+    OnRefreshDone('all done', self);
 end;
 
-procedure TUrlCacheEntry.HttpException(const Sender: TObject; const AError: Exception);
+procedure TSEUrlCacheEntry.HttpException(const Sender: TObject; const AError: Exception);
 var
   msg: string;
 begin
-  msg := 'Download Deputy Expert~Server Exception:' + AError.Message;
+  msg := 'UrlCache~Http Server Exception:' + AError.Message;
   LogMessage(msg);
 end;
 
-function TUrlCacheEntry.LastModifiedGet: string;
+function TSEUrlCacheEntry.LastModifiedGet: string;
 begin
   FMREW.BeginRead;
   result := FLastModified;
@@ -238,76 +241,76 @@ begin
   FMREW.EndRead;
 end;
 
-procedure TUrlCacheEntry.LastModifiedSet(const Value: string);
+procedure TSEUrlCacheEntry.LastModifiedSet(const Value: string);
 begin
   FMREW.BeginWrite;
   FLastModified := Value;
   FMREW.EndWrite;
 end;
 
-function TUrlCacheEntry.LocalFileExists: boolean;
+function TSEUrlCacheEntry.LocalFileExists: boolean;
 begin
   result := TFile.exists(LocalPath);
 end;
 
-function TUrlCacheEntry.LocalPathGet: string;
+function TSEUrlCacheEntry.LocalPathGet: string;
 begin
   FMREW.BeginRead;
   result := FLocalPath;
   FMREW.EndRead;
 end;
 
-procedure TUrlCacheEntry.LocalPathSet(const Value: string);
+procedure TSEUrlCacheEntry.LocalPathSet(const Value: string);
 begin
   FMREW.BeginWrite;
   FLocalPath := Value;
   FMREW.EndWrite;
 end;
 
-procedure TUrlCacheEntry.LogMessage(AMessage: string);
+procedure TSEUrlCacheEntry.LogMessage(AMessage: string);
 begin
   if Assigned(OnRequestMessage) then
     OnRequestMessage(AMessage);
 end;
 
-procedure TUrlCacheEntry.RefreshCache;
+procedure TSEUrlCacheEntry.RefreshCache;
 begin
   LogMessage('Refreshing cache of ' + self.URL);
   if (SecondsBetween(RefreshDts, now) > CacheAgeSeconds) or not LocalFileExists then
     DownloadUrl
 end;
 
-function TUrlCacheEntry.RefreshDtsGet: TDateTime;
+function TSEUrlCacheEntry.RefreshDtsGet: TDateTime;
 begin
   FMREW.BeginRead;
   result := FRefreshDts;
   FMREW.EndRead;
 end;
 
-procedure TUrlCacheEntry.RefreshDtsSet(const Value: TDateTime);
+procedure TSEUrlCacheEntry.RefreshDtsSet(const Value: TDateTime);
 begin
   FMREW.BeginWrite;
   FRefreshDts := Value;
   FMREW.EndWrite;
 end;
 
-function TUrlCacheEntry.URLGet: string;
+function TSEUrlCacheEntry.URLGet: string;
 begin
   FMREW.BeginRead;
   result := FURL;
   FMREW.EndRead;
 end;
 
-procedure TUrlCacheEntry.URLSet(const Value: string);
+procedure TSEUrlCacheEntry.URLSet(const Value: string);
 begin
   FMREW.BeginWrite;
   FURL := Value;
   FMREW.EndWrite;
 end;
 
-{ TUrlCacheManager }
+{ TSEUrlCacheManager }
 
-function TUrlCacheManager.CacheByUrl(AHttpUrl: string): TUrlCacheEntry;
+function TSEUrlCacheManager.CacheByUrl(AHttpUrl: string): TSEUrlCacheEntry;
 var
   b: boolean;
 begin
@@ -317,7 +320,7 @@ begin
   if not b then
   begin
     FMREW.BeginWrite;
-    result := TUrlCacheEntry.Create;
+    result := TSEUrlCacheEntry.Create;
     result.OnRequestMessage := LogMessage;
     result.URL := AHttpUrl;
     result.AssignHttpClient(HttpClient);
@@ -326,27 +329,27 @@ begin
   end;
 end;
 
-function TUrlCacheManager.CachesGet: TObjectDictionary<string, TUrlCacheEntry>;
+function TSEUrlCacheManager.CachesGet: TObjectDictionary<string, TSEUrlCacheEntry>;
 begin
   FMREW.BeginRead;
   result := FCaches;
   FMREW.EndRead;
 end;
 
-procedure TUrlCacheManager.CachesSet(const Value: TObjectDictionary<string, TUrlCacheEntry>);
+procedure TSEUrlCacheManager.CachesSet(const Value: TObjectDictionary<string, TSEUrlCacheEntry>);
 begin
   FMREW.BeginWrite;
   FCaches := Value;
   FMREW.EndWrite;
 end;
 
-constructor TUrlCacheManager.Create;
+constructor TSEUrlCacheManager.Create;
 begin
   FMREW := TMultiReadExclusiveWriteSynchronizer.Create;
-  FCaches := TObjectDictionary<string, TUrlCacheEntry>.Create([doOwnsValues]);
+  FCaches := TObjectDictionary<string, TSEUrlCacheEntry>.Create([doOwnsValues]);
 end;
 
-destructor TUrlCacheManager.Destroy;
+destructor TSEUrlCacheManager.Destroy;
 begin
   FMREW.Free;
   FCaches.Free;
@@ -354,7 +357,7 @@ begin
   inherited;
 end;
 
-procedure TUrlCacheManager.DistServerAuthEvent(const Sender: TObject; AnAuthTarget: TAuthTargetType;
+procedure TSEUrlCacheManager.DistServerAuthEvent(const Sender: TObject; AnAuthTarget: TAuthTargetType;
   const ARealm, AURL: string; var AUserName, APassword: string; var AbortAuth: boolean;
   var Persistence: TAuthPersistenceType);
 begin
@@ -365,7 +368,7 @@ begin
   end;
 end;
 
-procedure TUrlCacheManager.HttpClientException(const Sender: TObject; const AError: Exception);
+procedure TSEUrlCacheManager.HttpClientException(const Sender: TObject; const AError: Exception);
 var
   msg: string;
 begin
@@ -373,7 +376,7 @@ begin
   LogMessage(msg);
 end;
 
-function TUrlCacheManager.HttpClientGet: TNetHTTPClient;
+function TSEUrlCacheManager.HttpClientGet: TNetHTTPClient;
 begin
   InitHttpClient;
   FMREW.BeginRead;
@@ -381,7 +384,7 @@ begin
   FMREW.EndRead;
 end;
 
-procedure TUrlCacheManager.InitHttpClient;
+procedure TSEUrlCacheManager.InitHttpClient;
 begin
   if not Assigned(FHTTPClient) then
   begin
@@ -401,11 +404,11 @@ begin
   end;
 end;
 
-function TUrlCacheManager.JsonStringGet: string;
+function TSEUrlCacheManager.JsonStringGet: string;
 var // code here to get the string for the registry
   Writer: TJsonTextWriter;
   StringWriter: TStringWriter;
-  ce: TUrlCacheEntry;
+  ce: TSEUrlCacheEntry;
 begin
   StringWriter := TStringWriter.Create();
   Writer := TJsonTextWriter.Create(StringWriter);
@@ -437,12 +440,12 @@ begin
   StringWriter.Free;
 end;
 
-procedure TUrlCacheManager.JsonStringSet(const Value: string);
+procedure TSEUrlCacheManager.JsonStringSet(const Value: string);
 var
   JSONValue: TJSONValue;
   Caches: TJSONArray;
   I: integer;
-  ce: TUrlCacheEntry;
+  ce: TSEUrlCacheEntry;
   jo: TJSONObject;
 begin // load Caches from string
   JSONValue := TJSONObject.ParseJSONValue(Value);
@@ -452,18 +455,19 @@ begin // load Caches from string
     if JSONValue.TryGetValue<TJSONArray>(nm_json_prop_caches, Caches) then
     begin
       FCaches.Free;
-      FCaches := TObjectDictionary<string, TUrlCacheEntry>.Create([doOwnsValues]);
+      FCaches := TObjectDictionary<string, TSEUrlCacheEntry>.Create([doOwnsValues]);
       for I := 0 to Caches.Count - 1 do
       begin
         jo := Caches[I] as TJSONObject;
-        ce := TUrlCacheEntry.Create;
-        ce.URL := jo.GetValue<string>(ce.nm_json_prop_url, 'https://');
+        ce := TSEUrlCacheEntry.Create;
+        ce.URL := jo.GetValue<string>(ce.nm_json_prop_url, 'https://localhost');
         ce.LastModified := jo.GetValue<string>(ce.nm_json_prop_lastmod, ce.dt_lastmod_default);
         ce.RefreshDts := ISO8601ToDate(jo.GetValue<string>(ce.nm_json_prop_refreshdts,
           DateToISO8601(now, false)), false);
         ce.CacheAgeSeconds := jo.GetValue<integer>(ce.nm_json_prop_cacheagesec, ce.def_cacheagesec);
         ce.ExtractZip := StrToBool(jo.GetValue<string>(ce.nm_json_prop_extractzip, '0'));
         ce.ExtractPath := jo.GetValue<string>(ce.nm_json_prop_extractpath, TPath.GetTempPath);
+        ce.AssignHttpClient(HttpClient);
         FCaches.Add(ce.URL, ce);
       end;
     end
@@ -474,7 +478,7 @@ begin // load Caches from string
   end;
 end;
 
-procedure TUrlCacheManager.LogMessage(AMessage: string);
+procedure TSEUrlCacheManager.LogMessage(AMessage: string);
 begin
   if Assigned(OnManagerMessage) then
     OnManagerMessage(AMessage);

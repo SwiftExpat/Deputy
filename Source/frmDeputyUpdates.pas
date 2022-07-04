@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, SERTTK.DeputyTypes;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, SERTTK.DeputyTypes, SE.UpdateManager;
 
 type
   TDeputyUpdates = class(TForm)
@@ -12,7 +12,7 @@ type
     lblHdrItem: TLabel;
     lblHdrVerCurr: TLabel;
     lblHdrUpdate: TLabel;
-    Memo1: TMemo;
+    memoMessages: TMemo;
     lblHdrVerAvail: TLabel;
     lblDeputy: TLabel;
     lblCaddie: TLabel;
@@ -36,12 +36,17 @@ type
     procedure btnUpdateDemoVCLClick(Sender: TObject);
     procedure btnUpdateCaddieClick(Sender: TObject);
     procedure btnUpdateDeputyClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
   private
     FAppUpdate: TSERTTKAppVersionUpdate;
+    FUrlCacheMgr: TSEUrlCacheManager;
+    FSettings: TSERTTKDeputySettings;
     procedure DownloadDoneCaddie(const AMessage: string);
     procedure DownloadDoneDemoFMX(const AMessage: string);
     procedure DownloadDoneDemoVCL(const AMessage: string);
     procedure OnVersionUpdateMessage(const AMessage: string);
+    procedure LogMessage(AMessage: string);
   public
     procedure ExpertUpdatesRefresh(const AAppUpdate: TSERTTKAppVersionUpdate);
   end;
@@ -111,9 +116,32 @@ begin
   FAppUpdate.OnDownloadDemoVCLDone := DownloadDoneCaddie;
 end;
 
+procedure TDeputyUpdates.FormCreate(Sender: TObject);
+begin
+  FUrlCacheMgr := TSEUrlCacheManager.Create;
+  FUrlCacheMgr.OnManagerMessage := LogMessage;
+end;
+
+procedure TDeputyUpdates.FormDestroy(Sender: TObject);
+begin
+   FUrlCacheMgr.Free;
+end;
+
+procedure TDeputyUpdates.LogMessage(AMessage: string);
+var
+  msg: string;
+begin
+  msg := 'Msg: ' + AMessage;
+  TThread.Queue(nil,
+    procedure
+    begin
+      memoMessages.Lines.Add(msg);
+    end);
+end;
+
 procedure TDeputyUpdates.OnVersionUpdateMessage(const AMessage: string);
 begin
-  Memo1.Lines.Add(AMessage)
+  memoMessages.Lines.Add(AMessage)
 end;
 
 { TDeputyUpdatesFactory }
