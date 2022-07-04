@@ -4,7 +4,8 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, SERTTK.DeputyTypes, SE.UpdateManager;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Menus,
+  SERTTK.DeputyTypes, SE.UpdateManager;
 
 type
   TDeputyUpdates = class(TForm)
@@ -43,6 +44,7 @@ type
     FUrlCacheMgr: TSEUrlCacheManager;
     FSettings: TSERTTKDeputySettings;
     FDeputyUtils: TSERTTKDeputyUtils;
+    FMiCaddie, FMiDemoFMX, FMiDemoVCL: TMenuItem;
     procedure DownloadDoneCaddie(AMessage: string; ACacheEntry: TSEUrlCacheEntry);
     procedure DownloadDoneDemoFMX(AMessage: string; ACacheEntry: TSEUrlCacheEntry);
     procedure DownloadDoneDemoVCL(AMessage: string; ACacheEntry: TSEUrlCacheEntry);
@@ -55,6 +57,7 @@ type
   public
     procedure ExpertUpdatesRefresh(const AAppUpdate: TSERTTKAppVersionUpdate);
     procedure AssignSettings(ASettings: TSERTTKDeputySettings);
+    procedure AssignMenuItems(AMiCaddie, AMiDemoFMX, AMiDemoVCL: TMenuItem);
   end;
 
   EDeputyUpdatesCreate = class(Exception);
@@ -74,23 +77,54 @@ implementation
 {$R *.dfm}
 { TDeputyUpdates }
 
+procedure TDeputyUpdates.AssignMenuItems(AMiCaddie, AMiDemoFMX, AMiDemoVCL: TMenuItem);
+begin
+  FMiCaddie := AMiCaddie;
+  FMiDemoFMX := AMiDemoFMX;
+  FMiDemoVCL := AMiDemoVCL;
+end;
+
 procedure TDeputyUpdates.AssignSettings(ASettings: TSERTTKDeputySettings);
 begin
   FSettings := ASettings;
 end;
 
 procedure TDeputyUpdates.btnUpdateCaddieClick(Sender: TObject);
+var
+  ce: TSEUrlCacheEntry;
 begin
-  RefreshCaddie;
+  ce := FUrlCacheMgr.CacheByUrl(FAppUpdate.url_caddie_download);
+  if ce.CacheValid and FDeputyUtils.CaddieAppExists then
+  begin
+    FDeputyUtils.RunCaddie
+  end
+  else
+    RefreshCaddie;
 end;
 
 procedure TDeputyUpdates.btnUpdateDemoFMXClick(Sender: TObject);
+var
+  ce: TSEUrlCacheEntry;
 begin
+  ce := FUrlCacheMgr.CacheByUrl(FAppUpdate.url_demo_fmx_download);
+  if ce.CacheValid and FDeputyUtils.DemoFMXExists then
+  begin
+    FDeputyUtils.RunDemoFMX
+  end
+  else
   RefreshDemoFMX;
 end;
 
 procedure TDeputyUpdates.btnUpdateDemoVCLClick(Sender: TObject);
+var
+  ce: TSEUrlCacheEntry;
 begin
+  ce := FUrlCacheMgr.CacheByUrl(FAppUpdate.url_demo_vcl_download);
+  if ce.CacheValid and FDeputyUtils.DemoVCLExists then
+  begin
+    FDeputyUtils.RunDemoVCL
+  end
+  else
   RefreshDemoVCL;
 end;
 
@@ -101,7 +135,7 @@ end;
 
 procedure TDeputyUpdates.DownloadDoneCaddie(AMessage: string; ACacheEntry: TSEUrlCacheEntry);
 begin
-  if FDeputyUtils.DemoFMXExists then
+  if FDeputyUtils.CaddieAppExists then
   begin
     btnUpdateCaddie.OnClick := FAppUpdate.OnClickCaddieRun;
     lblCaddieInst.Caption := ACacheEntry.LastModified;

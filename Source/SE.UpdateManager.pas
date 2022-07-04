@@ -67,6 +67,7 @@ type
     property CacheAgeSeconds: integer read CacheAgeSecondsGet write CacheAgeSecondsSet;
     function LocalFileExists: boolean;
     procedure RefreshCache;
+    function CacheValid:boolean;
     procedure AssignHttpClient(AHttpClient: TNetHTTPClient);
     property OnRequestMessage: TSEUrlCacheManagerMessage read FCacheMgrMsg write FCacheMgrMsg;
     property OnRefreshDone: TSEUrlCacheRefreshDone read FOnRefreshDone write FOnRefreshDone;
@@ -131,6 +132,11 @@ begin
   FMREW.BeginWrite;
   FCacheAgeSeconds := Value;
   FMREW.EndWrite;
+end;
+
+function TSEUrlCacheEntry.CacheValid: boolean;
+begin
+  result :=  SecondsBetween(RefreshDts, now) < CacheAgeSeconds;
 end;
 
 constructor TSEUrlCacheEntry.Create;
@@ -274,7 +280,7 @@ end;
 procedure TSEUrlCacheEntry.RefreshCache;
 begin
   LogMessage('Refreshing cache of ' + self.URL);
-  if (SecondsBetween(RefreshDts, now) > CacheAgeSeconds) or not LocalFileExists then
+  if not CacheValid or not LocalFileExists then
     DownloadUrl
 end;
 
