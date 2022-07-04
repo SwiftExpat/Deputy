@@ -59,6 +59,7 @@ type
   private
     FDebugNotifier: ITOTALNotifier;
     procedure InitToolsMenu;
+    procedure AssignUpdateMenuItems;
     procedure OnClickMiKillProcEnabled(Sender: TObject);
     function FindMenuItemFirstLine(const AMenuItem: TMenuItem): integer;
     procedure MessagesAdd(const AMessage: string); // overload;
@@ -94,6 +95,22 @@ exports
   Initialize name WizardEntryPoint;
 
 { TSERTTKDeputyWizard }
+
+procedure TSERTTKDeputyWizard.AssignUpdateMenuItems;
+var
+ mic, mif, miv: TMenuItem;
+begin
+  mic := MenuItemByName(nm_mi_run_caddie);
+  mic.OnClick := FDeputyUpdates.btnUpdateCaddieClick;
+
+  miv := MenuItemByName(nm_mi_run_vcldemo);
+  miv.OnClick := FDeputyUpdates.btnUpdateDemoVCLClick;
+
+  mif := MenuItemByName(nm_mi_run_fmxdemo);
+  mif.OnClick := FDeputyUpdates.btnUpdateDemoFMXClick;
+
+  FDeputyUpdates.AssignMenuItems(mic, mif, miv);
+end;
 
 constructor TSERTTKDeputyWizard.Create;
 begin
@@ -134,6 +151,7 @@ begin
   FProcMgrForm.AssignSettings(FSettings);
   FDeputyUpdates := TDeputyUpdatesFactory.DeputyUpdates;
   FDeputyUpdates.AssignSettings(FSettings);
+  AssignUpdateMenuItems;
   FDeputyUpdates.ExpertUpdatesRefresh(FRTTKAppUpdate);
 end;
 
@@ -232,8 +250,8 @@ begin
   mi.Caption := 'Kill Process Settings';
   FToolsMenuRootItem.Add(mi);
   mic := MenuItemByName(nm_mi_run_caddie);
-  mic.Caption := FRTTKAppUpdate.ButtonTextCaddie;
-  mic.OnClick := FDeputyUpdates.btnUpdateCaddieClick;
+  mic.Caption := 'Refreshing Caddie';
+ // mic.OnClick := FDeputyUpdates.btnUpdateCaddieClick;
   // FRTTKAppUpdate.OnMessage := MessageCaddieCheck;
   // FRTTKAppUpdate.OnDownloadDone := CaddieCheckDownloaded;
   FToolsMenuRootItem.Add(mic);
@@ -242,16 +260,16 @@ begin
   mi.OnClick := OnClickShowWebsite;
   FToolsMenuRootItem.Add(mi);
   miv := MenuItemByName(nm_mi_run_vcldemo);
-  miv.Caption := FRTTKAppUpdate.ButtonTextDemoVCL;
-  miv.OnClick := FDeputyUpdates.btnUpdateDemoVCLClick;
+  miv.Caption := 'Refreshing Demo VCL';
+ // miv.OnClick := FDeputyUpdates.btnUpdateDemoVCLClick;
   // FRTTKAppUpdate.OnDownloadDemoVCLDone := DemoVCLDownloaded;
   FToolsMenuRootItem.Add(miv);
   mif := MenuItemByName(nm_mi_run_fmxdemo);
-  mif.Caption := FRTTKAppUpdate.ButtonTextDemoFMX;
-  mif.OnClick := FDeputyUpdates.btnUpdateDemoFMXClick;
+  mif.Caption := 'Refreshing Demo FMX';
+ // mif.OnClick := FDeputyUpdates.btnUpdateDemoFMXClick;
   // FRTTKAppUpdate.OnDownloadDemoFMXDone := DemoFMXDownloaded;
   FToolsMenuRootItem.Add(mif);
-  FDeputyUpdates.AssignMenuItems(mic, mif, miv);
+ // FDeputyUpdates.AssignMenuItems(mic, mif, miv);
   mi := MenuItemByName(nm_mi_update_status);
   mi.Caption := 'Deputy Updates';
   mi.OnClick := OnClickDeputyUpdates;

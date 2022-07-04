@@ -112,7 +112,7 @@ begin
     FDeputyUtils.RunDemoFMX
   end
   else
-  RefreshDemoFMX;
+    RefreshDemoFMX;
 end;
 
 procedure TDeputyUpdates.btnUpdateDemoVCLClick(Sender: TObject);
@@ -125,7 +125,7 @@ begin
     FDeputyUtils.RunDemoVCL
   end
   else
-  RefreshDemoVCL;
+    RefreshDemoVCL;
 end;
 
 procedure TDeputyUpdates.btnUpdateDeputyClick(Sender: TObject);
@@ -137,10 +137,10 @@ procedure TDeputyUpdates.DownloadDoneCaddie(AMessage: string; ACacheEntry: TSEUr
 begin
   if FDeputyUtils.CaddieAppExists then
   begin
-    btnUpdateCaddie.OnClick := FAppUpdate.OnClickCaddieRun;
+    FMiCaddie.Caption := 'Run Caddie';
     lblCaddieInst.Caption := ACacheEntry.LastModified;
   end;
-  btnUpdateCaddie.Caption := FAppUpdate.ButtonTextCaddie;
+  btnUpdateCaddie.Caption := 'Run Caddie or refresh';
   SaveCacheMgr;
 end;
 
@@ -148,10 +148,10 @@ procedure TDeputyUpdates.DownloadDoneDemoFMX(AMessage: string; ACacheEntry: TSEU
 begin
   if FDeputyUtils.DemoFMXExists then
   begin
-    btnUpdateDemoFMX.OnClick := FAppUpdate.OnClickDemoFMX;
+    FMiDemoFMX.Caption := 'Run Demo FMX';
     lblDemoFmxInst.Caption := ACacheEntry.LastModified;
   end;
-  btnUpdateDemoFMX.Caption := FAppUpdate.ButtonTextDemoFMX;
+  btnUpdateDemoFMX.Caption := 'Run Demo FMX or refresh';
 
 end;
 
@@ -159,10 +159,10 @@ procedure TDeputyUpdates.DownloadDoneDemoVCL(AMessage: string; ACacheEntry: TSEU
 begin
   if FDeputyUtils.DemoVCLExists then
   begin
-    btnUpdateDemoVCL.OnClick := FAppUpdate.OnClickDemoVCL;
+    FMiDemoVCL.Caption := 'Run DemoVCL';
     lblDemoVCLInst.Caption := ACacheEntry.LastModified;
   end;
-  btnUpdateDemoVCL.Caption := FAppUpdate.ButtonTextDemoVCL;
+  btnUpdateDemoVCL.Caption := 'Run Demo VCL or refresh';
 
 end;
 
