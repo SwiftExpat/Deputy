@@ -50,10 +50,10 @@ type
     FMenuItems: TDictionary<string, TMenuItem>;
     FNagCounter: TSERTTKNagCounter;
     function MenuItemByName(const AItemName: string): TMenuItem;
-//    procedure MessageCaddieCheck(const AMessage: string);
-//    procedure CaddieCheckDownloaded(const AMessage: string);
-//    procedure DemoFMXDownloaded(const AMessage: string);
-//    procedure DemoVCLDownloaded(const AMessage: string);
+    // procedure MessageCaddieCheck(const AMessage: string);
+    // procedure CaddieCheckDownloaded(const AMessage: string);
+    // procedure DemoFMXDownloaded(const AMessage: string);
+    // procedure DemoVCLDownloaded(const AMessage: string);
     procedure OnClickDeputyUpdates(Sender: TObject);
   private
     FDebugNotifier: ITOTALNotifier;
@@ -61,7 +61,7 @@ type
     procedure OnClickMiKillProcEnabled(Sender: TObject);
     function FindMenuItemFirstLine(const AMenuItem: TMenuItem): integer;
     procedure MessagesAdd(const AMessage: string); overload;
-//    procedure MessagesAdd(const AMessageList: TStringList); overload;
+    // procedure MessagesAdd(const AMessageList: TStringList); overload;
   protected
     procedure IDENotifierBeforeCompile(const AProject: IOTAProject; const AIsCodeInsight: boolean;
       var ACancel: boolean); override;
@@ -120,7 +120,7 @@ procedure TSERTTKDeputyWizard.IDEStarted;
 begin
   inherited;
   FIDEStarted := true;
-  //MessagesAdd('Deputy Started');
+  // MessagesAdd('Deputy Started');
   FWizardInfo := TSERTTKWizardInfo.Create;
   FWizardInfo.WizardVersion := GetWizardVersion;
   FWizardInfo.WizardFileName := GetWizardFileName;
@@ -129,6 +129,7 @@ begin
   FProcMgrForm := TDeputyProcMgrFactory.DeputyProcMgr;
   FProcMgrForm.AssignSettings(FSettings);
   FDeputyUpdates := TDeputyUpdatesFactory.DeputyUpdates;
+  FDeputyUpdates.AssignSettings(FSettings);
   FDeputyUpdates.ExpertUpdatesRefresh(FRTTKAppUpdate);
 end;
 
@@ -201,13 +202,13 @@ begin
     TOTAHelper.AddTitleMessage(AMessage, nm_message_group);
 end;
 
-//procedure TSERTTKDeputyWizard.MessagesAdd(const AMessageList: TStringList);
-//var
-//  s: string;
-//begin
-//  for s in AMessageList do
-//    MessagesAdd(s)
-//end;
+// procedure TSERTTKDeputyWizard.MessagesAdd(const AMessageList: TStringList);
+// var
+// s: string;
+// begin
+// for s in AMessageList do
+// MessagesAdd(s)
+// end;
 {$ENDREGION}
 
 procedure TSERTTKDeputyWizard.InitToolsMenu;
@@ -229,8 +230,8 @@ begin
   mi := MenuItemByName(nm_mi_run_caddie);
   mi.Caption := FRTTKAppUpdate.ButtonTextCaddie;
   mi.OnClick := FRTTKAppUpdate.OnClickCaddieRun;
-  //FRTTKAppUpdate.OnMessage := MessageCaddieCheck;
-  //FRTTKAppUpdate.OnDownloadDone := CaddieCheckDownloaded;
+  // FRTTKAppUpdate.OnMessage := MessageCaddieCheck;
+  // FRTTKAppUpdate.OnDownloadDone := CaddieCheckDownloaded;
   FToolsMenuRootItem.Add(mi);
   mi := MenuItemByName(nm_mi_show_website);
   mi.Caption := 'RTTK Website';
@@ -239,12 +240,12 @@ begin
   mi := MenuItemByName(nm_mi_run_vcldemo);
   mi.Caption := FRTTKAppUpdate.ButtonTextDemoVCL;
   mi.OnClick := FRTTKAppUpdate.OnClickDemoVCL;
-  //FRTTKAppUpdate.OnDownloadDemoVCLDone := DemoVCLDownloaded;
+  // FRTTKAppUpdate.OnDownloadDemoVCLDone := DemoVCLDownloaded;
   FToolsMenuRootItem.Add(mi);
   mi := MenuItemByName(nm_mi_run_fmxdemo);
   mi.Caption := FRTTKAppUpdate.ButtonTextDemoFMX;
   mi.OnClick := FRTTKAppUpdate.OnClickDemoFMX;
-  //FRTTKAppUpdate.OnDownloadDemoFMXDone := DemoFMXDownloaded;
+  // FRTTKAppUpdate.OnDownloadDemoFMXDone := DemoFMXDownloaded;
   FToolsMenuRootItem.Add(mi);
   mi := MenuItemByName(nm_mi_update_status);
   mi.Caption := 'Deputy Updates';
@@ -320,7 +321,6 @@ begin
     end;
 
 end;
-
 
 { TSERTTKDeputyDebugNotifier }
 
