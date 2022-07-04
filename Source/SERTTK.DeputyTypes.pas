@@ -164,6 +164,7 @@ type
   const
     nm_section_updates = 'Updates';
     nm_updates_lastupdate = 'LastUpdateCheckDate';
+    nm_updates_urlcachejson = 'UrlCacheJson';
     nm_section_killprocess = 'KillProcess';
     nm_killprocess_enabled = 'Enabled';
     nm_killprocess_closeleak = 'CloseLeakWindow';
@@ -182,12 +183,15 @@ type
     procedure CloseLeakWindowSet(const Value: boolean);
     function CopyLeakMessageGet: boolean;
     procedure CopyLeakMessageSet(const Value: boolean);
+    function UrlCacheJsonGet: string;
+    procedure UrlCacheJsonSet(const Value: string);
   public
     property KillProcActive: boolean read KillProcActiveGet write KillProcActiveSet;
     property LastUpdateCheck: TDateTime read LastUpdateCheckGet write LastUpdateCheckSet;
     property StopCommand: integer read StopCommandGet write StopCommandSet;
     property CloseLeakWindow: boolean read CloseLeakWindowGet write CloseLeakWindowSet;
     property CopyLeakMessage: boolean read CopyLeakMessageGet write CopyLeakMessageSet;
+    property UrlCacheJson: string read UrlCacheJsonGet write UrlCacheJsonSet;
   end;
 
   TSERTTKNagCounter = class
@@ -252,7 +256,6 @@ type
     FOnDownloadCaddieDone, FOnDownloadFMXDemoDone, FOnDownloadVCLDemoDone: TSERTTKAppVerUpdateOnDownloadDone;
     procedure LogMessage(AMessage: string);
 
-
     procedure InitHttpClient;
     procedure DistServerAuthEvent(const Sender: TObject; AnAuthTarget: TAuthTargetType; const ARealm, AURL: string;
       var AUserName, APassword: string; var AbortAuth: boolean; var Persistence: TAuthPersistenceType);
@@ -277,7 +280,7 @@ type
     function ExpertUpdateDownloaded: boolean;
     // procedure ExpertUpdateMenuItemSet(const Value: TMenuItem);
     procedure LoadDeputyUpdateVersion;
-//    function UpdateExpertButtonText: string;
+    // function UpdateExpertButtonText: string;
   public
     procedure DownloadCaddie;
     procedure DownloadDemoFMX;
@@ -297,7 +300,8 @@ type
     procedure OnClickDemoFMX(Sender: TObject);
     procedure OnClickShowWebsite(Sender: TObject);
     property OnMessage: TSERTTKAppVerUpdateOnMessage read FOnMessage write FOnMessage;
-    property OnDownloadCaddieDone: TSERTTKAppVerUpdateOnDownloadDone read FOnDownloadCaddieDone write FOnDownloadCaddieDone;
+    property OnDownloadCaddieDone: TSERTTKAppVerUpdateOnDownloadDone read FOnDownloadCaddieDone
+      write FOnDownloadCaddieDone;
     property OnDownloadDemoVCLDone: TSERTTKAppVerUpdateOnDownloadDone read FOnDownloadVCLDemoDone
       write FOnDownloadVCLDemoDone;
     property OnDownloadDemoFMXDone: TSERTTKAppVerUpdateOnDownloadDone read FOnDownloadFMXDemoDone
@@ -536,6 +540,16 @@ end;
 procedure TSERTTKDeputySettings.StopCommandSet(const Value: integer);
 begin
   self.WriteInteger(nm_section_killprocess, nm_killprocess_stopcommand, Value);
+end;
+
+function TSERTTKDeputySettings.UrlCacheJsonGet: string;
+begin
+  result := self.ReadString(nm_section_updates, nm_updates_urlcachejson, '')
+end;
+
+procedure TSERTTKDeputySettings.UrlCacheJsonSet(const Value: string);
+begin
+  self.WriteString(nm_section_updates, nm_updates_urlcachejson, Value)
 end;
 
 { TSERTTKNagCounter }
@@ -1086,42 +1100,42 @@ procedure TSERTTKAppVersionUpdate.UpdateDeputyExpert;
 var
   fn: string;
 begin // rename dll FWizardInfo.WizardFileName
-   try
-  // if not SameText(ExpertFileLocation, FWizardInfo.WizardFileName) then
-  // begin // ensure the Update would be for the wizard loaded
-  LogMessage('Dll missmatch to registry');
-  // exit;
-  // end;
-  // if FWizardInfo.WizardFileName = DeputyWizardBackupFilename then
-  // begin // pending restart, do not continue
-  LogMessage('Restart IDE to load update');
-  // exit;
-  // end;
-  fn := TPath.GetFileName(FWizardInfo.WizardFileName);
-  // if not TFile.Exists(DeputyWizardUpdateFilename(fn)) then
-  // begin // no update to install, exit
-  LogMessage('Update not found');
-  // exit;
-  // end;
-  // if TFile.Exists(DeputyWizardBackupFilename) then
-  // TFile.Delete(DeputyWizardBackupFilename);
-  // TFile.Move(FWizardInfo.WizardFileName, DeputyWizardBackupFilename);
-  // TFile.Move(DeputyWizardUpdateFilename(fn), ExpertFileLocation);
-   except
-   on E: Exception do
-   LogMessage('Failed Update ' + E.Message);
-   end;
+  try
+    // if not SameText(ExpertFileLocation, FWizardInfo.WizardFileName) then
+    // begin // ensure the Update would be for the wizard loaded
+    LogMessage('Dll missmatch to registry');
+    // exit;
+    // end;
+    // if FWizardInfo.WizardFileName = DeputyWizardBackupFilename then
+    // begin // pending restart, do not continue
+    LogMessage('Restart IDE to load update');
+    // exit;
+    // end;
+    fn := TPath.GetFileName(FWizardInfo.WizardFileName);
+    // if not TFile.Exists(DeputyWizardUpdateFilename(fn)) then
+    // begin // no update to install, exit
+    LogMessage('Update not found');
+    // exit;
+    // end;
+    // if TFile.Exists(DeputyWizardBackupFilename) then
+    // TFile.Delete(DeputyWizardBackupFilename);
+    // TFile.Move(FWizardInfo.WizardFileName, DeputyWizardBackupFilename);
+    // TFile.Move(DeputyWizardUpdateFilename(fn), ExpertFileLocation);
+  except
+    on E: Exception do
+      LogMessage('Failed Update ' + E.Message);
+  end;
 
-  LogMessage( 'Restart IDE pending');
+  LogMessage('Restart IDE pending');
 
 end;
 
-//function TSERTTKAppVersionUpdate.UpdateExpertButtonText: string;
-//begin
-//  if ExpertUpdateAvailable then
-//    result := 'Update Available to  ' + FUpdateVersion.VersionString
-//  else
-//    result := 'Version is current ' + FWizardVersion.VersionString;
-//end;
+// function TSERTTKAppVersionUpdate.UpdateExpertButtonText: string;
+// begin
+// if ExpertUpdateAvailable then
+// result := 'Update Available to  ' + FUpdateVersion.VersionString
+// else
+// result := 'Version is current ' + FWizardVersion.VersionString;
+// end;
 
 end.
