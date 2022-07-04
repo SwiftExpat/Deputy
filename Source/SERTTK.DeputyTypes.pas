@@ -254,7 +254,7 @@ type
     FSettings: TSERTTKDeputySettings;
     FWizardInfo: TSERTTKWizardInfo;
     FWizardVersion, FUpdateVersion: TSERTTKVersionInfo;
-    FHTTPReqCaddie, FHTTPReqDemoFMX, FHTTPReqDemoVCL, FHTTPReqDeputyVersion, FHTTPReqDeputyDL: TNetHTTPRequest;
+    FHTTPReqDeputyVersion, FHTTPReqDeputyDL: TNetHTTPRequest; //FHTTPReqCaddie, FHTTPReqDemoFMX, FHTTPReqDemoVCL,
     FHTTPClient: TNetHTTPClient;
     FOnMessage: TSERTTKAppVerUpdateOnMessage;
     FOnDownloadCaddieDone, FOnDownloadFMXDemoDone, FOnDownloadVCLDemoDone: TSERTTKAppVerUpdateOnDownloadDone;
@@ -263,12 +263,12 @@ type
     procedure InitHttpClient;
     procedure DistServerAuthEvent(const Sender: TObject; AnAuthTarget: TAuthTargetType; const ARealm, AURL: string;
       var AUserName, APassword: string; var AbortAuth: boolean; var Persistence: TAuthPersistenceType);
-    procedure HttpCaddieDLException(const Sender: TObject; const AError: Exception);
-    procedure HttpCaddieDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
-    procedure HttpDemoVCLDLException(const Sender: TObject; const AError: Exception);
-    procedure HttpDemoVCLDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
-    procedure HttpDemoFMXDLException(const Sender: TObject; const AError: Exception);
-    procedure HttpDemoFMXDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
+  //  procedure HttpCaddieDLException(const Sender: TObject; const AError: Exception);
+//    procedure HttpCaddieDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
+//    procedure HttpDemoVCLDLException(const Sender: TObject; const AError: Exception);
+//    procedure HttpDemoVCLDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
+//    procedure HttpDemoFMXDLException(const Sender: TObject; const AError: Exception);
+//    procedure HttpDemoFMXDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
     procedure HttpClientException(const Sender: TObject; const AError: Exception);
     procedure HttpDeputyExpertDownload;
     procedure HttpDeputyVersionDownload;
@@ -286,9 +286,9 @@ type
     procedure LoadDeputyUpdateVersion;
     // function UpdateExpertButtonText: string;
   public
-    procedure DownloadCaddie;
-    procedure DownloadDemoFMX;
-    procedure DownloadDemoVCL;
+    //procedure DownloadCaddie;
+//    procedure DownloadDemoFMX;
+//    procedure DownloadDemoVCL;
     procedure UpdateDeputyExpert;
 
     constructor Create;
@@ -638,9 +638,9 @@ end;
 
 destructor TSERTTKAppVersionUpdate.Destroy;
 begin
-  FHTTPReqCaddie.Free;
-  FHTTPReqDemoFMX.Free;
-  FHTTPReqDemoVCL.Free;
+//  FHTTPReqCaddie.Free;
+//  FHTTPReqDemoFMX.Free;
+//  FHTTPReqDemoVCL.Free;
   FHTTPClient.Free;
   FDeputyUtils.Free;
   inherited;
@@ -657,59 +657,59 @@ begin
   end;
 end;
 
-procedure TSERTTKAppVersionUpdate.DownloadCaddie;
-begin
-  InitHttpClient;
-  if not Assigned(FHTTPReqCaddie) then
-    FHTTPReqCaddie := TNetHTTPRequest.Create(nil);
-{$IF COMPILERVERSION > 33}
-  FHTTPReqCaddie.OnRequestException := HttpCaddieDLException;
-  FHTTPReqCaddie.SynchronizeEvents := false;
-{$ELSE}
-  // FHTTPReqCaddie.OnRequestError := HttpCaddieDLException;
-  FHTTPReqCaddie.Asynchronous := true;
-{$ENDIF}
-  FHTTPReqCaddie.Client := FHTTPClient;
-  FHTTPReqCaddie.OnRequestCompleted := HttpCaddieDLCompleted;
-  FHTTPReqCaddie.Asynchronous := true;
-  FHTTPReqCaddie.Get('https://swiftexpat.com/downloads/' + dl_fl_name);
-end;
+//procedure TSERTTKAppVersionUpdate.DownloadCaddie;
+//begin
+//  InitHttpClient;
+//  if not Assigned(FHTTPReqCaddie) then
+//    FHTTPReqCaddie := TNetHTTPRequest.Create(nil);
+//{$IF COMPILERVERSION > 33}
+//  FHTTPReqCaddie.OnRequestException := HttpCaddieDLException;
+//  FHTTPReqCaddie.SynchronizeEvents := false;
+//{$ELSE}
+//  // FHTTPReqCaddie.OnRequestError := HttpCaddieDLException;
+//  FHTTPReqCaddie.Asynchronous := true;
+//{$ENDIF}
+//  FHTTPReqCaddie.Client := FHTTPClient;
+//  FHTTPReqCaddie.OnRequestCompleted := HttpCaddieDLCompleted;
+//  FHTTPReqCaddie.Asynchronous := true;
+//  FHTTPReqCaddie.Get('https://swiftexpat.com/downloads/' + dl_fl_name);
+//end;
 
-procedure TSERTTKAppVersionUpdate.DownloadDemoFMX;
-begin
-  InitHttpClient;
-  if not Assigned(FHTTPReqDemoFMX) then
-    FHTTPReqDemoFMX := TNetHTTPRequest.Create(nil);
-{$IF COMPILERVERSION > 33}
-  FHTTPReqDemoFMX.OnRequestException := HttpDemoFMXDLException;
-  FHTTPReqDemoFMX.SynchronizeEvents := false;
-{$ELSE}
-  // FHTTPReqCaddie.OnRequestError := HttpCaddieDLException;
-  FHTTPReqDemoFMX.Asynchronous := true;
-{$ENDIF}
-  FHTTPReqDemoFMX.Client := FHTTPClient;
-  FHTTPReqDemoFMX.OnRequestCompleted := HttpDemoFMXDLCompleted;
-  FHTTPReqDemoFMX.Asynchronous := true;
-  FHTTPReqDemoFMX.Get(url_demo_downloads + dl_fl_demo_fmx);
-end;
+//procedure TSERTTKAppVersionUpdate.DownloadDemoFMX;
+//begin
+//  InitHttpClient;
+//  if not Assigned(FHTTPReqDemoFMX) then
+//    FHTTPReqDemoFMX := TNetHTTPRequest.Create(nil);
+//{$IF COMPILERVERSION > 33}
+//  FHTTPReqDemoFMX.OnRequestException := HttpDemoFMXDLException;
+//  FHTTPReqDemoFMX.SynchronizeEvents := false;
+//{$ELSE}
+//  // FHTTPReqCaddie.OnRequestError := HttpCaddieDLException;
+//  FHTTPReqDemoFMX.Asynchronous := true;
+//{$ENDIF}
+//  FHTTPReqDemoFMX.Client := FHTTPClient;
+//  FHTTPReqDemoFMX.OnRequestCompleted := HttpDemoFMXDLCompleted;
+//  FHTTPReqDemoFMX.Asynchronous := true;
+//  FHTTPReqDemoFMX.Get(url_demo_downloads + dl_fl_demo_fmx);
+//end;
 
-procedure TSERTTKAppVersionUpdate.DownloadDemoVCL;
-begin
-  InitHttpClient;
-  if not Assigned(FHTTPReqDemoVCL) then
-    FHTTPReqDemoVCL := TNetHTTPRequest.Create(nil);
-{$IF COMPILERVERSION > 33}
-  FHTTPReqDemoVCL.OnRequestException := HttpDemoVCLDLException;
-  FHTTPReqDemoVCL.SynchronizeEvents := false;
-{$ELSE}
-  FHTTPReqCaddie.OnRequestError := HttpCaddieDLException;
-  FHTTPReqDemoVCL.Asynchronous := true;
-{$ENDIF}
-  FHTTPReqDemoVCL.Client := FHTTPClient;
-  FHTTPReqDemoVCL.OnRequestCompleted := HttpDemoVCLDLCompleted;
-  FHTTPReqDemoVCL.Asynchronous := true;
-  FHTTPReqDemoVCL.Get(url_demo_downloads + dl_fl_demo_vcl);
-end;
+//procedure TSERTTKAppVersionUpdate.DownloadDemoVCL;
+//begin
+//  InitHttpClient;
+//  if not Assigned(FHTTPReqDemoVCL) then
+//    FHTTPReqDemoVCL := TNetHTTPRequest.Create(nil);
+//{$IF COMPILERVERSION > 33}
+//  FHTTPReqDemoVCL.OnRequestException := HttpDemoVCLDLException;
+//  FHTTPReqDemoVCL.SynchronizeEvents := false;
+//{$ELSE}
+//  FHTTPReqCaddie.OnRequestError := HttpCaddieDLException;
+//  FHTTPReqDemoVCL.Asynchronous := true;
+//{$ENDIF}
+//  FHTTPReqDemoVCL.Client := FHTTPClient;
+//  FHTTPReqDemoVCL.OnRequestCompleted := HttpDemoVCLDLCompleted;
+//  FHTTPReqDemoVCL.Asynchronous := true;
+//  FHTTPReqDemoVCL.Get(url_demo_downloads + dl_fl_demo_vcl);
+//end;
 
 procedure TSERTTKAppVersionUpdate.ExpertLogUsage(const AUsageStep: string);
 var
@@ -783,47 +783,47 @@ begin
   end;
 end;
 
-procedure TSERTTKAppVersionUpdate.HttpCaddieDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
-var
-  lfs: TFileStream;
-begin
-  if AResponse.StatusCode = 200 then
-  begin
-    lfs := TFileStream.Create(FDeputyUtils.CaddieDownloadFile, fmCreate);
-    lfs.CopyFrom(AResponse.ContentStream, 0);
-    lfs.Free;
-    LogMessage('Download Complete, Extracting');
-    if TZipFile.IsValid(FDeputyUtils.CaddieDownloadFile) then
-    begin
-      LogMessage('Zip File is valid');
-      TZipFile.ExtractZipFile(FDeputyUtils.CaddieDownloadFile, FDeputyUtils.RttkAppFolder);
-      if TFile.Exists(FDeputyUtils.CaddieAppFile) then
-      begin
-        FDeputyUtils.RunCaddie;
-        TThread.Queue(nil,
-          procedure
-          begin
-            if Assigned(OnDownloadCaddieDone) then
-              OnDownloadCaddieDone('Downloaded');
-          end);
-      end
-      else // for file exists
-        LogMessage('Caddie not found after');
-    end
-    else // Zip file invalid
-      LogMessage('Zip File not valid')
-  end
-  else
-    LogMessage('Download Http result = ' + AResponse.StatusCode.ToString);
-end;
-
-procedure TSERTTKAppVersionUpdate.HttpCaddieDLException(const Sender: TObject; const AError: Exception);
-var
-  msg: string;
-begin
-  msg := 'Download Caddie~Server Exception:' + AError.Message;
-  LogMessage(msg);
-end;
+//procedure TSERTTKAppVersionUpdate.HttpCaddieDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
+//var
+//  lfs: TFileStream;
+//begin
+//  if AResponse.StatusCode = 200 then
+//  begin
+//    lfs := TFileStream.Create(FDeputyUtils.CaddieDownloadFile, fmCreate);
+//    lfs.CopyFrom(AResponse.ContentStream, 0);
+//    lfs.Free;
+//    LogMessage('Download Complete, Extracting');
+//    if TZipFile.IsValid(FDeputyUtils.CaddieDownloadFile) then
+//    begin
+//      LogMessage('Zip File is valid');
+//      TZipFile.ExtractZipFile(FDeputyUtils.CaddieDownloadFile, FDeputyUtils.RttkAppFolder);
+//      if TFile.Exists(FDeputyUtils.CaddieAppFile) then
+//      begin
+//        FDeputyUtils.RunCaddie;
+//        TThread.Queue(nil,
+//          procedure
+//          begin
+//            if Assigned(OnDownloadCaddieDone) then
+//              OnDownloadCaddieDone('Downloaded');
+//          end);
+//      end
+//      else // for file exists
+//        LogMessage('Caddie not found after');
+//    end
+//    else // Zip file invalid
+//      LogMessage('Zip File not valid')
+//  end
+//  else
+//    LogMessage('Download Http result = ' + AResponse.StatusCode.ToString);
+//end;
+//
+//procedure TSERTTKAppVersionUpdate.HttpCaddieDLException(const Sender: TObject; const AError: Exception);
+//var
+//  msg: string;
+//begin
+//  msg := 'Download Caddie~Server Exception:' + AError.Message;
+//  LogMessage(msg);
+//end;
 
 procedure TSERTTKAppVersionUpdate.HttpClientException(const Sender: TObject; const AError: Exception);
 var
@@ -833,93 +833,93 @@ begin
   LogMessage(msg);
 end;
 
-procedure TSERTTKAppVersionUpdate.HttpDemoFMXDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
-const
-  nm_log_id = 'Demo FMX';
-var
-  lfs: TFileStream;
-begin
-  if AResponse.StatusCode = 200 then
-  begin
-    lfs := TFileStream.Create(FDeputyUtils.DemoDownloadFMXFile, fmCreate);
-    lfs.CopyFrom(AResponse.ContentStream, 0);
-    lfs.Free;
-    LogMessage('Download Complete, Extracting ' + nm_log_id);
-    if TZipFile.IsValid(FDeputyUtils.DemoDownloadFMXFile) then
-    begin
-      LogMessage('Zip File is valid ' + FDeputyUtils.DemoDownloadFMXFile);
-      TZipFile.ExtractZipFile(FDeputyUtils.DemoDownloadFMXFile, FDeputyUtils.RttkAppFolder);
-      if TFile.Exists(FDeputyUtils.DemoAppFMXFile) then
-      begin
-        FDeputyUtils.RunDemoFMX;
-        TThread.Queue(nil,
-          procedure
-          begin
-            if Assigned(OnDownloadDemoFMXDone) then
-              OnDownloadDemoFMXDone('Downloaded ' + nm_log_id);
-          end);
-      end
-      else // for file exists
-        LogMessage(nm_log_id + ' not found after extract. ' + FDeputyUtils.DemoAppFMXFile);
-    end
-    else // Zip file invalid
-      LogMessage('Zip File not valid ' + FDeputyUtils.DemoDownloadFMXFile)
-  end
-  else
-    LogMessage('Download ' + nm_log_id + ' Http result = ' + AResponse.StatusCode.ToString);
-end;
+//procedure TSERTTKAppVersionUpdate.HttpDemoFMXDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
+//const
+//  nm_log_id = 'Demo FMX';
+//var
+//  lfs: TFileStream;
+//begin
+//  if AResponse.StatusCode = 200 then
+//  begin
+//    lfs := TFileStream.Create(FDeputyUtils.DemoDownloadFMXFile, fmCreate);
+//    lfs.CopyFrom(AResponse.ContentStream, 0);
+//    lfs.Free;
+//    LogMessage('Download Complete, Extracting ' + nm_log_id);
+//    if TZipFile.IsValid(FDeputyUtils.DemoDownloadFMXFile) then
+//    begin
+//      LogMessage('Zip File is valid ' + FDeputyUtils.DemoDownloadFMXFile);
+//      TZipFile.ExtractZipFile(FDeputyUtils.DemoDownloadFMXFile, FDeputyUtils.RttkAppFolder);
+//      if TFile.Exists(FDeputyUtils.DemoAppFMXFile) then
+//      begin
+//        FDeputyUtils.RunDemoFMX;
+//        TThread.Queue(nil,
+//          procedure
+//          begin
+//            if Assigned(OnDownloadDemoFMXDone) then
+//              OnDownloadDemoFMXDone('Downloaded ' + nm_log_id);
+//          end);
+//      end
+//      else // for file exists
+//        LogMessage(nm_log_id + ' not found after extract. ' + FDeputyUtils.DemoAppFMXFile);
+//    end
+//    else // Zip file invalid
+//      LogMessage('Zip File not valid ' + FDeputyUtils.DemoDownloadFMXFile)
+//  end
+//  else
+//    LogMessage('Download ' + nm_log_id + ' Http result = ' + AResponse.StatusCode.ToString);
+//end;
+//
+//procedure TSERTTKAppVersionUpdate.HttpDemoFMXDLException(const Sender: TObject; const AError: Exception);
+//var
+//  msg: string;
+//begin
+//  msg := 'Download Demo FMX~Server Exception:' + AError.Message;
+//  LogMessage(msg);
+//end;
 
-procedure TSERTTKAppVersionUpdate.HttpDemoFMXDLException(const Sender: TObject; const AError: Exception);
-var
-  msg: string;
-begin
-  msg := 'Download Demo FMX~Server Exception:' + AError.Message;
-  LogMessage(msg);
-end;
-
-procedure TSERTTKAppVersionUpdate.HttpDemoVCLDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
-const
-  nm_log_id = 'Demo VCL';
-var
-  lfs: TFileStream;
-begin
-  if AResponse.StatusCode = 200 then
-  begin
-    lfs := TFileStream.Create(FDeputyUtils.DemoDownloadVCLFile, fmCreate);
-    lfs.CopyFrom(AResponse.ContentStream, 0);
-    lfs.Free;
-    LogMessage('Download Complete, Extracting ' + nm_log_id);
-    if TZipFile.IsValid(FDeputyUtils.DemoDownloadVCLFile) then
-    begin
-      LogMessage('Zip File is valid ' + FDeputyUtils.DemoDownloadVCLFile);
-      TZipFile.ExtractZipFile(FDeputyUtils.DemoDownloadVCLFile, FDeputyUtils.RttkAppFolder);
-      if TFile.Exists(FDeputyUtils.DemoAppVCLFile) then
-      begin
-        FDeputyUtils.RunDemoVCL;
-        TThread.Queue(nil,
-          procedure
-          begin
-            if Assigned(OnDownloadDemoVCLDone) then
-              OnDownloadDemoVCLDone('Downloaded ' + nm_log_id);
-          end);
-      end
-      else // for file exists
-        LogMessage(nm_log_id + ' not found after extract. ' + FDeputyUtils.DemoAppVCLFile);
-    end
-    else // Zip file invalid
-      LogMessage('Zip File not valid ' + FDeputyUtils.DemoDownloadVCLFile)
-  end
-  else
-    LogMessage('Download ' + nm_log_id + ' Http result = ' + AResponse.StatusCode.ToString);
-end;
-
-procedure TSERTTKAppVersionUpdate.HttpDemoVCLDLException(const Sender: TObject; const AError: Exception);
-var
-  msg: string;
-begin
-  msg := 'Download Demo VCL~Server Exception:' + AError.Message;
-  LogMessage(msg);
-end;
+//procedure TSERTTKAppVersionUpdate.HttpDemoVCLDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
+//const
+//  nm_log_id = 'Demo VCL';
+//var
+//  lfs: TFileStream;
+//begin
+//  if AResponse.StatusCode = 200 then
+//  begin
+//    lfs := TFileStream.Create(FDeputyUtils.DemoDownloadVCLFile, fmCreate);
+//    lfs.CopyFrom(AResponse.ContentStream, 0);
+//    lfs.Free;
+//    LogMessage('Download Complete, Extracting ' + nm_log_id);
+//    if TZipFile.IsValid(FDeputyUtils.DemoDownloadVCLFile) then
+//    begin
+//      LogMessage('Zip File is valid ' + FDeputyUtils.DemoDownloadVCLFile);
+//      TZipFile.ExtractZipFile(FDeputyUtils.DemoDownloadVCLFile, FDeputyUtils.RttkAppFolder);
+//      if TFile.Exists(FDeputyUtils.DemoAppVCLFile) then
+//      begin
+//        FDeputyUtils.RunDemoVCL;
+//        TThread.Queue(nil,
+//          procedure
+//          begin
+//            if Assigned(OnDownloadDemoVCLDone) then
+//              OnDownloadDemoVCLDone('Downloaded ' + nm_log_id);
+//          end);
+//      end
+//      else // for file exists
+//        LogMessage(nm_log_id + ' not found after extract. ' + FDeputyUtils.DemoAppVCLFile);
+//    end
+//    else // Zip file invalid
+//      LogMessage('Zip File not valid ' + FDeputyUtils.DemoDownloadVCLFile)
+//  end
+//  else
+//    LogMessage('Download ' + nm_log_id + ' Http result = ' + AResponse.StatusCode.ToString);
+//end;
+//
+//procedure TSERTTKAppVersionUpdate.HttpDemoVCLDLException(const Sender: TObject; const AError: Exception);
+//var
+//  msg: string;
+//begin
+//  msg := 'Download Demo VCL~Server Exception:' + AError.Message;
+//  LogMessage(msg);
+//end;
 
 procedure TSERTTKAppVersionUpdate.HttpDeputyDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
 var
@@ -1075,24 +1075,24 @@ procedure TSERTTKAppVersionUpdate.OnClickCaddieRun(Sender: TObject);
 begin
   if FDeputyUtils.CaddieAppExists then
     FDeputyUtils.RunCaddie
-  else
-    DownloadCaddie;
+//  else
+//    DownloadCaddie;
 end;
 
 procedure TSERTTKAppVersionUpdate.OnClickDemoFMX(Sender: TObject);
 begin
   if FDeputyUtils.DemoFMXExists then
     FDeputyUtils.RunDemoFMX
-  else
-    DownloadDemoFMX;
+//  else
+//    DownloadDemoFMX;
 end;
 
 procedure TSERTTKAppVersionUpdate.OnClickDemoVCL(Sender: TObject);
 begin
   if FDeputyUtils.DemoVCLExists then
     FDeputyUtils.RunDemoVCL
-  else
-    DownloadDemoVCL;
+//  else
+//    DownloadDemoVCL;
 end;
 
 procedure TSERTTKAppVersionUpdate.OnClickShowWebsite(Sender: TObject);
