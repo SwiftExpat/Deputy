@@ -299,9 +299,9 @@ type
     // property Downloaded: boolean read CaddieAppExists;
     // property Executed: boolean read CaddieIniFileExists;
     // property Licensed: boolean read FLicensed write FLicensed;
-    function ButtonTextCaddie: string;
-    function ButtonTextDemoVCL: string;
-    function ButtonTextDemoFMX: string;
+//    function ButtonTextCaddie: string;
+//    function ButtonTextDemoVCL: string;
+//    function ButtonTextDemoFMX: string;
     // procedure OnClickCaddieRun(Sender: TObject);
     // procedure OnClickDemoVCL(Sender: TObject);
     // procedure OnClickDemoFMX(Sender: TObject);
@@ -609,29 +609,29 @@ begin
   FWizardInfo := AWizardInfo;
 end;
 
-function TSERTTKAppVersionUpdate.ButtonTextCaddie: string;
-begin
-  if FDeputyUtils.CaddieAppExists then
-    result := 'Run Caddie'
-  else
-    result := 'Download & Install Caddie'
-end;
-
-function TSERTTKAppVersionUpdate.ButtonTextDemoFMX: string;
-begin
-  if FDeputyUtils.DemoFMXExists then
-    result := 'Run FMX Demo'
-  else
-    result := 'Download & Install FMX Demo'
-end;
-
-function TSERTTKAppVersionUpdate.ButtonTextDemoVCL: string;
-begin
-  if FDeputyUtils.DemoVCLExists then
-    result := 'Run VCL Demo'
-  else
-    result := 'Download & Install VCL Demo'
-end;
+//function TSERTTKAppVersionUpdate.ButtonTextCaddie: string;
+//begin
+//  if FDeputyUtils.CaddieAppExists then
+//    result := 'Run Caddie'
+//  else
+//    result := 'Download & Install Caddie'
+//end;
+//
+//function TSERTTKAppVersionUpdate.ButtonTextDemoFMX: string;
+//begin
+//  if FDeputyUtils.DemoFMXExists then
+//    result := 'Run FMX Demo'
+//  else
+//    result := 'Download & Install FMX Demo'
+//end;
+//
+//function TSERTTKAppVersionUpdate.ButtonTextDemoVCL: string;
+//begin
+//  if FDeputyUtils.DemoVCLExists then
+//    result := 'Run VCL Demo'
+//  else
+//    result := 'Download & Install VCL Demo'
+//end;
 
 constructor TSERTTKAppVersionUpdate.Create;
 begin
