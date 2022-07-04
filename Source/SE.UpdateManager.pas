@@ -72,18 +72,16 @@ type
     property OnRefreshDone: TSEUrlCacheRefreshDone read FOnRefreshDone write FOnRefreshDone;
     property ExtractZip: boolean read ExtractZipGet write ExtractZipSet;
     property ExtractPath: string read ExtractPathGet write ExtractPathSet;
-    property LastHttpCode:integer read FLastHttpCode write FLastHttpCode;
+    property LastHttpCode: integer read FLastHttpCode write FLastHttpCode;
   end;
 
   TSEUrlCacheManager = class
-
   const
     nm_json_object = 'UrlCacheManager';
     nm_json_prop_caches = 'caches';
   strict private
     FMREW: TMultiReadExclusiveWriteSynchronizer;
     FCaches: TObjectDictionary<string, TSEUrlCacheEntry>;
-    // FRequests: TObjectDictionary<TNetHTTPRequest, TUrlCacheEntry>;
     FHTTPClient: TNetHTTPClient;
     FCacheMgrMsg: TSEUrlCacheManagerMessage;
     procedure InitHttpClient;
@@ -106,7 +104,7 @@ type
     property Caches: TObjectDictionary<string, TSEUrlCacheEntry> read CachesGet write CachesSet;
     property JsonString: string read JsonStringGet write JsonStringSet;
     property OnManagerMessage: TSEUrlCacheManagerMessage read FCacheMgrMsg write FCacheMgrMsg;
-//    property LastRefreshDate: TDateTime read FLastRefreshDate write FLastRefreshDate;
+    // property LastRefreshDate: TDateTime read FLastRefreshDate write FLastRefreshDate;
   end;
 
 implementation
@@ -192,7 +190,7 @@ procedure TSEUrlCacheEntry.HttpCompleted(const Sender: TObject; const AResponse:
 var
   lfs: TFileStream;
 begin
-  LastHttpCode:=         AResponse.StatusCode;
+  LastHttpCode := AResponse.StatusCode;
   if AResponse.StatusCode = 200 then
   begin
     LastModified := AResponse.HeaderValue[hdr_lastmodified];
@@ -200,7 +198,7 @@ begin
     lfs := TFileStream.Create(LocalPath, fmCreate);
     lfs.CopyFrom(AResponse.ContentStream, 0);
     lfs.Free;
-    LogMessage('Download Complete, Extracting Deputy Experts');
+    LogMessage('Download Complete' + URL);
     if ExtractZip then
     begin
       if TZipFile.IsValid(LocalPath) then
