@@ -81,17 +81,17 @@ end;
 
 procedure TDeputyUpdates.btnUpdateCaddieClick(Sender: TObject);
 begin
-  FAppUpdate.DownloadCaddie;
+  RefreshCaddie;
 end;
 
 procedure TDeputyUpdates.btnUpdateDemoFMXClick(Sender: TObject);
 begin
-  FAppUpdate.DownloadDemoFMX;
+  RefreshDemoFMX;
 end;
 
 procedure TDeputyUpdates.btnUpdateDemoVCLClick(Sender: TObject);
 begin
-  FAppUpdate.DownloadDemoVCL;
+  RefreshDemoVCL;
 end;
 
 procedure TDeputyUpdates.btnUpdateDeputyClick(Sender: TObject);
