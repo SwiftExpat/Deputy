@@ -151,8 +151,9 @@ begin
   FProcMgrForm.AssignSettings(FSettings);
   FDeputyUpdates := TDeputyUpdatesFactory.DeputyUpdates;
   FDeputyUpdates.AssignSettings(FSettings);
+  FDeputyUpdates.AssignAppUpdate(FRTTKAppUpdate);
   AssignUpdateMenuItems;
-  FDeputyUpdates.ExpertUpdatesRefresh(FRTTKAppUpdate);
+  FDeputyUpdates.ExpertUpdatesRefresh;
 end;
 
 {$REGION 'Plugin Display values'}
@@ -293,7 +294,8 @@ end;
 
 procedure TSERTTKDeputyWizard.OnClickDeputyUpdates(Sender: TObject);
 begin
-  TDeputyUpdatesFactory.ShowDeputyUpdates;
+  FDeputyUpdates.ExpertUpdatesRefresh;
+  FDeputyUpdates.Show;
 end;
 
 procedure TSERTTKDeputyWizard.OnClickMiKillProcEnabled(Sender: TObject);
