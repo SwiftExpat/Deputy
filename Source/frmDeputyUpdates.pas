@@ -43,10 +43,13 @@ type
     FUrlCacheMgr: TSEUrlCacheManager;
     FSettings: TSERTTKDeputySettings;
     FDeputyUtils: TSERTTKDeputyUtils;
-    procedure DownloadDoneCaddie(const AMessage: string);
+    procedure DownloadDoneCaddie(AMessage: string; ACacheEntry: TSEUrlCacheEntry);
     procedure DownloadDoneDemoFMX(AMessage: string; ACacheEntry: TSEUrlCacheEntry);
-    procedure DownloadDoneDemoVCL(const AMessage: string);
+    procedure DownloadDoneDemoVCL(AMessage: string; ACacheEntry: TSEUrlCacheEntry);
+    procedure RefreshCaddie;
     procedure RefreshDemoFMX;
+    procedure RefreshDemoVCL;
+
     procedure OnVersionUpdateMessage(const AMessage: string);
     procedure LogMessage(AMessage: string);
   public
@@ -96,29 +99,34 @@ begin
   FAppUpdate.UpdateDeputyExpert
 end;
 
-procedure TDeputyUpdates.DownloadDoneCaddie(const AMessage: string);
+procedure TDeputyUpdates.DownloadDoneCaddie(AMessage: string; ACacheEntry: TSEUrlCacheEntry);
 begin
-  btnUpdateCaddie.Caption := 'Run Caddie';
-  btnUpdateCaddie.OnClick := FAppUpdate.OnClickCaddieRun;
+  if FDeputyUtils.DemoFMXExists then
+  begin
+    btnUpdateCaddie.Caption := 'Run Caddie';
+    btnUpdateCaddie.OnClick := FAppUpdate.OnClickCaddieRun;
+    lblCaddieInst.Caption := ACacheEntry.LastModified;
+  end;
 end;
 
 procedure TDeputyUpdates.DownloadDoneDemoFMX(AMessage: string; ACacheEntry: TSEUrlCacheEntry);
 begin
   if FDeputyUtils.DemoFMXExists then
   begin
-  btnUpdateDemoFMX.Caption := 'Run Demo FMX';
-  btnUpdateDemoFMX.OnClick := FAppUpdate.OnClickDemoFMX;
-  lblDemoFmxInst.Caption :=  ACacheEntry.LastModified;
+    btnUpdateDemoFMX.Caption := 'Run Demo FMX';
+    btnUpdateDemoFMX.OnClick := FAppUpdate.OnClickDemoFMX;
+    lblDemoFmxInst.Caption := ACacheEntry.LastModified;
   end;
-
 end;
 
-procedure TDeputyUpdates.DownloadDoneDemoVCL(const AMessage: string);
+procedure TDeputyUpdates.DownloadDoneDemoVCL(AMessage: string; ACacheEntry: TSEUrlCacheEntry);
 begin
-
-  btnUpdateDemoVCL.Caption := 'Run Demo VCL';
-  btnUpdateDemoVCL.OnClick := FAppUpdate.OnClickDemoVCL;
-
+  if FDeputyUtils.DemoVCLExists then
+  begin
+    btnUpdateDemoVCL.Caption := 'Run Demo VCL';
+    btnUpdateDemoVCL.OnClick := FAppUpdate.OnClickDemoVCL;
+    lblDemoVCLInst.Caption := ACacheEntry.LastModified;
+  end;
 end;
 
 procedure TDeputyUpdates.ExpertUpdatesRefresh(const AAppUpdate: TSERTTKAppVersionUpdate);
@@ -128,8 +136,8 @@ begin
   FAppUpdate.OnMessage := OnVersionUpdateMessage;
   FAppUpdate.ExpertUpdatesRefresh();
   RefreshDemoFMX;
-  FAppUpdate.OnDownloadDemoVCLDone := DownloadDoneDemoVCL;
-  FAppUpdate.OnDownloadDemoVCLDone := DownloadDoneCaddie;
+  RefreshDemoVCL;
+  RefreshCaddie;
 end;
 
 procedure TDeputyUpdates.FormCreate(Sender: TObject);
@@ -162,16 +170,42 @@ begin
   memoMessages.Lines.Add(AMessage)
 end;
 
+procedure TDeputyUpdates.RefreshCaddie;
+var
+  ce: TSEUrlCacheEntry;
+begin
+  ce := FUrlCacheMgr.CacheByUrl(FAppUpdate.url_caddie_download);
+  ce.OnRefreshDone := DownloadDoneCaddie;
+  ce.LocalPath := FDeputyUtils.CaddieDownloadFile;
+  ce.ExtractPath := FDeputyUtils.RttkAppFolder;
+  ce.ExtractZip := false;
+  ce.OnRequestMessage := LogMessage;
+  ce.RefreshCache;
+end;
+
 procedure TDeputyUpdates.RefreshDemoFMX;
 var
   ce: TSEUrlCacheEntry;
 begin
-  ce := FUrlCacheMgr.CacheByUrl(FAppUpdate.url_demo_downloads + FAppUpdate.dl_fl_demo_fmx);
+  ce := FUrlCacheMgr.CacheByUrl(FAppUpdate.url_demo_fmx_download);
   ce.OnRefreshDone := DownloadDoneDemoFMX;
   ce.LocalPath := FDeputyUtils.DemoDownloadFMXFile;
   ce.ExtractPath := FDeputyUtils.RttkAppFolder;
   ce.OnRequestMessage := LogMessage;
   ce.RefreshCache;
+end;
+
+procedure TDeputyUpdates.RefreshDemoVCL;
+var
+  ce: TSEUrlCacheEntry;
+begin
+  ce := FUrlCacheMgr.CacheByUrl(FAppUpdate.url_demo_vcl_download);
+  ce.OnRefreshDone := DownloadDoneDemoVCL;
+  ce.LocalPath := FDeputyUtils.DemoDownloadVCLFile;
+  ce.ExtractPath := FDeputyUtils.RttkAppFolder;
+  ce.OnRequestMessage := LogMessage;
+  ce.RefreshCache;
+
 end;
 
 { TDeputyUpdatesFactory }

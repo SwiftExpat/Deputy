@@ -237,10 +237,14 @@ type
     nm_json_prop_major = 'VerMajor';
     nm_json_prop_minor = 'VerMinor';
     nm_json_prop_release = 'VerRelease';
-    url_domain = '.swiftexpat.com';
-    url_demos = 'https://demos' + url_domain;
-    url_lic = 'https://licadmin' + url_domain;
+    url_domain = 'swiftexpat.com';
+    url_demos = 'https://demos.' + url_domain;
+    url_lic = 'https://licadmin.' + url_domain;
+    url_public_downloads =  'https://' + url_domain+ '/downloads/';         //https://swiftexpat.com/downloads/' + dl_fl_name
+    url_caddie_download =url_public_downloads +   dl_fl_name;
     url_demo_downloads = url_demos + '/downloads/';
+    url_demo_fmx_download = url_demo_downloads + dl_fl_demo_fmx;
+    url_demo_vcl_download = url_demo_downloads + dl_fl_demo_vcl;
     url_version = url_lic + '/deputy/';
     url_deputy_version = url_lic + '/deputy/' + fl_nm_deputy_version;
 
