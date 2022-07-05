@@ -54,6 +54,8 @@ type
     url_demo_downloads = url_demos + '/downloads/';
     url_demo_fmx_download = url_demo_downloads + dl_fl_demo_fmx;
     url_demo_vcl_download = url_demo_downloads + dl_fl_demo_vcl;
+    url_public_downloads = 'https://' + url_domain + '/downloads/';
+    url_caddie_download = url_public_downloads + dl_fl_name;
     url_deputyrttk = url_lic + '/deputyrttk/';
     url_deputy_version = url_deputyrttk + fl_nm_deputy_version;
   public
@@ -226,9 +228,6 @@ type
 
   TSERTTKAppVersionUpdate = class
   const
-    dl_fl_name = 'SERTTK_Caddie_dl.zip';
-    dl_fl_demo_vcl = 'RTTK_Demo_VCL.zip';
-    dl_fl_demo_fmx = 'RTTK_Demo_FMX.zip';
     nm_user_agent = 'Deputy Expert';
     fl_nm_expert_update_cache = 'expertupdates.xml';
     fl_nm_deputy_version = 'deputyversion.json';
@@ -241,11 +240,7 @@ type
     url_domain = 'swiftexpat.com';
     url_demos = 'https://demos.' + url_domain;
     url_lic = 'https://licadmin.' + url_domain;
-    url_public_downloads = 'https://' + url_domain + '/downloads/';
-    url_caddie_download = url_public_downloads + dl_fl_name;
     url_demo_downloads = url_demos + '/downloads/';
-    url_demo_fmx_download = url_demo_downloads + dl_fl_demo_fmx;
-    url_demo_vcl_download = url_demo_downloads + dl_fl_demo_vcl;
     url_version = url_lic + '/deputy/';
     url_deputy_version = url_lic + '/deputy/' + fl_nm_deputy_version;
   strict private
@@ -254,7 +249,7 @@ type
     FSettings: TSERTTKDeputySettings;
     FWizardInfo: TSERTTKWizardInfo;
     FWizardVersion, FUpdateVersion: TSERTTKVersionInfo;
-    FHTTPReqDeputyVersion: TNetHTTPRequest; // FHTTPReqCaddie, FHTTPReqDemoFMX, FHTTPReqDemoVCL,, FHTTPReqDeputyDL
+    FHTTPReqDeputyVersion: TNetHTTPRequest;
     FHTTPClient: TNetHTTPClient;
     FOnMessage: TSERTTKAppVerUpdateOnMessage;
     FOnDeputyUpdatesRefreshed: TSERTTKDeputyUpdatesRefreshed;
@@ -271,13 +266,13 @@ type
     procedure HttpDeputyVersionCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
     procedure ExpertLogUsage(const AUsageStep: string);
   private
-    function ExpertUpdateAvailable: boolean;
     function ExpertUpdateDownloaded: boolean;
     procedure LoadDeputyUpdateVersion;
     function DeputyWizardBackupFilename: string;
     function ExpertFileLocation: string;
     function DeputyWizardUpdateFilename(const AFileName: string): string;
   public
+    function ExpertUpdateAvailable: boolean;
     procedure UpdateDeputyExpert;
     constructor Create;
     destructor Destroy; override;
@@ -287,7 +282,9 @@ type
     procedure ExpertUpdatesRefresh;
     procedure AssignWizardInfo(const AWizardInfo: TSERTTKWizardInfo);
     procedure AssignSettings(const ASettings: TSERTTKDeputySettings);
-    // property ExpertUpdateMenuItem: TMenuItem read FExpertUpdateMenuItem write ExpertUpdateMenuItemSet;
+    function UpdateExpertButtonText: string;
+    property WizardVersion: TSERTTKVersionInfo read FWizardVersion write FWizardVersion;
+    property UpdateVersion: TSERTTKVersionInfo read FUpdateVersion write FUpdateVersion;
   end;
 
 implementation
@@ -796,7 +793,7 @@ begin
           HttpDeputyExpertDownload;
         FSettings.LastUpdateCheck := now;
         if Assigned(OnDeputyUpdatesRefreshed) then
-          OnDeputyUpdatesRefreshed('Cache loaded');
+          OnDeputyUpdatesRefreshed('Cache loaded from download');
       end);
   end
   else
@@ -914,12 +911,12 @@ begin // rename dll FWizardInfo.WizardFileName
 
 end;
 
-// function TSERTTKAppVersionUpdate.UpdateExpertButtonText: string;
-// begin
-// if ExpertUpdateAvailable then
-// result := 'Update Available to  ' + FUpdateVersion.VersionString
-// else
-// result := 'Version is current ' + FWizardVersion.VersionString;
-// end;
+function TSERTTKAppVersionUpdate.UpdateExpertButtonText: string;
+begin
+  if ExpertUpdateAvailable then
+    result := 'Update Available to  ' + FUpdateVersion.VersionString
+  else
+    result := 'Version is current ' + FWizardVersion.VersionString;
+end;
 
 end.
