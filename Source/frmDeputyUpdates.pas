@@ -40,7 +40,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
   private
-    FAppUpdate: TSERTTKAppVersionUpdate;
+    FDeputyUpdate: TSERTTKAppVersionUpdate;
     FUrlCacheMgr: TSEUrlCacheManager;
     FSettings: TSERTTKDeputySettings;
     FDeputyUtils: TSERTTKDeputyUtils;
@@ -82,7 +82,7 @@ implementation
 
 procedure TDeputyUpdates.AssignAppUpdate(const AAppUpdate: TSERTTKAppVersionUpdate);
 begin
-  FAppUpdate := AAppUpdate;
+  FDeputyUpdate := AAppUpdate;
 end;
 
 procedure TDeputyUpdates.AssignMenuItems(AMiCaddie, AMiDemoFMX, AMiDemoVCL: TMenuItem);
@@ -101,7 +101,7 @@ procedure TDeputyUpdates.btnUpdateCaddieClick(Sender: TObject);
 var
   ce: TSEUrlCacheEntry;
 begin
-  ce := FUrlCacheMgr.CacheByUrl(FAppUpdate.url_caddie_download);
+  ce := FUrlCacheMgr.CacheByUrl(FDeputyUtils.url_caddie_download);
   if ce.CacheValid and FDeputyUtils.CaddieAppExists then
   begin
     FDeputyUtils.RunCaddie
@@ -114,7 +114,7 @@ procedure TDeputyUpdates.btnUpdateDemoFMXClick(Sender: TObject);
 var
   ce: TSEUrlCacheEntry;
 begin
-  ce := FUrlCacheMgr.CacheByUrl(FAppUpdate.url_demo_fmx_download);
+  ce := FUrlCacheMgr.CacheByUrl(FDeputyUtils.url_demo_fmx_download);
   if ce.CacheValid and FDeputyUtils.DemoFMXExists then
   begin
     FDeputyUtils.RunDemoFMX
@@ -127,7 +127,7 @@ procedure TDeputyUpdates.btnUpdateDemoVCLClick(Sender: TObject);
 var
   ce: TSEUrlCacheEntry;
 begin
-  ce := FUrlCacheMgr.CacheByUrl(FAppUpdate.url_demo_vcl_download);
+  ce := FUrlCacheMgr.CacheByUrl(FDeputyUtils.url_demo_vcl_download);
   if ce.CacheValid and FDeputyUtils.DemoVCLExists then
   begin
     FDeputyUtils.RunDemoVCL
@@ -138,7 +138,7 @@ end;
 
 procedure TDeputyUpdates.btnUpdateDeputyClick(Sender: TObject);
 begin
-  FAppUpdate.UpdateDeputyExpert
+  FDeputyUpdate.UpdateDeputyExpert
 end;
 
 procedure TDeputyUpdates.DownloadDoneCaddie(AMessage: string; ACacheEntry: TSEUrlCacheEntry);
@@ -177,9 +177,9 @@ end;
 procedure TDeputyUpdates.ExpertUpdatesRefresh;
 begin
   FUrlCacheMgr.JsonString := FSettings.UrlCacheJson;
-  FAppUpdate.OnMessage := OnVersionUpdateMessage;
-  FAppUpdate.OnDeputyUpdatesRefreshed := OnDeputyVersionRefreshed;
-  FAppUpdate.ExpertUpdatesRefresh();
+  FDeputyUpdate.OnMessage := OnVersionUpdateMessage;
+  FDeputyUpdate.OnDeputyUpdatesRefreshed := OnDeputyVersionRefreshed;
+  FDeputyUpdate.ExpertUpdatesRefresh();
   RefreshDemoFMX;
   RefreshDemoVCL;
   RefreshCaddie;
@@ -212,7 +212,11 @@ end;
 
 procedure TDeputyUpdates.OnDeputyVersionRefreshed(const AMessage: string);
 begin
-memoMessages.Lines.Add('deputy refreshed: '+AMessage);
+  memoMessages.Lines.Add('deputy refreshed: ' + AMessage);
+  lblDeputyInst.Caption := FDeputyUpdate.WizardVersion.VersionString;
+  lblDeputyAvail.Caption := FDeputyUpdate.UpdateVersion.VersionString;
+  btnUpdateDeputy.Enabled := FDeputyUpdate.ExpertUpdateAvailable;
+  btnUpdateDeputy.Caption := FDeputyUpdate.UpdateExpertButtonText;
 end;
 
 procedure TDeputyUpdates.OnVersionUpdateMessage(const AMessage: string);
@@ -224,7 +228,7 @@ procedure TDeputyUpdates.RefreshCaddie;
 var
   ce: TSEUrlCacheEntry;
 begin
-  ce := FUrlCacheMgr.CacheByUrl(FAppUpdate.url_caddie_download);
+  ce := FUrlCacheMgr.CacheByUrl(FDeputyUtils.url_caddie_download);
   ce.OnRefreshDone := DownloadDoneCaddie;
   ce.LocalPath := FDeputyUtils.CaddieDownloadFile;
   ce.ExtractPath := FDeputyUtils.RttkAppFolder;
@@ -237,7 +241,7 @@ procedure TDeputyUpdates.RefreshDemoFMX;
 var
   ce: TSEUrlCacheEntry;
 begin
-  ce := FUrlCacheMgr.CacheByUrl(FAppUpdate.url_demo_fmx_download);
+  ce := FUrlCacheMgr.CacheByUrl(FDeputyUtils.url_demo_fmx_download);
   ce.OnRefreshDone := DownloadDoneDemoFMX;
   ce.LocalPath := FDeputyUtils.DemoDownloadFMXFile;
   ce.ExtractPath := FDeputyUtils.RttkAppFolder;
@@ -249,7 +253,7 @@ procedure TDeputyUpdates.RefreshDemoVCL;
 var
   ce: TSEUrlCacheEntry;
 begin
-  ce := FUrlCacheMgr.CacheByUrl(FAppUpdate.url_demo_vcl_download);
+  ce := FUrlCacheMgr.CacheByUrl(FDeputyUtils.url_demo_vcl_download);
   ce.OnRefreshDone := DownloadDoneDemoVCL;
   ce.LocalPath := FDeputyUtils.DemoDownloadVCLFile;
   ce.ExtractPath := FDeputyUtils.RttkAppFolder;
