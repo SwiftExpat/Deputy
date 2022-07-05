@@ -43,15 +43,17 @@ type
     fl_nm_suf_deputy_expert_zip = '.zip';
     rk_nm_expert = 'SwiftExpat Deputy';
     nm_json_object = 'DeputyVersion';
-    url_domain = '.swiftexpat.com';
-    url_demos = 'https://demos' + url_domain;
+    url_domain = 'swiftexpat.com';
+    url_demos = 'https://demos.' + url_domain;
 {$IFDEF UPDATEDEV}
-    url_lic = 'https://devupdates' + url_domain;
+    url_lic = 'https://devupdates.' + url_domain;
 {$ELSE}
-    url_lic = 'https://licadmin' + url_domain;
+    url_lic = 'https://licadmin.' + url_domain;
 {$ENDIF}
     url_website = 'https://' + url_domain;
     url_demo_downloads = url_demos + '/downloads/';
+    url_demo_fmx_download = url_demo_downloads + dl_fl_demo_fmx;
+    url_demo_vcl_download = url_demo_downloads + dl_fl_demo_vcl;
     url_deputyrttk = url_lic + '/deputyrttk/';
     url_deputy_version = url_deputyrttk + fl_nm_deputy_version;
   public
@@ -227,8 +229,6 @@ type
     dl_fl_demo_vcl = 'RTTK_Demo_VCL.zip';
     dl_fl_demo_fmx = 'RTTK_Demo_FMX.zip';
     nm_user_agent = 'Deputy Expert';
-    fl_nm_demo_vcl = 'RTTK.VCL.exe';
-    fl_nm_demo_fmx = 'RTTK_FMX.exe';
     fl_nm_expert_update_cache = 'expertupdates.xml';
     fl_nm_deputy_version = 'deputyversion.json';
     fl_nm_deputy_expert_zip = 'DeputyExpert.zip';
@@ -240,7 +240,7 @@ type
     url_domain = 'swiftexpat.com';
     url_demos = 'https://demos.' + url_domain;
     url_lic = 'https://licadmin.' + url_domain;
-    url_public_downloads = 'https://' + url_domain + '/downloads/'; // https://swiftexpat.com/downloads/' + dl_fl_name
+    url_public_downloads = 'https://' + url_domain + '/downloads/';
     url_caddie_download = url_public_downloads + dl_fl_name;
     url_demo_downloads = url_demos + '/downloads/';
     url_demo_fmx_download = url_demo_downloads + dl_fl_demo_fmx;
@@ -259,16 +259,9 @@ type
     FOnMessage: TSERTTKAppVerUpdateOnMessage;
     FOnDownloadCaddieDone, FOnDownloadFMXDemoDone, FOnDownloadVCLDemoDone: TSERTTKAppVerUpdateOnDownloadDone;
     procedure LogMessage(AMessage: string);
-
     procedure InitHttpClient;
     procedure DistServerAuthEvent(const Sender: TObject; AnAuthTarget: TAuthTargetType; const ARealm, AURL: string;
       var AUserName, APassword: string; var AbortAuth: boolean; var Persistence: TAuthPersistenceType);
-    // procedure HttpCaddieDLException(const Sender: TObject; const AError: Exception);
-    // procedure HttpCaddieDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
-    // procedure HttpDemoVCLDLException(const Sender: TObject; const AError: Exception);
-    // procedure HttpDemoVCLDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
-    // procedure HttpDemoFMXDLException(const Sender: TObject; const AError: Exception);
-    // procedure HttpDemoFMXDLCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
     procedure HttpClientException(const Sender: TObject; const AError: Exception);
     procedure HttpDeputyExpertDownload;
     procedure HttpDeputyVersionDownload;
@@ -278,34 +271,16 @@ type
     procedure HttpDeputyVersionCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
     procedure ExpertLogUsage(const AUsageStep: string);
   private
-    // FExpertUpdateMenuItem: TMenuItem;
-    // function ExpertFileLocation: string;
     function ExpertUpdateAvailable: boolean;
     function ExpertUpdateDownloaded: boolean;
-    // procedure ExpertUpdateMenuItemSet(const Value: TMenuItem);
     procedure LoadDeputyUpdateVersion;
-    // function UpdateExpertButtonText: string;
     function DeputyWizardBackupFilename: string;
     function ExpertFileLocation: string;
     function DeputyWizardUpdateFilename(const AFileName: string): string;
   public
-    // procedure DownloadCaddie;
-    // procedure DownloadDemoFMX;
-    // procedure DownloadDemoVCL;
     procedure UpdateDeputyExpert;
-
     constructor Create;
     destructor Destroy; override;
-    // property Downloaded: boolean read CaddieAppExists;
-    // property Executed: boolean read CaddieIniFileExists;
-    // property Licensed: boolean read FLicensed write FLicensed;
-//    function ButtonTextCaddie: string;
-//    function ButtonTextDemoVCL: string;
-//    function ButtonTextDemoFMX: string;
-    // procedure OnClickCaddieRun(Sender: TObject);
-    // procedure OnClickDemoVCL(Sender: TObject);
-    // procedure OnClickDemoFMX(Sender: TObject);
-    // procedure OnClickShowWebsite(Sender: TObject);
     property OnMessage: TSERTTKAppVerUpdateOnMessage read FOnMessage write FOnMessage;
     property OnDownloadCaddieDone: TSERTTKAppVerUpdateOnDownloadDone read FOnDownloadCaddieDone
       write FOnDownloadCaddieDone;
@@ -609,30 +584,6 @@ begin
   FWizardInfo := AWizardInfo;
 end;
 
-//function TSERTTKAppVersionUpdate.ButtonTextCaddie: string;
-//begin
-//  if FDeputyUtils.CaddieAppExists then
-//    result := 'Run Caddie'
-//  else
-//    result := 'Download & Install Caddie'
-//end;
-//
-//function TSERTTKAppVersionUpdate.ButtonTextDemoFMX: string;
-//begin
-//  if FDeputyUtils.DemoFMXExists then
-//    result := 'Run FMX Demo'
-//  else
-//    result := 'Download & Install FMX Demo'
-//end;
-//
-//function TSERTTKAppVersionUpdate.ButtonTextDemoVCL: string;
-//begin
-//  if FDeputyUtils.DemoVCLExists then
-//    result := 'Run VCL Demo'
-//  else
-//    result := 'Download & Install VCL Demo'
-//end;
-
 constructor TSERTTKAppVersionUpdate.Create;
 begin
   FLicensed := false;
@@ -929,35 +880,6 @@ begin
         FOnMessage(msg);
     end);
 end;
-
-// procedure TSERTTKAppVersionUpdate.OnClickCaddieRun(Sender: TObject);
-// begin
-// if FDeputyUtils.CaddieAppExists then
-// FDeputyUtils.RunCaddie
-// // else
-// // DownloadCaddie;
-// end;
-//
-// procedure TSERTTKAppVersionUpdate.OnClickDemoFMX(Sender: TObject);
-// begin
-// if FDeputyUtils.DemoFMXExists then
-// FDeputyUtils.RunDemoFMX
-// // else
-// // DownloadDemoFMX;
-// end;
-//
-// procedure TSERTTKAppVersionUpdate.OnClickDemoVCL(Sender: TObject);
-// begin
-// if FDeputyUtils.DemoVCLExists then
-// FDeputyUtils.RunDemoVCL
-// // else
-// // DownloadDemoVCL;
-// end;
-
-// procedure TSERTTKAppVersionUpdate.OnClickShowWebsite(Sender: TObject);
-// begin
-// FDeputyUtils.ShowWebsite;
-// end;
 
 procedure TSERTTKAppVersionUpdate.UpdateDeputyExpert;
 var
