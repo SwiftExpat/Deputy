@@ -54,6 +54,8 @@ type
     procedure SaveCacheMgr;
     procedure OnVersionUpdateMessage(const AMessage: string);
     procedure LogMessage(AMessage: string);
+    procedure UpdateLastRefresh;
+    procedure OnDeputyVersionRefreshed(const AMessage: string);
   public
     procedure ExpertUpdatesRefresh;
     procedure AssignSettings(ASettings: TSERTTKDeputySettings);
@@ -80,7 +82,7 @@ implementation
 
 procedure TDeputyUpdates.AssignAppUpdate(const AAppUpdate: TSERTTKAppVersionUpdate);
 begin
-   FAppUpdate := AAppUpdate;
+  FAppUpdate := AAppUpdate;
 end;
 
 procedure TDeputyUpdates.AssignMenuItems(AMiCaddie, AMiDemoFMX, AMiDemoVCL: TMenuItem);
@@ -147,7 +149,7 @@ begin
     lblCaddieInst.Caption := ACacheEntry.LastModified;
   end;
   btnUpdateCaddie.Caption := 'Run Caddie or refresh';
-  SaveCacheMgr;
+  UpdateLastRefresh;
 end;
 
 procedure TDeputyUpdates.DownloadDoneDemoFMX(AMessage: string; ACacheEntry: TSEUrlCacheEntry);
@@ -158,7 +160,7 @@ begin
     lblDemoFmxInst.Caption := ACacheEntry.LastModified;
   end;
   btnUpdateDemoFMX.Caption := 'Run Demo FMX or refresh';
-    SaveCacheMgr;
+  UpdateLastRefresh;
 end;
 
 procedure TDeputyUpdates.DownloadDoneDemoVCL(AMessage: string; ACacheEntry: TSEUrlCacheEntry);
@@ -169,13 +171,14 @@ begin
     lblDemoVCLInst.Caption := ACacheEntry.LastModified;
   end;
   btnUpdateDemoVCL.Caption := 'Run Demo VCL or refresh';
-    SaveCacheMgr;
+  UpdateLastRefresh;
 end;
 
 procedure TDeputyUpdates.ExpertUpdatesRefresh;
 begin
   FUrlCacheMgr.JsonString := FSettings.UrlCacheJson;
   FAppUpdate.OnMessage := OnVersionUpdateMessage;
+  FAppUpdate.OnDeputyUpdatesRefreshed := OnDeputyVersionRefreshed;
   FAppUpdate.ExpertUpdatesRefresh();
   RefreshDemoFMX;
   RefreshDemoVCL;
@@ -205,6 +208,11 @@ begin
     begin
       memoMessages.Lines.Add(msg);
     end);
+end;
+
+procedure TDeputyUpdates.OnDeputyVersionRefreshed(const AMessage: string);
+begin
+memoMessages.Lines.Add('deputy refreshed: '+AMessage);
 end;
 
 procedure TDeputyUpdates.OnVersionUpdateMessage(const AMessage: string);
@@ -254,6 +262,16 @@ begin
   FSettings.UrlCacheJson := FUrlCacheMgr.JsonString;
 end;
 
+procedure TDeputyUpdates.UpdateLastRefresh;
+begin
+  TThread.Synchronize(nil,
+    procedure
+    begin
+      lblUpdateRefresh.Caption := FormatDateTime('mmm/dd/yyyy hh:nn:ss', now);
+      SaveCacheMgr;
+    end);
+end;
+
 { TDeputyUpdatesFactory }
 
 class function TDeputyUpdatesFactory.DeputyUpdates: TDeputyUpdates;
@@ -286,7 +304,7 @@ begin
   DeputyUpdates.Hide;
 end;
 
-class function TDeputyUpdatesFactory.ShowDeputyUpdates :TDeputyUpdates;
+class function TDeputyUpdatesFactory.ShowDeputyUpdates: TDeputyUpdates;
 begin
   result := DeputyUpdates;
   result.Show;

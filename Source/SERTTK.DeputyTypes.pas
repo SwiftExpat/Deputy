@@ -222,6 +222,7 @@ type
 
   TSERTTKAppVerUpdateOnMessage = procedure(const AMessage: string) of object;
   TSERTTKAppVerUpdateOnDownloadDone = procedure(const AMessage: string) of object;
+  TSERTTKDeputyUpdatesRefreshed = procedure(const AMessage: string) of object;
 
   TSERTTKAppVersionUpdate = class
   const
@@ -247,7 +248,6 @@ type
     url_demo_vcl_download = url_demo_downloads + dl_fl_demo_vcl;
     url_version = url_lic + '/deputy/';
     url_deputy_version = url_lic + '/deputy/' + fl_nm_deputy_version;
-
   strict private
     FDeputyUtils: TSERTTKDeputyUtils;
     FLicensed: boolean;
@@ -257,7 +257,7 @@ type
     FHTTPReqDeputyVersion: TNetHTTPRequest; // FHTTPReqCaddie, FHTTPReqDemoFMX, FHTTPReqDemoVCL,, FHTTPReqDeputyDL
     FHTTPClient: TNetHTTPClient;
     FOnMessage: TSERTTKAppVerUpdateOnMessage;
-    FOnDownloadCaddieDone, FOnDownloadFMXDemoDone, FOnDownloadVCLDemoDone: TSERTTKAppVerUpdateOnDownloadDone;
+    FOnDeputyUpdatesRefreshed: TSERTTKDeputyUpdatesRefreshed;
     procedure LogMessage(AMessage: string);
     procedure InitHttpClient;
     procedure DistServerAuthEvent(const Sender: TObject; AnAuthTarget: TAuthTargetType; const ARealm, AURL: string;
@@ -282,12 +282,8 @@ type
     constructor Create;
     destructor Destroy; override;
     property OnMessage: TSERTTKAppVerUpdateOnMessage read FOnMessage write FOnMessage;
-    property OnDownloadCaddieDone: TSERTTKAppVerUpdateOnDownloadDone read FOnDownloadCaddieDone
-      write FOnDownloadCaddieDone;
-    property OnDownloadDemoVCLDone: TSERTTKAppVerUpdateOnDownloadDone read FOnDownloadVCLDemoDone
-      write FOnDownloadVCLDemoDone;
-    property OnDownloadDemoFMXDone: TSERTTKAppVerUpdateOnDownloadDone read FOnDownloadFMXDemoDone
-      write FOnDownloadFMXDemoDone;
+    property OnDeputyUpdatesRefreshed: TSERTTKDeputyUpdatesRefreshed read FOnDeputyUpdatesRefreshed
+      write FOnDeputyUpdatesRefreshed;
     procedure ExpertUpdatesRefresh;
     procedure AssignWizardInfo(const AWizardInfo: TSERTTKWizardInfo);
     procedure AssignSettings(const ASettings: TSERTTKDeputySettings);
@@ -695,7 +691,7 @@ end;
 
 function TSERTTKAppVersionUpdate.ExpertUpdateDownloaded: boolean;
 begin
-  result := true; // fix this
+  result := TFile.Exists(FDeputyUtils.DeputyExpertDownloadFile);
 end;
 
 procedure TSERTTKAppVersionUpdate.ExpertUpdatesRefresh;
@@ -710,15 +706,17 @@ begin
   FWizardVersion.VerMin := FWizardInfo.WizardVersion.Split(['.'])[1].ToInteger;
   FWizardVersion.VerRel := FWizardInfo.WizardVersion.Split(['.'])[2].ToInteger;
   // check the settings for last update dts
-  if (HoursBetween(FSettings.LastUpdateCheck, now) < 8) and FDeputyUtils.DeputyVersionFileExists then
+  if (HoursBetween(FSettings.LastUpdateCheck, now) < 2) and FDeputyUtils.DeputyVersionFileExists then
   begin
-    LogMessage('Using cached values');
+    LogMessage('Loading cached version values');
     LoadDeputyUpdateVersion;
+    if Assigned(OnDeputyUpdatesRefreshed) then
+      OnDeputyUpdatesRefreshed('Cache loaded');
     // FExpertUpdateMenuItem.Caption := UpdateExpertButtonText;
   end
   else
   begin // async download must update button after checking the file
-    LogMessage('Checking server for updates');
+    LogMessage('Checking server for version updates');
     HttpDeputyVersionDownload;
   end;
 end;
@@ -794,10 +792,11 @@ begin
       procedure
       begin
         LoadDeputyUpdateVersion;
-        // FExpertUpdateMenuItem.Caption := UpdateExpertButtonText;
         if ExpertUpdateAvailable and not ExpertUpdateDownloaded then
           HttpDeputyExpertDownload;
         FSettings.LastUpdateCheck := now;
+        if Assigned(OnDeputyUpdatesRefreshed) then
+          OnDeputyUpdatesRefreshed('Cache loaded');
       end);
   end
   else
