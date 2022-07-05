@@ -4,7 +4,7 @@
         <ProjectVersion>19.4</ProjectVersion>
         <FrameworkType>VCL</FrameworkType>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Debug</Config>
+        <Config Condition="'$(Config)'==''">Release</Config>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>1</TargetedPlatforms>
         <AppType>Library</AppType>
@@ -116,7 +116,7 @@
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
         <BT_BuildType>Debug</BT_BuildType>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Keys>CompanyName=SwiftExpat;FileDescription=$(MSBuildProjectName);FileVersion=2.5.1.0;InternalName=Deputy;LegalCopyright=SwiftExpat;LegalTrademarks=;OriginalFilename=SE.IDE.Deputy;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=2.1.0.0;Comments=Deputy - IDE plugin for Delphi</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=SwiftExpat;FileDescription=$(MSBuildProjectName);FileVersion=2.5.1.0;InternalName=Deputy;LegalCopyright=SwiftExpat;LegalTrademarks=;OriginalFilename=SE.IDE.Deputy;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=2.5.1.0;Comments=Deputy - IDE plugin for Delphi</VerInfo_Keys>
         <DCC_UnitSearchPath>C:\Repos\Srcs\TOTAL;C:\Repos\Srcs\Kastri\Core;C:\Repos\Srcs\Kastri\Include;C:\Repos\Srcs\Kastri\API;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <DCC_Define>EXPERT;GITHUBEVAL;$(DCC_Define)</DCC_Define>
         <Manifest_File>(None)</Manifest_File>
@@ -161,8 +161,8 @@
         <DCC_DebugInformation>0</DCC_DebugInformation>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
-        <VerInfo_Build>18</VerInfo_Build>
-        <VerInfo_Keys>CompanyName=SwiftExpat;FileDescription=$(MSBuildProjectName);FileVersion=2.5.1.18;InternalName=Deputy;LegalCopyright=SwiftExpat;LegalTrademarks=;OriginalFilename=SE.IDE.Deputy;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=2.5.1.0;Comments=Deputy - IDE plugin for Delphi</VerInfo_Keys>
+        <VerInfo_Build>21</VerInfo_Build>
+        <VerInfo_Keys>CompanyName=SwiftExpat;FileDescription=$(MSBuildProjectName);FileVersion=2.5.1.21;InternalName=Deputy;LegalCopyright=SwiftExpat;LegalTrademarks=;OriginalFilename=SE.IDE.Deputy;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=2.5.1.0;Comments=Deputy - IDE plugin for Delphi</VerInfo_Keys>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_MajorVer>2</VerInfo_MajorVer>
         <VerInfo_DLL>true</VerInfo_DLL>
@@ -220,12 +220,12 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="$(BDS)\Redist\iossimulator\libPCRE.dylib" Class="DependencyModule">
+                <DeployFile LocalName="$(BDS)\Redist\iossimulator\libpcre.dylib" Class="DependencyModule">
                     <Platform Name="iOSSimulator">
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="$(BDS)\Redist\iossimulator\libpcre.dylib" Class="DependencyModule">
+                <DeployFile LocalName="$(BDS)\Redist\iossimulator\libPCRE.dylib" Class="DependencyModule">
                     <Platform Name="iOSSimulator">
                         <Overwrite>true</Overwrite>
                     </Platform>

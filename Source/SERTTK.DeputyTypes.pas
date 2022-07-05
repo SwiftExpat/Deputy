@@ -808,7 +808,7 @@ begin
   FHTTPReqDeputyVersion.OnRequestException := HttpDeputyVersionException;
   FHTTPReqDeputyVersion.SynchronizeEvents := false;
 {$ELSE}
-  FHTTPReqDeputyVersion.OnRequestError := FHTTPReqDeputyVersion.Asynchronous := true;
+  FHTTPReqDeputyVersion.OnRequestError := nil;
 {$ENDIF}
   FHTTPReqDeputyVersion.Client := FHTTPClient;
   FHTTPReqDeputyVersion.OnRequestCompleted := HttpDeputyVersionCompleted;
