@@ -156,8 +156,10 @@ procedure TSEUrlCacheEntry.DownloadUrl;
 begin
   if not Assigned(FHTTPRequest) then // FHTTPRequest.Client
     LogMessage('client not assigned');
+    {$IF COMPILERVERSION > 33}
   FHTTPRequest.OnRequestException := HttpException;
   FHTTPRequest.SynchronizeEvents := false;
+  {$ENDIF}
   FHTTPRequest.OnRequestCompleted := HttpCompleted;
   FHTTPRequest.Asynchronous := true;
   FHTTPRequest.CustomHeaders[hdr_ifmodmatch] := LastModified; // .Replace('2022', '2021');
@@ -465,7 +467,7 @@ begin // load Caches from string
       FCaches := TObjectDictionary<string, TSEUrlCacheEntry>.Create([doOwnsValues]);
       for I := 0 to Caches.Count - 1 do
       begin
-        jo := Caches[I] as TJSONObject;
+        jo := Caches.Items[I] as TJSONObject;
         ce := TSEUrlCacheEntry.Create;
         ce.URL := jo.GetValue<string>(ce.nm_json_prop_url, 'https://localhost');
         ce.LastModified := jo.GetValue<string>(ce.nm_json_prop_lastmod, ce.dt_lastmod_default);
