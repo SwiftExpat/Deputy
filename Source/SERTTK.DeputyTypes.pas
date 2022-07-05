@@ -709,7 +709,6 @@ begin
     LoadDeputyUpdateVersion;
     if Assigned(OnDeputyUpdatesRefreshed) then
       OnDeputyUpdatesRefreshed('Cache loaded');
-    // FExpertUpdateMenuItem.Caption := UpdateExpertButtonText;
   end
   else
   begin // async download must update button after checking the file

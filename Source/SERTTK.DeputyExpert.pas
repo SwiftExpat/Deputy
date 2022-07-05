@@ -10,16 +10,41 @@ uses System.Classes, ToolsAPI, VCL.Dialogs, System.SysUtils, System.TypInfo, Win
   DW.OTA.Wizard, DW.OTA.IDENotifierOTAWizard, DW.OTA.Helpers, DW.Menus.Helpers, DW.OTA.ProjectManagerMenu,
   DW.OTA.Notifiers, SERTTK.DeputyTypes, SE.ProcMgrUtils;
 
+const
+  MAJ_VER = 2; // Major version nr.
+  MIN_VER = 5; // Minor version nr.
+  REL_VER = 1; // Release nr.
+  BLD_VER = 0; // Build nr.
+
+  { Built with TOTAL & KASTRI versions:
+    KASTRI : fa453cd : https://github.com/DelphiWorlds/Kastri/commit/fa453cd2afaa47739f01133a5f22cf4dc391fc84
+    TOTAL : 2ec8360 : https://github.com/DelphiWorlds/TOTAL/commit/2ec8360328bab72b0ade817f1ffd168210f2098e
+  }
+
+  // Version history
+  // v1.1.1.0 : First Release
+  // v2.5.0.0 : This version implments forms to display progress
+  // v2.5.1.0 : New Nag counter
+
+  { ******************************************************************** }
+  { written by swiftexpat }
+  { copyright  ©  2022 }
+  { Email : support@swiftexpat.com }
+  { Web : https://swiftexpat.com }
+  { }
+  { The source code is given as is. The author is not responsible }
+  { for any possible damage done due to the use of this code. }
+  { The complete source code remains property of the author and may }
+  { not be distributed, published, given or sold in any form as such. }
+  { No parts of the source code can be included in any other component }
+  { or application without written authorization of the author. }
+  { ******************************************************************** }
 type
   TSERTTKDeputyWizard = class;
 
   TSERTTKDeputyDebugNotifier = class(TDebuggerNotifier)
   private
     FWizard: TSERTTKDeputyWizard;
-  strict private
-    // FProcMgr: TSEProcessManager;
-    FNagCounter: TSERTTKNagCounter;
-    // procedure CheckNagCount;
   public
     function BeforeProgramLaunch(const Project: IOTAProject): boolean; override;
     constructor Create(const AWizard: TSERTTKDeputyWizard);
@@ -28,6 +53,7 @@ type
 
   TSERTTKDeputyWizard = class(TIDENotifierOTAWizard)
   const
+    nag_interval = 10;
     nm_tools_menu = 'SE Deputy';
     nm_tools_menuitem = 'miSEDeputyRoot';
     nm_message_group = 'SE Deputy';
@@ -51,10 +77,6 @@ type
     FNagCounter: TSERTTKNagCounter;
     FDeputyUtils: TSERTTKDeputyUtils;
     function MenuItemByName(const AItemName: string): TMenuItem;
-    // procedure MessageCaddieCheck(const AMessage: string);
-    // procedure CaddieCheckDownloaded(const AMessage: string);
-    // procedure DemoFMXDownloaded(const AMessage: string);
-    // procedure DemoVCLDownloaded(const AMessage: string);
     procedure OnClickDeputyUpdates(Sender: TObject);
   private
     FDebugNotifier: ITOTALNotifier;
@@ -62,8 +84,7 @@ type
     procedure AssignUpdateMenuItems;
     procedure OnClickMiKillProcEnabled(Sender: TObject);
     function FindMenuItemFirstLine(const AMenuItem: TMenuItem): integer;
-    procedure MessagesAdd(const AMessage: string); // overload;
-    // procedure MessagesAdd(const AMessageList: TStringList); overload;
+    procedure MessagesAdd(const AMessage: string);
     procedure OnClickShowWebsite(Sender: TObject);
   protected
     procedure IDENotifierBeforeCompile(const AProject: IOTAProject; const AIsCodeInsight: boolean;
@@ -98,7 +119,7 @@ exports
 
 procedure TSERTTKDeputyWizard.AssignUpdateMenuItems;
 var
- mic, mif, miv: TMenuItem;
+  mic, mif, miv: TMenuItem;
 begin
   mic := MenuItemByName(nm_mi_run_caddie);
   mic.OnClick := FDeputyUpdates.btnUpdateCaddieClick;
@@ -255,9 +276,6 @@ begin
   FToolsMenuRootItem.Add(mi);
   mic := MenuItemByName(nm_mi_run_caddie);
   mic.Caption := 'Refreshing Caddie';
- // mic.OnClick := FDeputyUpdates.btnUpdateCaddieClick;
-  // FRTTKAppUpdate.OnMessage := MessageCaddieCheck;
-  // FRTTKAppUpdate.OnDownloadDone := CaddieCheckDownloaded;
   FToolsMenuRootItem.Add(mic);
   mi := MenuItemByName(nm_mi_show_website);
   mi.Caption := 'RTTK Website';
@@ -265,15 +283,10 @@ begin
   FToolsMenuRootItem.Add(mi);
   miv := MenuItemByName(nm_mi_run_vcldemo);
   miv.Caption := 'Refreshing Demo VCL';
- // miv.OnClick := FDeputyUpdates.btnUpdateDemoVCLClick;
-  // FRTTKAppUpdate.OnDownloadDemoVCLDone := DemoVCLDownloaded;
   FToolsMenuRootItem.Add(miv);
   mif := MenuItemByName(nm_mi_run_fmxdemo);
   mif.Caption := 'Refreshing Demo FMX';
- // mif.OnClick := FDeputyUpdates.btnUpdateDemoFMXClick;
-  // FRTTKAppUpdate.OnDownloadDemoFMXDone := DemoFMXDownloaded;
   FToolsMenuRootItem.Add(mif);
- // FDeputyUpdates.AssignMenuItems(mic, mif, miv);
   mi := MenuItemByName(nm_mi_update_status);
   mi.Caption := 'Deputy Updates';
   mi.OnClick := OnClickDeputyUpdates;
@@ -287,10 +300,13 @@ begin
   if FSettings.KillProcActive and (AIsCodeInsight = false) then
   begin
     ACancel := FProcMgrForm.CompileContinue(AProject.ProjectOptions.TargetName);
-    // {$IFDEF GITHUBEVAL}
-    // if FNagCounter.NagUser then
-    // FNagCounter.NagLess(NagCountReached);
-    // {$ENDIF}
+{$IFDEF GITHUBEVAL}
+    if FNagCounter.NagUser then
+    begin
+      FNagCounter.NagLess(nag_interval);
+      MessagesAdd('Please evaluate RunTime ToolKit, https://swiftexpat.com')
+    end;
+{$ENDIF}
   end;
   inherited;
 end;
@@ -311,81 +327,26 @@ begin
   FDeputyUtils.ShowWebsite;
 end;
 
-// function TSERTTKDeputyWizard.NagCountReached: integer;
-// const
-// m_dl_free = #13 + 'The download is free & is a demo of RunTime ToolKit.';
-// t_m_title = 'RunTime ToolKit Caddie not found!';
-// t_m_download = 'Are you ready to download RunTime ToolKit Caddie?' + m_dl_free;
-// t_m_nag = 'Visit http://swiftexpat.com for more information about RunTime ToolKit.' + m_dl_free;
-// begin
-// result := -1; // some default
-// if true then // FRTTKAppUpdate.Downloaded then
-// begin { TODO : Add nag behavior if caddie was not run recently }
-// MessagesAdd('Ready to execute, please try RunTime ToolKit');
-// result := -3; // log a message
-// end
-// else
-// case TaskMessageDlg(t_m_title, t_m_download, mtConfirmation, [mbOK, mbCancel], 0) of
-// mrOk:
-// begin
-// FRTTKAppUpdate.DownloadCaddie;
-// result := -4096; // if the IDE runs more than that, wow
-// end;
-// mrCancel:
-// begin // Write code here for pressing button Cancel
-// case
-// {$IF COMPILERVERSION > 33}
-// MessageDlg(t_m_nag, mtInformation, [mbOK, mbCancel, mbRetry], 0, mbOK,
-// ['Visit Site', 'Cancel', 'Later please'])
-// {$ELSE}
-// MessageDlg(t_m_nag, mtInformation, [mbOK, mbCancel, mbRetry], 0, mbOK)
-// {$ENDIF} of
-// mrOk:
-// begin
-// // FRTTKAppUpdate.ShowWebsite;
-// result := -1024; // visited the site, dont bug again for this session
-// end;
-// mrCancel:
-// result := 0; // prompt at next interval
-// mrRetry:
-// result := -5; // the asked for later
-// end;
-// end;
-// end;
-// end;
-
 { TSERTTKDeputyDebugNotifier }
 
 function TSERTTKDeputyDebugNotifier.BeforeProgramLaunch(const Project: IOTAProject): boolean;
 begin
-  // CheckNagCount;
   if FWizard.Settings.KillProcActive then
   begin
     result := FWizard.ProcMgrForm.DebugLaunch(Project.ProjectOptions.TargetName);
-    // FWizard.MessagesAdd(FProcMgr.Actions);
   end
   else
     result := true;
 end;
 
-// procedure TSERTTKDeputyDebugNotifier.CheckNagCount;
-// begin
-// {$IFDEF GITHUBEVAL}
-// if FNagCounter.NagUser then
-// FNagCounter.NagLess(FWizard.NagCountReached);
-// {$ENDIF}
-// end;
-
 constructor TSERTTKDeputyDebugNotifier.Create(const AWizard: TSERTTKDeputyWizard);
 begin
   inherited Create;
   FWizard := AWizard;
-  FNagCounter := TSERTTKNagCounter.Create(0, 4);
 end;
 
 destructor TSERTTKDeputyDebugNotifier.Destroy;
 begin
-  FNagCounter.Free;
   inherited;
 end;
 
