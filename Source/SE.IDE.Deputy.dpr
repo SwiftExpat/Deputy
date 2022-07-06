@@ -10,7 +10,8 @@ uses
   SERTTK.DeputyExpert in 'SERTTK.DeputyExpert.pas',
   frmDeputyProcMgr in 'frmDeputyProcMgr.pas' {DeputyProcMgr},
   frmDeputyUpdates in 'frmDeputyUpdates.pas' {DeputyUpdates},
-  SE.UpdateManager in 'SE.UpdateManager.pas';
+  SE.UpdateManager in 'SE.UpdateManager.pas',
+  SE.ProcMgrUtils in 'SE.ProcMgrUtils.pas';
 
 {$R *.res}
 
