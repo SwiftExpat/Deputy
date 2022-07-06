@@ -188,6 +188,7 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="SE.UpdateManager.pas"/>
+        <DCCReference Include="SE.ProcMgrUtils.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -241,6 +242,12 @@
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="Win32\Debug\SE.IDE.Deputy.dll" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>SE_IDE_Deputy.dll</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Win32\Release\SE.IDE.Deputy.dll" Configuration="Release" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>SE_IDE_Deputy.dll</RemoteName>
                         <Overwrite>true</Overwrite>

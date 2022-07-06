@@ -64,7 +64,7 @@ type
   private
     procedure LogMsg(AMessage: string);
     procedure LeakCopied(AMessage: string; APID: cardinal);
-    procedure WaitPoll(APollCount: integer);
+    procedure WaitPoll(APollCount: integer; ALoopTime: integer);
     property ProcCleanup: TSEProcessCleanup read FProcCleanup write FProcCleanup;
     property ProcMgrInfo: TSEProcessManagerEnvInfo read FProcMgrInfo write FProcMgrInfo;
     procedure UpdateCleanHist(AProcCleanup: TSEProcessCleanup);
@@ -166,8 +166,8 @@ begin
     ClearLog;
     FProcMgr.AssignMgrInfo(ProcMgrInfo);
     FProcMgr.AssignProcCleanup(ProcCleanup);
-//    if ProcCleanup.StopCommand = TSEProcessStopCommand.tseProcStopClose then
-//      self.Show;
+    // if ProcCleanup.StopCommand = TSEProcessStopCommand.tseProcStopClose then
+    // self.Show;
     StartCleanupStatus; // timer to count with the stopwatch
     result := FProcMgr.ProcessCleanup;
     tmrCleanupStatus.Enabled := false; // stop the timer
@@ -175,7 +175,7 @@ begin
     StopCleanupStatus;
   finally
     tmrCleanupStatus.Enabled := false;
-    self.Hide;        //hide the form
+    self.Hide; // hide the form
   end;
 end;
 
@@ -315,7 +315,7 @@ end;
 
 procedure TDeputyProcMgr.StartCleanupStatus;
 begin
-  WaitPoll(0);
+  WaitPoll(0, 0);
   FStopWatch := TStopWatch.StartNew;
   tmrCleanupStatus.Enabled := true;
   gpCleanStatus.Visible := true;
@@ -384,10 +384,10 @@ begin
   end;
 end;
 
-procedure TDeputyProcMgr.WaitPoll(APollCount: integer);
+procedure TDeputyProcMgr.WaitPoll(APollCount: integer; ALoopTime: integer);
 begin
   lblLoopCount.Caption := APollCount.ToString;
-  if APollCount > 1  then //cleaner but by ms would be better for user configuration
+  if (APollCount > 1) and (ALoopTime > 200) then // cleaner but by ms would be better for user configuration
     self.Show;
   Application.ProcessMessages;
 end;

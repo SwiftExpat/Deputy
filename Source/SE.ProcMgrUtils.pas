@@ -47,7 +47,7 @@ type
   end;
 
   TSEProcessManagerMessage = procedure(AMsg: string) of object;
-  TSEProcessManagerWaitPoll = procedure(APollCount: integer) of object;
+  TSEProcessManagerWaitPoll = procedure(APollCount: integer; ALoopTime:integer) of object;
   TSEProcessManagerLeakCopied = procedure(AMsg: string; APID: cardinal) of object;
 
   TSEProcessManagerEnvInfo = class
@@ -68,6 +68,7 @@ type
     FMsgProc: TSEProcessManagerMessage;
     FLeakCopied: TSEProcessManagerLeakCopied;
     FWaitPoll: TSEProcessManagerWaitPoll;
+    FSleepTime: integer;
     function TerminateProcessByID(AProcessID: cardinal): boolean;
     procedure LogMsg(const AMsg: string);
   private
@@ -79,6 +80,7 @@ type
     function LeakWindowClose(APID: cardinal): boolean;
     procedure ExecKill;
     procedure ExecClose;
+    function LoopTime(ALoopCount: integer): integer;
     function CloseMainWindow(APID: cardinal): boolean;
   public
     function FindMainWindow(const APID: DWord): DWord;
@@ -92,6 +94,7 @@ type
     function ProcessCleanup: boolean;
     function ProcFileExists(const AProcFullPath: string; var AFileName: string; var AFileDirectory: string): boolean;
     property Actions: TStringList read FActions;
+    constructor Create;
     destructor Destroy; override;
     procedure StopManager;
     procedure AssignMgrInfo(const AMgrInfo: TSEProcessManagerEnvInfo);
@@ -217,6 +220,11 @@ begin
   end;
 end;
 
+constructor TSEProcessManager.Create;
+begin
+ FSleepTime := 100;
+end;
+
 destructor TSEProcessManager.Destroy;
 begin
   // FCleanup.Free; // the thread will not free this any more
@@ -261,10 +269,10 @@ begin
     begin
       if FManagerStopped then
         exit; // exit on abort, to be implemented
-      TThread.Sleep(100); // sleep first, close was just sent
+      TThread.Sleep(FSleepTime); // sleep first, close was just sent
       inc(ps.PollCount);
       if Assigned(FWaitPoll) then
-        FWaitPoll(ps.PollCount);
+        FWaitPoll(ps.PollCount, LoopTime(ps.PollCount));
       if LeakWindowShowing(ps.ProcID) then
       begin // what is the workflow, hold the IDE till the leak is closed?
         ps.LeakShown := true;
@@ -360,6 +368,11 @@ procedure TSEProcessManager.LogMsg(const AMsg: string);
 begin
   if Assigned(FMsgProc) then
     FMsgProc(AMsg);
+end;
+
+function TSEProcessManager.LoopTime(ALoopCount: integer): integer;
+begin
+  result := FSleepTime * ALoopCount;
 end;
 
 function TSEProcessManager.ProcessCleanup: boolean;
