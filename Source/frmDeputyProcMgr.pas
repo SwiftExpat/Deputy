@@ -166,8 +166,8 @@ begin
     ClearLog;
     FProcMgr.AssignMgrInfo(ProcMgrInfo);
     FProcMgr.AssignProcCleanup(ProcCleanup);
-    if ProcCleanup.StopCommand = TSEProcessStopCommand.tseProcStopClose then
-      self.Show;
+//    if ProcCleanup.StopCommand = TSEProcessStopCommand.tseProcStopClose then
+//      self.Show;
     StartCleanupStatus; // timer to count with the stopwatch
     result := FProcMgr.ProcessCleanup;
     tmrCleanupStatus.Enabled := false; // stop the timer
@@ -387,6 +387,8 @@ end;
 procedure TDeputyProcMgr.WaitPoll(APollCount: integer);
 begin
   lblLoopCount.Caption := APollCount.ToString;
+  if APollCount > 1  then //cleaner but by ms would be better for user configuration
+    self.Show;
   Application.ProcessMessages;
 end;
 
