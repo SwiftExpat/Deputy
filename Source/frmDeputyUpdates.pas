@@ -45,6 +45,7 @@ type
     FSettings: TSERTTKDeputySettings;
     FDeputyUtils: TSERTTKDeputyUtils;
     FMiCaddie, FMiDemoFMX, FMiDemoVCL: TMenuItem;
+    FLicensed: boolean;
     procedure DownloadDoneCaddie(AMessage: string; ACacheEntry: TSEUrlCacheEntry);
     procedure DownloadDoneDemoFMX(AMessage: string; ACacheEntry: TSEUrlCacheEntry);
     procedure DownloadDoneDemoVCL(AMessage: string; ACacheEntry: TSEUrlCacheEntry);
@@ -57,7 +58,7 @@ type
     procedure UpdateLastRefresh;
     procedure OnDeputyVersionRefreshed(const AMessage: string);
   public
-    procedure ExpertUpdatesRefresh;
+    procedure ExpertUpdatesRefresh(ALicensed: boolean);
     procedure AssignSettings(ASettings: TSERTTKDeputySettings);
     procedure AssignAppUpdate(const AAppUpdate: TSERTTKAppVersionUpdate);
     procedure AssignMenuItems(AMiCaddie, AMiDemoFMX, AMiDemoVCL: TMenuItem);
@@ -174,12 +175,18 @@ begin
   UpdateLastRefresh;
 end;
 
-procedure TDeputyUpdates.ExpertUpdatesRefresh;
+procedure TDeputyUpdates.ExpertUpdatesRefresh(ALicensed: boolean);
 begin
+  FLicensed := ALicensed;
   FUrlCacheMgr.JsonString := FSettings.UrlCacheJson;
-  FDeputyUpdate.OnMessage := OnVersionUpdateMessage;
-  FDeputyUpdate.OnDeputyUpdatesRefreshed := OnDeputyVersionRefreshed;
-  FDeputyUpdate.ExpertUpdatesRefresh();
+  if FLicensed then
+    OnDeputyVersionRefreshed('Licensed')
+  else
+  begin
+    FDeputyUpdate.OnMessage := OnVersionUpdateMessage;
+    FDeputyUpdate.OnDeputyUpdatesRefreshed := OnDeputyVersionRefreshed;
+    FDeputyUpdate.ExpertUpdatesRefresh();
+  end;
   RefreshDemoFMX;
   RefreshDemoVCL;
   RefreshCaddie;
@@ -190,6 +197,7 @@ begin
   FDeputyUtils := TSERTTKDeputyUtils.Create;
   FUrlCacheMgr := TSEUrlCacheManager.Create;
   FUrlCacheMgr.OnManagerMessage := LogMessage;
+  memoMessages.Clear;
 end;
 
 procedure TDeputyUpdates.FormDestroy(Sender: TObject);
@@ -214,9 +222,17 @@ procedure TDeputyUpdates.OnDeputyVersionRefreshed(const AMessage: string);
 begin
   memoMessages.Lines.Add('deputy refreshed: ' + AMessage);
   lblDeputyInst.Caption := FDeputyUpdate.WizardVersion.VersionString;
-  lblDeputyAvail.Caption := FDeputyUpdate.UpdateVersion.VersionString;
-  btnUpdateDeputy.Enabled := FDeputyUpdate.ExpertUpdateAvailable;
-  btnUpdateDeputy.Caption := FDeputyUpdate.UpdateExpertButtonText;
+  if FLicensed then
+  begin
+    btnUpdateDeputy.Enabled := false;
+    lblDeputyAvail.Caption := 'Use Caddie';
+  end
+  else
+  begin
+    lblDeputyAvail.Caption := FDeputyUpdate.UpdateVersion.VersionString;
+    btnUpdateDeputy.Enabled := FDeputyUpdate.ExpertUpdateAvailable;
+    btnUpdateDeputy.Caption := FDeputyUpdate.UpdateExpertButtonText;
+  end;
 end;
 
 procedure TDeputyUpdates.OnVersionUpdateMessage(const AMessage: string);
@@ -232,7 +248,7 @@ begin
   ce.OnRefreshDone := DownloadDoneCaddie;
   ce.LocalPath := FDeputyUtils.CaddieDownloadFile;
   ce.ExtractPath := FDeputyUtils.RttkAppFolder;
-  ce.ExtractZip := false;
+  ce.ExtractZip := true;
   ce.OnRequestMessage := LogMessage;
   ce.RefreshCache;
 end;
@@ -245,6 +261,7 @@ begin
   ce.OnRefreshDone := DownloadDoneDemoFMX;
   ce.LocalPath := FDeputyUtils.DemoDownloadFMXFile;
   ce.ExtractPath := FDeputyUtils.RttkAppFolder;
+  ce.ExtractZip := true;
   ce.OnRequestMessage := LogMessage;
   ce.RefreshCache;
 end;
@@ -257,6 +274,7 @@ begin
   ce.OnRefreshDone := DownloadDoneDemoVCL;
   ce.LocalPath := FDeputyUtils.DemoDownloadVCLFile;
   ce.ExtractPath := FDeputyUtils.RttkAppFolder;
+  ce.ExtractZip := true;
   ce.OnRequestMessage := LogMessage;
   ce.RefreshCache;
 end;

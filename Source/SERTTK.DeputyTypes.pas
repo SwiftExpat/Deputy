@@ -289,7 +289,11 @@ type
 
 implementation
 
-uses System.IOUtils, WinAPI.ShellAPI, WinAPI.Windows, System.DateUtils, System.Zip, System.JSON, DW.OTA.Helpers;
+uses System.IOUtils, WinAPI.ShellAPI, WinAPI.Windows, System.DateUtils, System.Zip,
+{$IFDEF EXPERT}
+ DW.OTA.Helpers,
+{$ENDIF}
+System.JSON;
 
 { TSERTTKDeputyUtils }
 
@@ -575,6 +579,13 @@ end;
 procedure TSERTTKAppVersionUpdate.AssignWizardInfo(const AWizardInfo: TSERTTKWizardInfo);
 begin
   FWizardInfo := AWizardInfo;
+  if Assigned(FWizardVersion) then
+    FWizardVersion.Free;
+
+  FWizardVersion := TSERTTKVersionInfo.Create;
+  FWizardVersion.VerMaj := FWizardInfo.WizardVersion.Split(['.'])[0].ToInteger;
+  FWizardVersion.VerMin := FWizardInfo.WizardVersion.Split(['.'])[1].ToInteger;
+  FWizardVersion.VerRel := FWizardInfo.WizardVersion.Split(['.'])[2].ToInteger;
 end;
 
 constructor TSERTTKAppVersionUpdate.Create;
@@ -625,6 +636,7 @@ var
   reg: TRegistry;
 begin
   result := 'err';
+{$IFDEF EXPERT}
   reg := TRegistry.Create;
   reg.RootKey := HKEY_CURRENT_USER;
   try
@@ -638,10 +650,10 @@ begin
         result := 'not found';
       reg.CloseKey;
     end;
-
   finally
     reg.Free;
   end;
+{$ENDIF}
 end;
 
 procedure TSERTTKAppVersionUpdate.ExpertLogUsage(const AUsageStep: string);
@@ -694,14 +706,6 @@ end;
 procedure TSERTTKAppVersionUpdate.ExpertUpdatesRefresh;
 begin
   ExpertLogUsage('Refresh-Updates');
-
-  if Assigned(FWizardVersion) then
-    FWizardVersion.Free;
-
-  FWizardVersion := TSERTTKVersionInfo.Create;
-  FWizardVersion.VerMaj := FWizardInfo.WizardVersion.Split(['.'])[0].ToInteger;
-  FWizardVersion.VerMin := FWizardInfo.WizardVersion.Split(['.'])[1].ToInteger;
-  FWizardVersion.VerRel := FWizardInfo.WizardVersion.Split(['.'])[2].ToInteger;
   // check the settings for last update dts
   if (HoursBetween(FSettings.LastUpdateCheck, now) < 2) and FDeputyUtils.DeputyVersionFileExists then
   begin
