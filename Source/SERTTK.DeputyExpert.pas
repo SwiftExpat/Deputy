@@ -177,7 +177,7 @@ begin
   FDeputyUpdates.AssignSettings(FSettings);
   FDeputyUpdates.AssignAppUpdate(FRTTKAppUpdate);
   AssignUpdateMenuItems;
-  FDeputyUpdates.ExpertUpdatesRefresh;
+  FDeputyUpdates.ExpertUpdatesRefresh(false);
 end;
 
 {$REGION 'Plugin Display values'}
@@ -313,7 +313,7 @@ end;
 
 procedure TSERTTKDeputyWizard.OnClickDeputyUpdates(Sender: TObject);
 begin
-  FDeputyUpdates.ExpertUpdatesRefresh;
+  FDeputyUpdates.ExpertUpdatesRefresh(false);
   FDeputyUpdates.Show;
 end;
 
