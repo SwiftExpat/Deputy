@@ -84,6 +84,7 @@ implementation
 procedure TDeputyUpdates.AssignAppUpdate(const AAppUpdate: TSERTTKAppVersionUpdate);
 begin
   FDeputyUpdate := AAppUpdate;
+  FUrlCacheMgr.UserAgent(FDeputyUpdate.WizardInfo.AgentString);
 end;
 
 procedure TDeputyUpdates.AssignMenuItems(AMiCaddie, AMiDemoFMX, AMiDemoVCL: TMenuItem);

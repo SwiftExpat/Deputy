@@ -67,7 +67,7 @@ type
     property CacheAgeSeconds: integer read CacheAgeSecondsGet write CacheAgeSecondsSet;
     function LocalFileExists: boolean;
     procedure RefreshCache;
-    function CacheValid:boolean;
+    function CacheValid: boolean;
     procedure AssignHttpClient(AHttpClient: TNetHTTPClient);
     property OnRequestMessage: TSEUrlCacheManagerMessage read FCacheMgrMsg write FCacheMgrMsg;
     property OnRefreshDone: TSEUrlCacheRefreshDone read FOnRefreshDone write FOnRefreshDone;
@@ -80,11 +80,13 @@ type
   const
     nm_json_object = 'UrlCacheManager';
     nm_json_prop_caches = 'caches';
+    nm_user_agent = 'UCM 1';
   strict private
     FMREW: TMultiReadExclusiveWriteSynchronizer;
     FCaches: TObjectDictionary<string, TSEUrlCacheEntry>;
     FHTTPClient: TNetHTTPClient;
     FCacheMgrMsg: TSEUrlCacheManagerMessage;
+    FUserAgent: string;
     procedure InitHttpClient;
     function CachesGet: TObjectDictionary<string, TSEUrlCacheEntry>;
     procedure CachesSet(const Value: TObjectDictionary<string, TSEUrlCacheEntry>);
@@ -101,6 +103,7 @@ type
     KeyName: string;
     constructor Create;
     destructor Destroy; override;
+    procedure UserAgent(AUserAgent: string);
     function CacheByUrl(AHttpUrl: string): TSEUrlCacheEntry;
     property Caches: TObjectDictionary<string, TSEUrlCacheEntry> read CachesGet write CachesSet;
     property JsonString: string read JsonStringGet write JsonStringSet;
@@ -136,7 +139,7 @@ end;
 
 function TSEUrlCacheEntry.CacheValid: boolean;
 begin
-  result :=  SecondsBetween(RefreshDts, now) < CacheAgeSeconds;
+  result := SecondsBetween(RefreshDts, now) < CacheAgeSeconds;
 end;
 
 constructor TSEUrlCacheEntry.Create;
@@ -156,10 +159,10 @@ procedure TSEUrlCacheEntry.DownloadUrl;
 begin
   if not Assigned(FHTTPRequest) then // FHTTPRequest.Client
     LogMessage('client not assigned');
-    {$IF COMPILERVERSION > 33}
+{$IF COMPILERVERSION > 33}
   FHTTPRequest.OnRequestException := HttpException;
   FHTTPRequest.SynchronizeEvents := false;
-  {$ENDIF}
+{$ENDIF}
   FHTTPRequest.OnRequestCompleted := HttpCompleted;
   FHTTPRequest.Asynchronous := true;
   FHTTPRequest.CustomHeaders[hdr_ifmodmatch] := LastModified; // .Replace('2022', '2021');
@@ -284,8 +287,8 @@ begin
   LogMessage('Refreshing cache of ' + self.URL);
   if not CacheValid or not LocalFileExists then
     DownloadUrl
-    else
-      LogMessage('Cache valid for ' + self.URL);
+  else
+    LogMessage('Cache valid for ' + self.URL);
 
 end;
 
@@ -407,7 +410,7 @@ begin
 {$ELSEIF COMPILERVERSION = 33}
     FHTTPClient.SecureProtocols := [THTTPSecureProtocol.TLS12];
 {$ENDIF}
-    // FHTTPClient.UserAgent := nm_user_agent;
+    FHTTPClient.UserAgent := nm_user_agent + ':' + FUserAgent;
     { TODO : Create a hash of Username / Computer name }
     FMREW.EndWrite;
   end;
@@ -491,6 +494,11 @@ procedure TSEUrlCacheManager.LogMessage(AMessage: string);
 begin
   if Assigned(OnManagerMessage) then
     OnManagerMessage(AMessage);
+end;
+
+procedure TSEUrlCacheManager.UserAgent(AUserAgent: string);
+begin
+  FUserAgent := AUserAgent;
 end;
 
 end.
