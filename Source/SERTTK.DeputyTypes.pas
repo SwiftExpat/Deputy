@@ -283,6 +283,7 @@ type
     procedure AssignWizardInfo(const AWizardInfo: TSERTTKWizardInfo);
     procedure AssignSettings(const ASettings: TSERTTKDeputySettings);
     function UpdateExpertButtonText: string;
+    property WizardInfo: TSERTTKWizardInfo read FWizardInfo;
     property WizardVersion: TSERTTKVersionInfo read FWizardVersion write FWizardVersion;
     property UpdateVersion: TSERTTKVersionInfo read FUpdateVersion write FUpdateVersion;
   end;
