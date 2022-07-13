@@ -213,7 +213,7 @@ begin
       begin
         LogMessage('Zip File is valid ' + LocalPath);
         TZipFile.ExtractZipFile(LocalPath, ExtractPath);
-        LogMessage('Wizard Updates Extracted.');
+        LogMessage('Updates Extracted to ' + ExtractPath);
       end
       else // Zip file invalid
         LogMessage('Zip File not valid ' + LocalPath);
