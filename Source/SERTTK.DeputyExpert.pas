@@ -25,6 +25,7 @@ const
   // v1.1.1.0 : First Release
   // v2.5.0.0 : This version implments forms to display progress
   // v2.5.1.0 : New Nag counter
+  // v2.5.3.0 : Version release GPL
 
   { ******************************************************************** }
   { written by swiftexpat }
