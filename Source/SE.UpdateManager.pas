@@ -9,6 +9,20 @@ const
   hdr_ifmodmatch = 'If-Modified-Since';
   hdr_lastmodified = 'Last-Modified';
 
+  { ******************************************************************** }
+  { written by swiftexpat }
+  { copyright  ©  2022 }
+  { Email : support@swiftexpat.com }
+  { Web : https://swiftexpat.com }
+  { }
+  { The source code is given as is. The author is not responsible }
+  { for any possible damage done due to the use of this code. }
+  { The complete source code remains property of the author and may }
+  { not be distributed, published, given or sold in any form as such. }
+  { No parts of the source code can be included in any other component }
+  { or application without written authorization of the author. }
+  { ******************************************************************** }
+
 type
   TSEUrlCacheEntry = class;
   TSEUrlCacheRefreshDone = procedure(AMessage: string; ACacheEntry: TSEUrlCacheEntry) of object;

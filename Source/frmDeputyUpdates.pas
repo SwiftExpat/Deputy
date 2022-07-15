@@ -251,6 +251,7 @@ begin
   ce.ExtractPath := FDeputyUtils.RttkAppFolder;
   ce.ExtractZip := true;
   ce.OnRequestMessage := LogMessage;
+  lblCaddieInst.Caption := ce.LastModified;
   ce.RefreshCache;
 end;
 
@@ -264,6 +265,7 @@ begin
   ce.ExtractPath := FDeputyUtils.RttkAppFolder;
   ce.ExtractZip := true;
   ce.OnRequestMessage := LogMessage;
+  lblDemoFMXInst.Caption := ce.LastModified;
   ce.RefreshCache;
 end;
 
@@ -277,6 +279,7 @@ begin
   ce.ExtractPath := FDeputyUtils.RttkAppFolder;
   ce.ExtractZip := true;
   ce.OnRequestMessage := LogMessage;
+  lblDemoVCLInst.Caption := ce.LastModified;
   ce.RefreshCache;
 end;
 

@@ -5,6 +5,20 @@ interface
 
 uses System.SysUtils, System.Classes, Winapi.Windows, Winapi.TlHelp32;
 
+{ ******************************************************************** }
+{ written by swiftexpat }
+{ copyright  ©  2022 }
+{ Email : support@swiftexpat.com }
+{ Web : https://swiftexpat.com }
+{ }
+{ The source code is given as is. The author is not responsible }
+{ for any possible damage done due to the use of this code. }
+{ The complete source code remains property of the author and may }
+{ not be distributed, published, given or sold in any form as such. }
+{ No parts of the source code can be included in any other component }
+{ or application without written authorization of the author. }
+{ ******************************************************************** }
+
 type
   TSEProcessMgrException = class(exception);
   TSEProcessSnapshotFailed = class(TSEProcessMgrException);
@@ -47,7 +61,7 @@ type
   end;
 
   TSEProcessManagerMessage = procedure(AMsg: string) of object;
-  TSEProcessManagerWaitPoll = procedure(APollCount: integer; ALoopTime:integer) of object;
+  TSEProcessManagerWaitPoll = procedure(APollCount: integer; ALoopTime: integer) of object;
   TSEProcessManagerLeakCopied = procedure(AMsg: string; APID: cardinal) of object;
 
   TSEProcessManagerEnvInfo = class
@@ -222,7 +236,7 @@ end;
 
 constructor TSEProcessManager.Create;
 begin
- FSleepTime := 100;
+  FSleepTime := 100;
 end;
 
 destructor TSEProcessManager.Destroy;
