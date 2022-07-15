@@ -1,6 +1,7 @@
 # Deputy
 
-Delphi IDE plugin created using TOTAL https://github.com/DelphiWorlds/TOTAL
+Delphi IDE expert providing integration of RunTime ToolKit, more information can be found here, https://swiftexpat.com/deputy.html.
+Deputy was created using TOTAL https://github.com/DelphiWorlds/TOTAL
 
 ## License
 
