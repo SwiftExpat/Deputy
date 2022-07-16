@@ -11,6 +11,10 @@ Deputy is dual-licensed. You may choose to use it under the restrictions of the 
 
 This expert will watch for compile and debug actions in the Delphi IDE and terminate any running instances of the target application before compile. Warning this will terminate the process without saving any data.
 
+> Series 2.5 Release details
+
+[![Release 2.5](https://img.youtube.com/vi/MWXR4M_sHkI/hqdefault.jpg)](https://youtu.be/MWXR4M_sHkI)
+
 > Watch this video to see Deputy in action
 
 [![Watch the video](https://img.youtube.com/vi/UfsSbDxbAL8/hqdefault.jpg)](https://youtu.be/UfsSbDxbAL8)
