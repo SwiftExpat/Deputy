@@ -55,6 +55,7 @@ var
   fmgr: TDeputyProcMgr;
 begin
   fmgr := TDeputyProcMgrFactory.DeputyProcMgr;
+  fmgr.AssignSettings(FSettings);
   fmgr.Show;
   fmgr.ClearProcess(ProcName, proc_dir);
 end;
@@ -79,6 +80,7 @@ var
   fmgr: TDeputyProcMgr;
 begin
   fmgr := TDeputyProcMgrFactory.DeputyProcMgr;
+  fmgr.AssignSettings(FSettings);
   fmgr.Show;
 end;
 
