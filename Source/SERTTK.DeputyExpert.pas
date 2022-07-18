@@ -138,7 +138,9 @@ constructor TSERTTKDeputyWizard.Create;
 begin
   inherited;
   FIDEStarted := false;
+{$IF COMPILERVERSION > 32}
   TOTAHelper.RegisterThemeForms([TDeputyUpdates, TDeputyProcMgr]);
+{$ENDIF}
   FMenuItems := TDictionary<string, TMenuItem>.Create;
   FDebugNotifier := TSERTTKDeputyDebugNotifier.Create(self);
   FRTTKAppUpdate := TSERTTKAppVersionUpdate.Create;
@@ -171,7 +173,9 @@ begin
   FRTTKAppUpdate.AssignWizardInfo(FWizardInfo);
   FRTTKAppUpdate.AssignSettings(FSettings);
   FProcMgrForm := TDeputyProcMgrFactory.DeputyProcMgr;
+{$IF COMPILERVERSION > 32}
   TOTAHelper.ApplyTheme(FProcMgrForm);
+{$ENDIF}
   FProcMgrForm.AssignSettings(FSettings);
   FDeputyUpdates := TDeputyUpdatesFactory.DeputyUpdates;
   TOTAHelper.ApplyTheme(FDeputyUpdates);

@@ -145,35 +145,47 @@ end;
 
 procedure TDeputyUpdates.DownloadDoneCaddie(AMessage: string; ACacheEntry: TSEUrlCacheEntry);
 begin
-  if FDeputyUtils.CaddieAppExists then
-  begin
-    FMiCaddie.Caption := 'Run Caddie';
-    lblCaddieInst.Caption := ACacheEntry.LastModified;
-  end;
-  btnUpdateCaddie.Caption := 'Run Caddie or refresh';
-  UpdateLastRefresh;
+  TThread.Queue(nil,
+    procedure
+    begin
+      if FDeputyUtils.CaddieAppExists then
+      begin
+        FMiCaddie.Caption := 'Run Caddie';
+        lblCaddieInst.Caption := ACacheEntry.LastModified;
+      end;
+      btnUpdateCaddie.Caption := 'Run Caddie or refresh';
+      UpdateLastRefresh;
+    end);
 end;
 
 procedure TDeputyUpdates.DownloadDoneDemoFMX(AMessage: string; ACacheEntry: TSEUrlCacheEntry);
 begin
-  if FDeputyUtils.DemoFMXExists then
-  begin
-    FMiDemoFMX.Caption := 'Run Demo FMX';
-    lblDemoFmxInst.Caption := ACacheEntry.LastModified;
-  end;
-  btnUpdateDemoFMX.Caption := 'Run Demo FMX or refresh';
-  UpdateLastRefresh;
+  TThread.Queue(nil,
+    procedure
+    begin
+      if FDeputyUtils.DemoFMXExists then
+      begin
+        FMiDemoFMX.Caption := 'Run Demo FMX';
+        lblDemoFmxInst.Caption := ACacheEntry.LastModified;
+      end;
+      btnUpdateDemoFMX.Caption := 'Run Demo FMX or refresh';
+      UpdateLastRefresh;
+    end);
 end;
 
 procedure TDeputyUpdates.DownloadDoneDemoVCL(AMessage: string; ACacheEntry: TSEUrlCacheEntry);
 begin
-  if FDeputyUtils.DemoVCLExists then
-  begin
-    FMiDemoVCL.Caption := 'Run DemoVCL';
-    lblDemoVCLInst.Caption := ACacheEntry.LastModified;
-  end;
-  btnUpdateDemoVCL.Caption := 'Run Demo VCL or refresh';
-  UpdateLastRefresh;
+  TThread.Queue(nil,
+    procedure
+    begin
+      if FDeputyUtils.DemoVCLExists then
+      begin
+        FMiDemoVCL.Caption := 'Run DemoVCL';
+        lblDemoVCLInst.Caption := ACacheEntry.LastModified;
+      end;
+      btnUpdateDemoVCL.Caption := 'Run Demo VCL or refresh';
+      UpdateLastRefresh;
+    end);
 end;
 
 procedure TDeputyUpdates.ExpertUpdatesRefresh(ALicensed: boolean);
@@ -265,7 +277,7 @@ begin
   ce.ExtractPath := FDeputyUtils.RttkAppFolder;
   ce.ExtractZip := true;
   ce.OnRequestMessage := LogMessage;
-  lblDemoFMXInst.Caption := ce.LastModified;
+  lblDemoFmxInst.Caption := ce.LastModified;
   ce.RefreshCache;
 end;
 
