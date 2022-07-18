@@ -37,7 +37,7 @@ type
     nm_user_agent = 'Deputy Expert';
     fl_nm_demo_vcl = 'RTTK.VCL.exe';
     fl_nm_demo_fmx = 'RTTK_FMX.exe';
-    fl_nm_deputy_version = 'DeputyVersion.xml';
+    fl_nm_deputy_version = 'DeputyVersion.json';
     fl_nm_deputy_expert_zip = 'DeputyExpert.zip';
     fl_nm_pre_deputy_expert_zip = 'DeputyLicensed_';
     fl_nm_suf_deputy_expert_zip = '.zip';
@@ -789,11 +789,14 @@ begin
     lfs.Free;
     LogMessage('Download Version Complete, Loading');
 
-    TThread.Queue(nil,
+    TThread.Synchronize(nil,
       procedure
       begin
         LoadDeputyUpdateVersion;
-        if ExpertUpdateAvailable and not ExpertUpdateDownloaded then
+        //this should clear the download file, it is not really current anymore and needs to be extracted.
+        //it hangs the update process after the dll is updated the first time.
+        //the move on update is problematic if i do not force an extract. change to copy?
+        if ExpertUpdateAvailable then //and not ExpertUpdateDownloaded
           HttpDeputyExpertDownload;
         FSettings.LastUpdateCheck := now;
         if Assigned(OnDeputyUpdatesRefreshed) then
@@ -905,7 +908,7 @@ begin // rename dll FWizardInfo.WizardFileName
     if TFile.Exists(DeputyWizardBackupFilename) then
       TFile.Delete(DeputyWizardBackupFilename);
     TFile.Move(FWizardInfo.WizardFileName, DeputyWizardBackupFilename);
-    TFile.Move(DeputyWizardUpdateFilename(fn), ExpertFileLocation);
+    TFile.Move(DeputyWizardUpdateFilename(fn), ExpertFileLocation);//is this move or copy?
   except
     on E: Exception do
       LogMessage('Failed Update ' + E.Message);
