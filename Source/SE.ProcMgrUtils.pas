@@ -75,7 +75,7 @@ type
 
   TSEProcessManager = class
   strict private
-    FManagerStopped: boolean;
+    FCleanupStopped, FForceTerminate: boolean;
     FProcMgrInfo: TSEProcessManagerEnvInfo;
     FActions: TStringList;
     FCleanup: TSEProcessCleanup;
@@ -92,8 +92,9 @@ type
     function ProcListLoad: boolean;
     function LeakWindowShowing(APID: cardinal): boolean;
     function LeakWindowClose(APID: cardinal): boolean;
-    procedure ExecKill;
     procedure ExecClose;
+    procedure ExecKill;
+    procedure ExecTerminate(APID: cardinal);
     function LoopTime(ALoopCount: integer): integer;
     function CloseMainWindow(APID: cardinal): boolean;
   public
@@ -110,7 +111,8 @@ type
     property Actions: TStringList read FActions;
     constructor Create;
     destructor Destroy; override;
-    procedure StopManager;
+    procedure CleanupAbort;
+    procedure CleanupForceTerminate;
     procedure AssignMgrInfo(const AMgrInfo: TSEProcessManagerEnvInfo);
     procedure AssignProcCleanup(const AProcCleanup: TSEProcessCleanup);
     property OnMessage: TSEProcessManagerMessage read FMsgProc write FMsgProc;
@@ -219,6 +221,17 @@ begin
   self.FCleanup := AProcCleanup;
 end;
 
+procedure TSEProcessManager.CleanupAbort;
+begin
+  FCleanupStopped := true;
+end;
+
+procedure TSEProcessManager.CleanupForceTerminate;
+begin
+  FForceTerminate := true;
+  FCleanupStopped := true;
+end;
+
 function TSEProcessManager.CloseMainWindow(APID: cardinal): boolean;
 var
   mw: DWord;
@@ -250,15 +263,16 @@ var
   s: string;
 begin
   for s in FCleanup.ProcList do
-  begin
-    if FManagerStopped then
-      exit;
-    LogMsg('Killing ' + s);
-    if TerminateProcessByID(cardinal.Parse(s)) then
-      LogMsg('Terminated id ' + s)
-    else // if you ever hit this block, let the ide go?
-      LogMsg('Failed to terminate ID ' + s);
-  end;
+    ExecTerminate(cardinal.Parse(s));
+end;
+
+procedure TSEProcessManager.ExecTerminate(APID: cardinal);
+begin
+  LogMsg('Terminating proc id' + APID.ToString);
+  if TerminateProcessByID(APID) then
+    LogMsg('Terminated  proc id ' + APID.ToString)
+  else // if you ever hit this block, let the ide go?
+    LogMsg('Failed to terminate proc ID ' + APID.ToString);
 end;
 
 procedure TSEProcessManager.ExecClose;
@@ -273,16 +287,18 @@ begin
     else
       exit; // should never get here
 
-    if FManagerStopped then // exit on abort, to be implemented
-      exit;
-
-    LogMsg('Closing main window' + ps.ProcID.ToString);
+    FCleanupStopped := false; // reset the stop flag for each itteration
+    FForceTerminate := false;
+    LogMsg('Closing main window proc id = ' + ps.ProcID.ToString);
     CloseMainWindow(ps.ProcID);
     ps.PollCount := 0; // loop to display status in the IDE
     while ProcIDRunning(ps.ProcID) do
     begin
-      if FManagerStopped then
-        exit; // exit on abort, to be implemented
+      if FCleanupStopped then
+      begin // exit on abort
+        LogMsg('Abort! Stopping wait loop');
+        break;
+      end;
       TThread.Sleep(FSleepTime); // sleep first, close was just sent
       inc(ps.PollCount);
       if Assigned(FWaitPoll) then
@@ -300,6 +316,8 @@ begin
           LogMsg('Failed Leak window close');
       end;
     end;
+    if FForceTerminate then // check a flag for terminate, then call the kill
+      ExecTerminate(ps.ProcID);
   end;
 end;
 
@@ -391,7 +409,6 @@ end;
 
 function TSEProcessManager.ProcessCleanup: boolean;
 begin
-  FManagerStopped := false;
   try
     try
       if ProcListLoad then // includes a check on proc count
@@ -497,12 +514,6 @@ begin
   finally
     CloseHandle(hSnapShot);
   end;
-
-end;
-
-procedure TSEProcessManager.StopManager;
-begin
-  FManagerStopped := true;
 end;
 
 function TSEProcessManager.TerminateProcessByID(AProcessID: cardinal): boolean;
@@ -510,13 +521,13 @@ var { https://stackoverflow.com/questions/65286513/how-to-terminate-a-process-tr
   hProcess: THandle;
 begin
   result := false;
-  hProcess := OpenProcess(PROCESS_TERMINATE, false, AProcessID);
-  if hProcess > 0 then
-    try
+  hProcess := OpenProcess(PROCESS_TERMINATE, false, AProcessID); // this can throw exception?
+  try
+    if hProcess > 0 then
       result := Win32Check(TerminateProcess(hProcess, 0));
-    finally
-      CloseHandle(hProcess);
-    end;
+  finally
+    CloseHandle(hProcess);
+  end;
 end;
 
 { TSEProcessCleanupOptions }

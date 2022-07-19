@@ -186,7 +186,7 @@ object DeputyProcMgr: TDeputyProcMgr
     ControlCollection = <
       item
         Column = 0
-        Control = lblLCHdr
+        Control = lblHdrLoopCount
         Row = 0
       end
       item
@@ -201,7 +201,7 @@ object DeputyProcMgr: TDeputyProcMgr
       end
       item
         Column = 0
-        Control = Label1
+        Control = lblHdrElapsed
         Row = 1
       end
       item
@@ -227,7 +227,7 @@ object DeputyProcMgr: TDeputyProcMgr
     ShowCaption = False
     TabOrder = 2
     Visible = False
-    object lblLCHdr: TLabel
+    object lblHdrLoopCount: TLabel
       Left = 1
       Top = 1
       Width = 92
@@ -257,10 +257,9 @@ object DeputyProcMgr: TDeputyProcMgr
       Align = alClient
       Caption = 'Abort Cleanup'
       TabOrder = 0
-      Visible = False
       OnClick = btnAbortCleanupClick
     end
-    object Label1: TLabel
+    object lblHdrElapsed: TLabel
       Left = 1
       Top = 18
       Width = 92
@@ -290,7 +289,6 @@ object DeputyProcMgr: TDeputyProcMgr
       Align = alClient
       Caption = 'Force Terminate'
       TabOrder = 1
-      Visible = False
       OnClick = btnForceTerminateClick
     end
   end
