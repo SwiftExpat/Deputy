@@ -6,9 +6,15 @@ library SE.IDE.Deputy;
 uses
   System.SysUtils,
   System.Classes,
-  SE.IE.Deputy in 'SE.IE.Deputy.pas';
+  SERTTK.DeputyTypes in 'SERTTK.DeputyTypes.pas',
+  SERTTK.DeputyExpert in 'SERTTK.DeputyExpert.pas',
+  frmDeputyProcMgr in 'frmDeputyProcMgr.pas' {DeputyProcMgr},
+  frmDeputyUpdates in 'frmDeputyUpdates.pas' {DeputyUpdates},
+  SE.UpdateManager in 'SE.UpdateManager.pas',
+  SE.ProcMgrUtils in 'SE.ProcMgrUtils.pas';
 
 {$R *.res}
 
 begin
+
 end.

@@ -3,16 +3,39 @@ unit SE.ProcMgrUtils;
 
 interface
 
-uses System.Classes, Winapi.Windows, Winapi.TlHelp32;
+uses System.SysUtils, System.Classes, Winapi.Windows, Winapi.TlHelp32;
+
+{ ******************************************************************** }
+{ written by swiftexpat }
+{ copyright  ©  2022 }
+{ Email : support@swiftexpat.com }
+{ Web : https://swiftexpat.com }
+{ }
+{ The source code is given as is. The author is not responsible }
+{ for any possible damage done due to the use of this code. }
+{ The complete source code remains property of the author and may }
+{ not be distributed, published, given or sold in any form as such. }
+{ No parts of the source code can be included in any other component }
+{ or application without written authorization of the author. }
+{ ******************************************************************** }
 
 type
+  TSEProcessMgrException = class(exception);
+  TSEProcessSnapshotFailed = class(TSEProcessMgrException);
+
   TSEProcessStopCommand = (tseProcStopKill, tseProcStopClose);
 
   TSEProcessCleanStatus = class
+  strict private
+    FMemLeakMessage: string;
+    FProcID: cardinal;
+    FLeakShown: boolean;
   public
-    ProcID: cardinal;
-    PollCount: integer;
-    MemLeakMessage: string;
+    PollCount: cardinal; // not sure why compiler does not like a prop here
+    property ProcID: cardinal read FProcID write FProcID;
+    property MemLeakMessage: string read FMemLeakMessage write FMemLeakMessage;
+    property LeakShown: boolean read FLeakShown write FLeakShown;
+    constructor Create(AProcID: cardinal);
   end;
 
   TSEProcessCleanup = class
@@ -20,26 +43,33 @@ type
     StopCommand: TSEProcessStopCommand;
     CloseMemLeak: boolean;
     CopyMemLeak: boolean;
-    Timeout: cardinal;
+    // Timeout: cardinal;   //should have
     ProcID: cardinal;
     ProcList: TStringList;
     ProcessName: string;
     ProcessDirectory: string;
+    StartTime, EndTime: TDateTime;
+    procedure LeakDetail(AStrings: TStrings);
+    function LeakShown: boolean;
+    function ProcessFound: boolean;
     function ProcessFullName: string;
+    procedure OptionsSet(const AStopCommand: TSEProcessStopCommand; ACloseMemLeak, ACopyMemLeak: boolean);
+    procedure SetLeakByPID(APID: cardinal; ALeakMsg: string);
     constructor Create(const AProcName: string; const AProcDirectory: string;
       const AStopCommand: TSEProcessStopCommand);
     destructor Destroy; override;
   end;
 
   TSEProcessManagerMessage = procedure(AMsg: string) of object;
-  TSEProcessManagerWaitPoll = procedure(APollCount: integer) of object;
-  TSEProcessManagerLeakCopied = procedure(AMsg: string) of object;
+  TSEProcessManagerWaitPoll = procedure(APollCount: integer; ALoopTime: integer) of object;
+  TSEProcessManagerLeakCopied = procedure(AMsg: string; APID: cardinal) of object;
 
   TSEProcessManagerEnvInfo = class
   strict private
+    FBDSProcID: cardinal;
     procedure LoadBDSInfo;
   public
-    BDSProcID: cardinal;
+    property BDSProcID: cardinal read FBDSProcID write FBDSProcID;
     constructor Create;
   end;
 
@@ -52,6 +82,7 @@ type
     FMsgProc: TSEProcessManagerMessage;
     FLeakCopied: TSEProcessManagerLeakCopied;
     FWaitPoll: TSEProcessManagerWaitPoll;
+    FSleepTime: integer;
     function TerminateProcessByID(AProcessID: cardinal): boolean;
     procedure LogMsg(const AMsg: string);
   private
@@ -63,12 +94,21 @@ type
     function LeakWindowClose(APID: cardinal): boolean;
     procedure ExecKill;
     procedure ExecClose;
+    function LoopTime(ALoopCount: integer): integer;
     function CloseMainWindow(APID: cardinal): boolean;
   public
     function FindMainWindow(const APID: DWord): DWord;
     function FindLeakMsgWindow(const APID: DWord): DWord;
-    procedure ProcessCleanup;//(const ACleanup: TSEProcessCleanup);
+    /// <summary>
+    /// Starts the process Cleanup for assigned cleanup
+    /// </summary>
+    /// <remarks>
+    /// always returns true at this point, consider refactoring
+    /// </remarks>
+    function ProcessCleanup: boolean;
+    function ProcFileExists(const AProcFullPath: string; var AFileName: string; var AFileDirectory: string): boolean;
     property Actions: TStringList read FActions;
+    constructor Create;
     destructor Destroy; override;
     procedure StopManager;
     procedure AssignMgrInfo(const AMgrInfo: TSEProcessManagerEnvInfo);
@@ -80,7 +120,7 @@ type
 
 implementation
 
-uses System.SysUtils, System.DateUtils, System.IOUtils, Winapi.Messages, System.Threading;
+uses System.DateUtils, System.IOUtils, Winapi.Messages, System.Threading;
 
 type
   TEnumInfo = record
@@ -194,9 +234,14 @@ begin
   end;
 end;
 
+constructor TSEProcessManager.Create;
+begin
+  FSleepTime := 100;
+end;
+
 destructor TSEProcessManager.Destroy;
 begin
-  //FCleanup.Free; // the thread will not free this any more
+  // FCleanup.Free; // the thread will not free this any more
   inherited;
 end;
 
@@ -211,38 +256,42 @@ begin
     LogMsg('Killing ' + s);
     if TerminateProcessByID(cardinal.Parse(s)) then
       LogMsg('Terminated id ' + s)
-    else
+    else // if you ever hit this block, let the ide go?
       LogMsg('Failed to terminate ID ' + s);
   end;
 end;
 
 procedure TSEProcessManager.ExecClose;
 var
-  s: string;
-  PID: cardinal;
-  pc: cardinal;
+  ps: TSEProcessCleanStatus;
+  i: integer;
 begin
-  for s in FCleanup.ProcList do
+  for i := 0 to FCleanup.ProcList.Count - 1 do
   begin
-    if FManagerStopped then
+    if Assigned(FCleanup.ProcList.Objects[i]) and (FCleanup.ProcList.Objects[i] is TSEProcessCleanStatus) then
+      ps := TSEProcessCleanStatus(FCleanup.ProcList.Objects[i])
+    else
+      exit; // should never get here
+
+    if FManagerStopped then // exit on abort, to be implemented
       exit;
-    PID := cardinal.Parse(s);
-    LogMsg('Closing Main ' + s);
-    CloseMainWindow(PID);
-    pc := 0;
-    while ProcIDRunning(PID) do
+
+    LogMsg('Closing main window' + ps.ProcID.ToString);
+    CloseMainWindow(ps.ProcID);
+    ps.PollCount := 0; // loop to display status in the IDE
+    while ProcIDRunning(ps.ProcID) do
     begin
       if FManagerStopped then
-        exit;
-      TThread.Sleep(100); // sleep first, close was just sent
-      inc(pc);
+        exit; // exit on abort, to be implemented
+      TThread.Sleep(FSleepTime); // sleep first, close was just sent
+      inc(ps.PollCount);
       if Assigned(FWaitPoll) then
-        FWaitPoll(pc);
-      LogMsg('Exiting ' + pc.ToString);
-      if LeakWindowShowing(PID) then
-      begin
+        FWaitPoll(ps.PollCount, LoopTime(ps.PollCount));
+      if LeakWindowShowing(ps.ProcID) then
+      begin // what is the workflow, hold the IDE till the leak is closed?
+        ps.LeakShown := true;
         LogMsg('Leak window showing');
-        if LeakWindowClose(PID) then
+        if LeakWindowClose(ps.ProcID) then
         begin // closed no need to poll any more
           LogMsg('Leak window closed');
           exit;
@@ -310,8 +359,9 @@ begin
     if FCleanup.CopyMemLeak then
     begin
       result := PostMessage(mw, WM_COPY, 0, 0);
+      TThread.Sleep(20); // wait to let the clipboard get copied to
       if Assigned(FLeakCopied) then
-        FLeakCopied('Leak Found');
+        FLeakCopied('Leak Found', APID);
     end;
     result := PostMessage(mw, WM_CLOSE, 0, 0);
   except
@@ -334,21 +384,38 @@ begin
     FMsgProc(AMsg);
 end;
 
-procedure TSEProcessManager.ProcessCleanup;
+function TSEProcessManager.LoopTime(ALoopCount: integer): integer;
+begin
+  result := FSleepTime * ALoopCount;
+end;
+
+function TSEProcessManager.ProcessCleanup: boolean;
 begin
   FManagerStopped := false;
-
-//  FCleanup := ACleanup;
-  ProcListLoad;
-  if FCleanup.ProcList.Count = 0 then
-  begin
-    LogMsg('Process not found');
-    exit;
+  try
+    try
+      if ProcListLoad then // includes a check on proc count
+      begin
+        if FCleanup.StopCommand = TSEProcessStopCommand.tseProcStopClose then
+          ExecClose
+        else
+          ExecKill
+      end
+      else // snapshot success, FCleanup.ProcList.Count = 0, nothing to clean
+        LogMsg('Process not found');
+      result := true;
+    except
+      on E: TSEProcessSnapshotFailed do // if the snapshot fails, let the IDE do what it did before
+        exit(true);
+      on E: exception do // if the snapshot fails, let the IDE do what it did before
+      begin
+        LogMsg('Proc Clean Exception =' + E.Message); // log any general exception
+        exit(true);
+      end;
+    end;
+  finally
+    FCleanup.EndTime := now;
   end;
-  if FCleanup.StopCommand = TSEProcessStopCommand.tseProcStopKill then
-    ExecKill
-  else if FCleanup.StopCommand = TSEProcessStopCommand.tseProcStopClose then
-    ExecClose
 end;
 
 function TSEProcessManager.ProcessMatched(const AProcEntry: TProcessEntry32): boolean;
@@ -366,6 +433,17 @@ begin
   end
   else
     result := false;
+end;
+
+function TSEProcessManager.ProcFileExists(const AProcFullPath: string; var AFileName: string;
+  var AFileDirectory: string): boolean;
+begin
+  result := TFile.Exists(AProcFullPath, true);
+  if result then
+  begin
+    AFileName := TPath.GetFileName(AProcFullPath);
+    AFileDirectory := TPath.GetDirectoryName(AProcFullPath);
+  end;
 end;
 
 function TSEProcessManager.ProcIDRunning(APID: cardinal): boolean;
@@ -405,13 +483,16 @@ begin
           repeat // look for match by name
             if (PE.szExeFile = FCleanup.ProcessName) then
               if ProcessMatched(PE) then
-                FCleanup.ProcList.Add(PE.th32ProcessID.ToString);
+                FCleanup.ProcList.AddObject(PE.th32ProcessID.ToString, TSEProcessCleanStatus.Create(PE.th32ProcessID));
           until (Process32Next(hSnapShot, PE) = false);
       end;
       result := FCleanup.ProcList.Count > 0;
     except
-      on E: Exception do
-        raise Exception.Create('failed snapshot' + E.Message);
+      on E: exception do
+      begin
+        LogMsg('failed snapshot' + E.Message);
+        raise TSEProcessSnapshotFailed.Create('failed snapshot' + E.Message);
+      end;
     end;
   finally
     CloseHandle(hSnapShot);
@@ -446,9 +527,10 @@ begin
   ProcessName := AProcName;
   ProcessDirectory := AProcDirectory;
   StopCommand := AStopCommand;
-  ProcList := TStringList.Create;
+  ProcList := TStringList.Create(true); // refactor to generic object list for less type casting
   CloseMemLeak := true;
   CopyMemLeak := true;
+  StartTime := now;
 end;
 
 destructor TSEProcessCleanup.Destroy;
@@ -457,9 +539,61 @@ begin
   inherited;
 end;
 
+procedure TSEProcessCleanup.LeakDetail(AStrings: TStrings);
+var
+  pcs: TSEProcessCleanStatus;
+  i: integer;
+begin
+  for i := 0 to ProcList.Count - 1 do
+    if Assigned(ProcList.Objects[i]) and (ProcList.Objects[i] is TSEProcessCleanStatus) then
+    begin
+      pcs := TSEProcessCleanStatus(ProcList.Objects[i]);
+      AStrings.Add(pcs.MemLeakMessage);
+    end;
+
+end;
+
+function TSEProcessCleanup.LeakShown: boolean;
+var
+  i: integer;
+begin
+  if ProcessFound then
+  begin
+    for i := 0 to ProcList.Count - 1 do
+      if TSEProcessCleanStatus(ProcList.Objects[i]).LeakShown then
+        exit(true);
+    result := false;
+  end
+  else
+    result := false;
+end;
+
+procedure TSEProcessCleanup.OptionsSet(const AStopCommand: TSEProcessStopCommand; ACloseMemLeak, ACopyMemLeak: boolean);
+begin
+  StopCommand := AStopCommand;
+  CloseMemLeak := ACloseMemLeak;
+  CopyMemLeak := ACopyMemLeak;
+end;
+
+function TSEProcessCleanup.ProcessFound: boolean;
+begin
+  result := ProcList.Count > 0;
+end;
+
 function TSEProcessCleanup.ProcessFullName: string;
 begin
   result := TPath.Combine(self.ProcessDirectory, self.ProcessName);
+end;
+
+procedure TSEProcessCleanup.SetLeakByPID(APID: cardinal; ALeakMsg: string);
+var
+  i: integer;
+  // cs: TSEProcessCleanStatus;
+begin
+  i := ProcList.IndexOf(APID.ToString);
+  if i > -1 then
+    if Assigned(ProcList.Objects[i]) and (ProcList.Objects[i] is TSEProcessCleanStatus) then
+      TSEProcessCleanStatus(ProcList.Objects[i]).MemLeakMessage := ALeakMsg;
 end;
 
 { TSEProcessManagerEnvInfo }
@@ -474,9 +608,16 @@ begin
   try
     self.BDSProcID := GetCurrentProcessID;
   except // if this does not work IDE / Windows needs a restart
-    on E: Exception do
+    on E: exception do
       self.BDSProcID := 0; // set it to 0 on error
   end;
+end;
+
+{ TSEProcessCleanStatus }
+
+constructor TSEProcessCleanStatus.Create(AProcID: cardinal);
+begin
+  FProcID := AProcID;
 end;
 
 end.

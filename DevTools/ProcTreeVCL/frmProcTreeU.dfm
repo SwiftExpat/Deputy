@@ -28,6 +28,7 @@ object frmProcTree: TfrmProcTree
       Height = 25
       Caption = 'Close'
       TabOrder = 0
+      Visible = False
       OnClick = btnCloseClick
     end
     object Edit1: TEdit
@@ -45,7 +46,7 @@ object frmProcTree: TfrmProcTree
       Top = 10
       Width = 75
       Height = 25
-      Caption = 'Kill Proc'
+      Caption = 'Show Form'
       TabOrder = 2
       OnClick = btnKillClick
     end
@@ -56,7 +57,17 @@ object frmProcTree: TfrmProcTree
       Height = 25
       Caption = 'Form'
       TabOrder = 3
+      Visible = False
       OnClick = btnFormClick
+    end
+    object btnFunction: TButton
+      Left = 400
+      Top = 10
+      Width = 75
+      Height = 25
+      Caption = 'function'
+      TabOrder = 4
+      OnClick = btnFunctionClick
     end
   end
   object Memo1: TMemo

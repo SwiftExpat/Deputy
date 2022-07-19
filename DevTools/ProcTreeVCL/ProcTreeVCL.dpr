@@ -4,7 +4,8 @@ uses
   Vcl.Forms,
   frmProcTreeU in 'frmProcTreeU.pas' {frmProcTree},
   SE.ProcMgrUtils in '..\..\Source\SE.ProcMgrUtils.pas',
-  frmDeputyProcMgr in 'frmDeputyProcMgr.pas' {DeputyProcMgr};
+  SERTTK.DeputyTypes in '..\..\Source\SERTTK.DeputyTypes.pas',
+  frmDeputyProcMgr in '..\..\Source\frmDeputyProcMgr.pas' {DeputyProcMgr};
 
 {$R *.res}
 
