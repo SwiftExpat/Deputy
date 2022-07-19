@@ -21,9 +21,9 @@ type
     btnForceTerminate: TButton;
     tmrCleanupStatus: TTimer;
     gpCleanStatus: TGridPanel;
-    lblLCHdr: TLabel;
+    lblHdrLoopCount: TLabel;
     lblLoopCount: TLabel;
-    Label1: TLabel;
+    lblHdrElapsed: TLabel;
     lblElapsedMS: TLabel;
     tsHistory: TTabSheet;
     lvHist: TListView;
@@ -132,12 +132,12 @@ end;
 
 procedure TDeputyProcMgr.btnAbortCleanupClick(Sender: TObject);
 begin
-  FProcMgr.StopManager;
+  FProcMgr.CleanupAbort;
 end;
 
 procedure TDeputyProcMgr.btnForceTerminateClick(Sender: TObject);
 begin
-  FProcMgr.StopManager;
+  FProcMgr.CleanupForceTerminate;
 end;
 
 procedure TDeputyProcMgr.cbCloseLeakWindowClick(Sender: TObject);
@@ -218,7 +218,7 @@ end;
 
 procedure TDeputyProcMgr.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  FProcMgr.StopManager;
+  //FProcMgr.StopManager;
 end;
 
 procedure TDeputyProcMgr.FormCreate(Sender: TObject);
