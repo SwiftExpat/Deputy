@@ -67,9 +67,11 @@ type
   TSEProcessManagerEnvInfo = class
   strict private
     FBDSProcID: cardinal;
+    FWaitPollms: integer;
     procedure LoadBDSInfo;
   public
     property BDSProcID: cardinal read FBDSProcID write FBDSProcID;
+    property WaitPollms: integer read FWaitPollms write FWaitPollms;
     constructor Create;
   end;
 
@@ -82,7 +84,6 @@ type
     FMsgProc: TSEProcessManagerMessage;
     FLeakCopied: TSEProcessManagerLeakCopied;
     FWaitPoll: TSEProcessManagerWaitPoll;
-    FSleepTime: integer;
     function TerminateProcessByID(AProcessID: cardinal): boolean;
     procedure LogMsg(const AMsg: string);
   private
@@ -97,9 +98,9 @@ type
     procedure ExecTerminate(APID: cardinal);
     function LoopTime(ALoopCount: integer): integer;
     function CloseMainWindow(APID: cardinal): boolean;
-  public
     function FindMainWindow(const APID: DWord): DWord;
     function FindLeakMsgWindow(const APID: DWord): DWord;
+  public
     /// <summary>
     /// Starts the process Cleanup for assigned cleanup
     /// </summary>
@@ -111,10 +112,16 @@ type
     property Actions: TStringList read FActions;
     constructor Create;
     destructor Destroy; override;
+    /// <summary>
+    /// Terminates a cleanup loop that would be waiting for close window
+    /// </summary>
     procedure CleanupAbort;
+    /// <summary>
+    /// Terminates cleanup loop and calls terminate process.
+    /// </summary>
     procedure CleanupForceTerminate;
-    procedure AssignMgrInfo(const AMgrInfo: TSEProcessManagerEnvInfo);
     procedure AssignProcCleanup(const AProcCleanup: TSEProcessCleanup);
+    property ProcMgrInfo: TSEProcessManagerEnvInfo read FProcMgrInfo write FProcMgrInfo;
     property OnMessage: TSEProcessManagerMessage read FMsgProc write FMsgProc;
     property OnLeakCopied: TSEProcessManagerLeakCopied read FLeakCopied write FLeakCopied;
     property OnWaitPoll: TSEProcessManagerWaitPoll read FWaitPoll write FWaitPoll;
@@ -211,14 +218,9 @@ end;
 
 { TSEProcessManager }
 
-procedure TSEProcessManager.AssignMgrInfo(const AMgrInfo: TSEProcessManagerEnvInfo);
-begin
-  FProcMgrInfo := AMgrInfo;
-end;
-
 procedure TSEProcessManager.AssignProcCleanup(const AProcCleanup: TSEProcessCleanup);
 begin
-  self.FCleanup := AProcCleanup;
+  FCleanup := AProcCleanup;
 end;
 
 procedure TSEProcessManager.CleanupAbort;
@@ -249,12 +251,12 @@ end;
 
 constructor TSEProcessManager.Create;
 begin
-  FSleepTime := 100;
+  FProcMgrInfo := TSEProcessManagerEnvInfo.Create;
 end;
 
 destructor TSEProcessManager.Destroy;
 begin
-  // FCleanup.Free; // the thread will not free this any more
+  FProcMgrInfo.Free;
   inherited;
 end;
 
@@ -299,12 +301,17 @@ begin
         LogMsg('Abort! Stopping wait loop');
         break;
       end;
-      TThread.Sleep(FSleepTime); // sleep first, close was just sent
+      TThread.Sleep(FProcMgrInfo.WaitPollms); // sleep first, close was just sent
       inc(ps.PollCount);
       if Assigned(FWaitPoll) then
         FWaitPoll(ps.PollCount, LoopTime(ps.PollCount));
       if LeakWindowShowing(ps.ProcID) then
       begin // what is the workflow, hold the IDE till the leak is closed?
+        if not FCleanup.CloseMemLeak then   //Ide can not continue, will go back to default behavior
+        begin // break, the leak window is showing
+          LogMsg('Done! Review memory leak shown !');
+          break;
+        end;
         ps.LeakShown := true;
         LogMsg('Leak window showing');
         if LeakWindowClose(ps.ProcID) then
@@ -404,7 +411,7 @@ end;
 
 function TSEProcessManager.LoopTime(ALoopCount: integer): integer;
 begin
-  result := FSleepTime * ALoopCount;
+  result := FProcMgrInfo.WaitPollms * ALoopCount;
 end;
 
 function TSEProcessManager.ProcessCleanup: boolean;
@@ -612,6 +619,7 @@ end;
 constructor TSEProcessManagerEnvInfo.Create;
 begin
   LoadBDSInfo;
+  WaitPollms := 100;
 end;
 
 procedure TSEProcessManagerEnvInfo.LoadBDSInfo;

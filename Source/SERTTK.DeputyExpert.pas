@@ -277,7 +277,7 @@ begin
   end;
   mi := MenuItemByName(nm_mi_killprocnabled);
   mi.OnClick := OnClickMiKillProcEnabled;
-  mi.Caption := 'Kill Process Settings';
+  mi.Caption := 'Process Manager';
   FToolsMenuRootItem.Add(mi);
   mic := MenuItemByName(nm_mi_run_caddie);
   mic.Caption := 'Refreshing Caddie';
