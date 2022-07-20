@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls, SE.ProcMgrUtils, SERTTK.DeputyTypes,
-  Vcl.CategoryButtons, Vcl.ExtCtrls, Generics.Collections, System.Diagnostics;
+  Vcl.CategoryButtons, Vcl.ExtCtrls, Generics.Collections, System.Diagnostics, Vcl.Mask, Vcl.Samples.Spin;
 
 type
   EDeputyProcMgrCreate = class(Exception);
@@ -33,6 +33,12 @@ type
     rgProcTermActive: TRadioGroup;
     cbCloseLeakWindow: TCheckBox;
     cbCopyLeakMessage: TCheckBox;
+    gpTimeouts: TGridPanel;
+    lblHdrTimeouts: TLabel;
+    lblWaitPollTimeout: TLabel;
+    edtWaitPoll: TSpinEdit;
+    lblHdrShowDelay: TLabel;
+    edtShowDelay: TSpinEdit;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -46,9 +52,11 @@ type
     procedure rgProcTermActiveClick(Sender: TObject);
     procedure cbCloseLeakWindowClick(Sender: TObject);
     procedure cbCopyLeakMessageClick(Sender: TObject);
+    procedure edtWaitPollChange(Sender: TObject);
+    procedure edtShowDelayChange(Sender: TObject);
   strict private
     FProcCleanup: TSEProcessCleanup;
-    FProcMgrInfo: TSEProcessManagerEnvInfo;
+    // FProcMgrInfo: TSEProcessManagerEnvInfo;
     FCleanups: TObjectList<TSEProcessCleanup>;
     FProcMgr: TSEProcessManager;
     FStopWatch: TStopWatch;
@@ -66,7 +74,7 @@ type
     procedure LeakCopied(AMessage: string; APID: cardinal);
     procedure WaitPoll(APollCount: integer; ALoopTime: integer);
     property ProcCleanup: TSEProcessCleanup read FProcCleanup write FProcCleanup;
-    property ProcMgrInfo: TSEProcessManagerEnvInfo read FProcMgrInfo write FProcMgrInfo;
+    // property ProcMgrInfo: TSEProcessManagerEnvInfo read FProcMgrInfo write FProcMgrInfo;
     procedure UpdateCleanHist(AProcCleanup: TSEProcessCleanup);
   public
     /// <summary>
@@ -114,7 +122,7 @@ var
   tli: TListItem;
 begin
   result := TSEProcessCleanup.Create(AProcName, AProcDirectory, FStopCommand);
-  result.OptionsSet(FStopCommand, cbCopyLeakMessage.Checked, cbCloseLeakWindow.Checked);
+  result.OptionsSet(FStopCommand, cbCloseLeakWindow.Checked, cbCopyLeakMessage.Checked);
   FCleanups.Add(result);
   tli := TListItem.Create(lvHist.Items);
   lvHist.Items.AddItem(tli, 0);
@@ -128,6 +136,9 @@ procedure TDeputyProcMgr.AssignSettings(ASettings: TSERTTKDeputySettings);
 begin
   FSettings := ASettings;
   UpdateSettings;
+  edtWaitPoll.Value := FSettings.WaitPollInterval;
+  FProcMgr.ProcMgrInfo.WaitPollms := FSettings.WaitPollInterval;
+  edtShowDelay.Value := FSettings.ShowWindowDelay;
 end;
 
 procedure TDeputyProcMgr.btnAbortCleanupClick(Sender: TObject);
@@ -164,7 +175,6 @@ begin
     ProcCleanup := AddCleanup(AProcName, AProcDirectory);
     ClearMemLeak;
     ClearLog;
-    FProcMgr.AssignMgrInfo(ProcMgrInfo);
     FProcMgr.AssignProcCleanup(ProcCleanup);
     // if ProcCleanup.StopCommand = TSEProcessStopCommand.tseProcStopClose then
     // self.Show;
@@ -206,6 +216,24 @@ begin
   result := true;
 end;
 
+procedure TDeputyProcMgr.edtShowDelayChange(Sender: TObject);
+begin
+  if (edtShowDelay.Value > edtShowDelay.MinValue) and (edtShowDelay.Value < edtShowDelay.MaxValue) then
+  begin
+    FSettings.ShowWindowDelay := edtShowDelay.Value;
+    Memo1.Lines.Add('Setting show window delay to ' + edtShowDelay.Value.ToString)
+  end;
+end;
+
+procedure TDeputyProcMgr.edtWaitPollChange(Sender: TObject);
+begin
+  if (edtWaitPoll.Value > edtWaitPoll.MinValue) and (edtWaitPoll.Value < edtWaitPoll.MaxValue) then
+  begin
+    FSettings.WaitPollInterval := edtWaitPoll.Value;
+    Memo1.Lines.Add('Setting waitpool to ' + edtWaitPoll.Value.ToString)
+  end;
+end;
+
 procedure TDeputyProcMgr.ClearLog;
 begin
   lbMgrStatus.Clear;
@@ -218,13 +246,12 @@ end;
 
 procedure TDeputyProcMgr.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  //FProcMgr.StopManager;
+  // FProcMgr.StopManager;
 end;
 
 procedure TDeputyProcMgr.FormCreate(Sender: TObject);
 begin
   FCleanups := TObjectList<TSEProcessCleanup>.Create(true);
-  ProcMgrInfo := TSEProcessManagerEnvInfo.Create;
   FProcMgr := TSEProcessManager.Create;
   FProcMgr.OnMessage := LogMsg;
   FProcMgr.OnLeakCopied := LeakCopied;
@@ -234,7 +261,6 @@ end;
 procedure TDeputyProcMgr.FormDestroy(Sender: TObject);
 begin
   FProcMgr.Free;
-  FProcMgrInfo.Free;
   FCleanups.Free;
 end;
 
@@ -387,8 +413,10 @@ end;
 procedure TDeputyProcMgr.WaitPoll(APollCount: integer; ALoopTime: integer);
 begin
   lblLoopCount.Caption := APollCount.ToString;
-  if (APollCount > 1) and (ALoopTime > 200) then // cleaner but by ms would be better for user configuration
+  if (APollCount > 1) and (ALoopTime > edtShowDelay.Value) then
     self.Show;
+  // else
+  // memo1.Lines.Add('Delay show, loop= ' + APollCount.ToString + ' time= '+ ALoopTime.ToString);
   Application.ProcessMessages;
 end;
 
