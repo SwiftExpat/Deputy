@@ -71,9 +71,12 @@ type
     procedure ExtractPathSet(const Value: string);
     function ExtractZipGet: boolean;
     procedure ExtractZipSet(const Value: boolean);
+  private
+    function LastModifiedDTSGet: TDateTime;
   public
     constructor Create;
     destructor Destroy; override;
+    property LastModifiedDTS: TDateTime read LastModifiedDTSGet;
     property LastModified: string read LastModifiedGet write LastModifiedSet;
     property URL: string read URLGet write URLSet;
     property RefreshDts: TDateTime read RefreshDtsGet write RefreshDtsSet;
@@ -253,6 +256,21 @@ var
 begin
   msg := 'UrlCache~Http Server Exception:' + AError.Message;
   LogMessage(msg);
+end;
+
+function TSEUrlCacheEntry.LastModifiedDTSGet: TDateTime;
+var
+  year, month, day, hour, minute, second: integer;
+begin
+  FMREW.BeginRead;
+  year := StrToInt(dt_lastmod_default);
+  month := StrToInt(dt_lastmod_default);
+  day := StrToInt(dt_lastmod_default);
+  hour := StrToInt(dt_lastmod_default);
+  minute := StrToInt(dt_lastmod_default);
+  second := StrToInt(dt_lastmod_default);
+  result := EncodeDateTime(year, month, day, hour, minute, second, 0);
+  FMREW.EndRead;
 end;
 
 function TSEUrlCacheEntry.LastModifiedGet: string;

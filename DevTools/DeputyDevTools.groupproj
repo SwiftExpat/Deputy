@@ -9,10 +9,10 @@
         <Projects Include="..\Source\SE.IDE.Deputy.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="C:\Users\Coder\Documents\Embarcadero\Studio\Projects\OSUtils\ShowMessage\ShowLeakMessage.dproj">
+        <Projects Include="C:\Users\Coder\Documents\Embarcadero\Studio\Projects\Http\Header304\hdr304http.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="C:\Users\Coder\Documents\Embarcadero\Studio\Projects\Http\Header304\hdr304http.dproj">
+        <Projects Include="LeakTests\ShowLeakMessage.dproj">
             <Dependencies/>
         </Projects>
     </ItemGroup>
@@ -41,15 +41,6 @@
     <Target Name="SE_IDE_Deputy:Make">
         <MSBuild Projects="..\Source\SE.IDE.Deputy.dproj" Targets="Make"/>
     </Target>
-    <Target Name="ShowLeakMessage">
-        <MSBuild Projects="C:\Users\Coder\Documents\Embarcadero\Studio\Projects\OSUtils\ShowMessage\ShowLeakMessage.dproj"/>
-    </Target>
-    <Target Name="ShowLeakMessage:Clean">
-        <MSBuild Projects="C:\Users\Coder\Documents\Embarcadero\Studio\Projects\OSUtils\ShowMessage\ShowLeakMessage.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="ShowLeakMessage:Make">
-        <MSBuild Projects="C:\Users\Coder\Documents\Embarcadero\Studio\Projects\OSUtils\ShowMessage\ShowLeakMessage.dproj" Targets="Make"/>
-    </Target>
     <Target Name="hdr304http">
         <MSBuild Projects="C:\Users\Coder\Documents\Embarcadero\Studio\Projects\Http\Header304\hdr304http.dproj"/>
     </Target>
@@ -59,14 +50,23 @@
     <Target Name="hdr304http:Make">
         <MSBuild Projects="C:\Users\Coder\Documents\Embarcadero\Studio\Projects\Http\Header304\hdr304http.dproj" Targets="Make"/>
     </Target>
+    <Target Name="ShowLeakMessage">
+        <MSBuild Projects="LeakTests\ShowLeakMessage.dproj"/>
+    </Target>
+    <Target Name="ShowLeakMessage:Clean">
+        <MSBuild Projects="LeakTests\ShowLeakMessage.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="ShowLeakMessage:Make">
+        <MSBuild Projects="LeakTests\ShowLeakMessage.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="ProcTreeVCL;SE_IDE_Deputy;ShowLeakMessage;hdr304http"/>
+        <CallTarget Targets="ProcTreeVCL;SE_IDE_Deputy;hdr304http;ShowLeakMessage"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="ProcTreeVCL:Clean;SE_IDE_Deputy:Clean;ShowLeakMessage:Clean;hdr304http:Clean"/>
+        <CallTarget Targets="ProcTreeVCL:Clean;SE_IDE_Deputy:Clean;hdr304http:Clean;ShowLeakMessage:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="ProcTreeVCL:Make;SE_IDE_Deputy:Make;ShowLeakMessage:Make;hdr304http:Make"/>
+        <CallTarget Targets="ProcTreeVCL:Make;SE_IDE_Deputy:Make;hdr304http:Make;ShowLeakMessage:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>
