@@ -10,10 +10,12 @@ object DeputyProcMgr: TDeputyProcMgr
   Font.Height = -12
   Font.Name = 'Segoe UI'
   Font.Style = []
+  OldCreateOrder = True
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnShow = FormShow
+  PixelsPerInch = 96
   TextHeight = 15
   object sbMain: TStatusBar
     Left = 0
@@ -234,7 +236,7 @@ object DeputyProcMgr: TDeputyProcMgr
           Left = 2
           Top = 20
           Width = 149
-          Height = 29
+          Height = 28
           Align = alClient
           Alignment = taCenter
           Caption = 'WaitPoll Interval (ms)'
@@ -246,45 +248,37 @@ object DeputyProcMgr: TDeputyProcMgr
           AlignWithMargins = True
           Left = 154
           Top = 23
-          Width = 94
+          Width = 71
           Height = 24
-          Align = alClient
           MaxValue = 200
           MinValue = 25
           TabOrder = 0
           Value = 25
           OnChange = edtWaitPollChange
-          ExplicitLeft = 108
-          ExplicitTop = 20
-          ExplicitWidth = 71
-          ExplicitHeight = 29
         end
         object lblHdrShowDelay: TLabel
           Left = 2
-          Top = 49
+          Top = 48
           Width = 149
-          Height = 27
+          Height = 28
           Align = alClient
           Caption = 'Show Manager Delay (ms)'
           Layout = tlCenter
+          ExplicitTop = 49
           ExplicitWidth = 138
           ExplicitHeight = 15
         end
         object edtShowDelay: TSpinEdit
           AlignWithMargins = True
           Left = 154
-          Top = 52
+          Top = 51
           Width = 94
           Height = 24
-          Align = alClient
           MaxValue = 1500
           MinValue = 100
           TabOrder = 1
           Value = 200
           OnChange = edtShowDelayChange
-          ExplicitLeft = 168
-          ExplicitTop = 48
-          ExplicitWidth = 121
         end
       end
     end
@@ -373,9 +367,9 @@ object DeputyProcMgr: TDeputyProcMgr
     object btnAbortCleanup: TButton
       AlignWithMargins = True
       Left = 92
-      Top = 45
+      Top = 44
       Width = 86
-      Height = 28
+      Height = 29
       Margins.Left = 2
       Margins.Top = 1
       Margins.Right = 1
@@ -389,7 +383,7 @@ object DeputyProcMgr: TDeputyProcMgr
       Left = 2
       Top = 21
       Width = 88
-      Height = 23
+      Height = 22
       Align = alClient
       Alignment = taRightJustify
       Caption = 'Elapsed ms = '
@@ -401,7 +395,7 @@ object DeputyProcMgr: TDeputyProcMgr
       Left = 90
       Top = 21
       Width = 89
-      Height = 23
+      Height = 22
       Align = alClient
       Caption = '0'
       ExplicitWidth = 6
@@ -410,9 +404,9 @@ object DeputyProcMgr: TDeputyProcMgr
     object btnForceTerminate: TButton
       AlignWithMargins = True
       Left = 3
-      Top = 45
+      Top = 44
       Width = 85
-      Height = 28
+      Height = 29
       Margins.Left = 1
       Margins.Top = 1
       Margins.Right = 2

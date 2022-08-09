@@ -69,6 +69,10 @@ type
     procedure StartCleanupStatus;
     procedure StopCleanupStatus;
     procedure UpdateSettings;
+    /// <remarks>
+    ///   10.2 does not like some alignment properties in the DFM
+    /// </remarks>
+    procedure FixAligns;
   private
     procedure LogMsg(AMessage: string);
     procedure LeakCopied(AMessage: string; APID: cardinal);
@@ -256,6 +260,13 @@ begin
   FProcMgr.OnMessage := LogMsg;
   FProcMgr.OnLeakCopied := LeakCopied;
   FProcMgr.OnWaitPoll := WaitPoll;
+  FixAligns;
+end;
+
+procedure TDeputyProcMgr.FixAligns;
+begin
+  edtWaitPoll.Align := TAlign.alClient;
+  edtShowDelay.Align := TAlign.alClient;
 end;
 
 procedure TDeputyProcMgr.FormDestroy(Sender: TObject);

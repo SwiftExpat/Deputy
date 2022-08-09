@@ -130,8 +130,8 @@
         <DCC_DebugInformation>0</DCC_DebugInformation>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
-        <VerInfo_Build>31</VerInfo_Build>
-        <VerInfo_Keys>CompanyName=SwiftExpat;FileDescription=$(MSBuildProjectName);FileVersion=2.5.7.31;InternalName=Deputy;LegalCopyright=SwiftExpat;LegalTrademarks=;OriginalFilename=SE.IDE.Deputy;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=2.5.7.0;Comments=Deputy - IDE plugin for Delphi</VerInfo_Keys>
+        <VerInfo_Build>32</VerInfo_Build>
+        <VerInfo_Keys>CompanyName=SwiftExpat;FileDescription=$(MSBuildProjectName);FileVersion=2.5.7.32;InternalName=Deputy;LegalCopyright=SwiftExpat;LegalTrademarks=;OriginalFilename=SE.IDE.Deputy;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=2.5.7.0;Comments=Deputy - IDE plugin for Delphi</VerInfo_Keys>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_MajorVer>2</VerInfo_MajorVer>
         <VerInfo_DLL>true</VerInfo_DLL>
