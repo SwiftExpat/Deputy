@@ -22,4 +22,13 @@ object frmIdeEmulate: TfrmIdeEmulate
       'Memo1')
     TabOrder = 0
   end
+  object btnCheckRunning: TButton
+    Left = 136
+    Top = 64
+    Width = 153
+    Height = 25
+    Caption = 'Check Running'
+    TabOrder = 1
+    OnClick = btnCheckRunningClick
+  end
 end
