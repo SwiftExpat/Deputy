@@ -18,6 +18,9 @@
         <Projects Include="ProcTreeVCL\ProcTreeVCL.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="IDEEmulator\idebds.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -71,14 +74,23 @@
     <Target Name="ProcTreeVCL:Make">
         <MSBuild Projects="ProcTreeVCL\ProcTreeVCL.dproj" Targets="Make"/>
     </Target>
+    <Target Name="idebds">
+        <MSBuild Projects="IDEEmulator\idebds.dproj"/>
+    </Target>
+    <Target Name="idebds:Clean">
+        <MSBuild Projects="IDEEmulator\idebds.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="idebds:Make">
+        <MSBuild Projects="IDEEmulator\idebds.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="SE_IDE_Deputy;hdr304http;ShowLeakMessage;DeputyFormHarness;ProcTreeVCL"/>
+        <CallTarget Targets="SE_IDE_Deputy;hdr304http;ShowLeakMessage;DeputyFormHarness;ProcTreeVCL;idebds"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="SE_IDE_Deputy:Clean;hdr304http:Clean;ShowLeakMessage:Clean;DeputyFormHarness:Clean;ProcTreeVCL:Clean"/>
+        <CallTarget Targets="SE_IDE_Deputy:Clean;hdr304http:Clean;ShowLeakMessage:Clean;DeputyFormHarness:Clean;ProcTreeVCL:Clean;idebds:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="SE_IDE_Deputy:Make;hdr304http:Make;ShowLeakMessage:Make;DeputyFormHarness:Make;ProcTreeVCL:Make"/>
+        <CallTarget Targets="SE_IDE_Deputy:Make;hdr304http:Make;ShowLeakMessage:Make;DeputyFormHarness:Make;ProcTreeVCL:Make;idebds:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

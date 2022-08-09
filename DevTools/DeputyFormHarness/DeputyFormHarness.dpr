@@ -2,10 +2,7 @@ program DeputyFormHarness;
 
 uses
   Vcl.Forms,
-  frmDeputyFormHarness in 'frmDeputyFormHarness.pas' {frmDeputyHarness},
-  frmDeputyProcMgr in '..\..\Source\frmDeputyProcMgr.pas' {DeputyProcMgr},
-  SE.ProcMgrUtils in '..\..\Source\SE.ProcMgrUtils.pas',
-  SERTTK.DeputyTypes in '..\..\Source\SERTTK.DeputyTypes.pas';
+  frmDeputyFormHarness in 'frmDeputyFormHarness.pas' {frmDeputyHarness};
 
 {$R *.res}
 

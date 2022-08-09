@@ -78,7 +78,11 @@ OpenDialog1.InitialDir :=  valDirName.Caption;
 
   rslt := OpenDialog1.Execute;
   if rslt then
-    LogMsg(OpenDialog1.FileName)
+  begin
+    LogMsg('Change file to: '+OpenDialog1.FileName);
+    valProcName.Caption := TPath.GetFileName(OpenDialog1.FileName);
+    valDirName.Caption := TPath.GetDirectoryName(OpenDialog1.FileName);
+  end
   else
     LogMsg('Abort File choose');
 end;
