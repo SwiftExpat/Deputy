@@ -79,6 +79,7 @@ type
   TSEProcessInfo = class
   public
     ProcID: cardinal;
+    ParentProcID: cardinal;
     ImagePath: string;
     CommandLine: string;
   end;
@@ -126,7 +127,6 @@ type
     function ProcInfo(var AProcInfo: TSEProcessInfo): boolean;
     function ProcessCommandLine(const APID: cardinal; var ACmdLine: string): boolean;
     function ProcessIsSecondInstance(const AProcInfo: TSEProcessInfo): boolean;
-    function ProcessSameImage(const APID1, APID2: DWord): boolean;
     constructor Create;
     destructor Destroy; override;
     /// <summary>
@@ -501,18 +501,24 @@ begin
       if (Process32First(hSnapShot, PE)) then
         repeat // look for match by name
         begin
+          // all matches should be from the same explorer.exe as parent proc ID
+          if PE.th32ParentProcessID <> AProcInfo.ParentProcID then
+            continue;
+
           pi.ImagePath := ImageFileName(PE);
           pi.ProcID := PE.th32ProcessID;
           if (pi.ProcID <> AProcInfo.ProcID) and (AProcInfo.ImagePath = pi.ImagePath) then
           begin
-            LogMsg('Matched image path, comparing command line');
+            LogMsg('Matched image path, comparing command lines');
             if ProcessCommandLine(pi.ProcID, pi.CommandLine) then
             begin
               if pi.CommandLine = AProcInfo.CommandLine then
               begin
                 LogMsg('Second instance found');
                 exit(true);
-              end;
+              end
+              else
+                LogMsg('Command lines differ');
             end;
           end;
         end;
@@ -522,7 +528,6 @@ begin
     CloseHandle(hSnapShot);
     pi.Free;
   end;
-
 end;
 
 function TSEProcessManager.ProcessMatched(const AProcEntry: TProcessEntry32): boolean;
@@ -540,12 +545,6 @@ begin
   end
   else
     result := false;
-end;
-
-function TSEProcessManager.ProcessSameImage(const APID1, APID2: DWord): boolean;
-begin
-  result := false;
-
 end;
 
 function TSEProcessManager.ProcFileExists(const AProcFullPath: string; var AFileName: string;
@@ -583,13 +582,13 @@ end;
 
 // https://theroadtodelphi.com/2011/07/20/two-ways-to-get-the-command-line-of-another-process-using-delphi/
 function TSEProcessManager.ProcInfo(var AProcInfo: TSEProcessInfo): boolean;
-const
-  STATUS_SUCCESS = $00000000;
 var
-  ProcessHandle: THANDLE;
+  ProcessHandle, SnapshotHandle: THANDLE;
   rLength: cardinal;
+  PE: TProcessEntry32;
 begin
   ProcessHandle := OpenProcess(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ, false, AProcInfo.ProcID);
+  SnapshotHandle := CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
   try
     if (ProcessHandle = 0) then
       exit(false);
@@ -600,11 +599,25 @@ begin
       SetLength(AProcInfo.ImagePath, rLength)
     else
       AProcInfo.ImagePath := '';
-
+    // read the command line
     result := ProcessCommandLine(AProcInfo.ProcID, AProcInfo.CommandLine);
+
+    if (SnapshotHandle <> THANDLE(-1)) then
+    begin
+      PE.dwSize := SizeOf(TProcessEntry32);
+      if (Process32First(SnapshotHandle, PE)) then
+        repeat // look for match by name
+          if PE.th32ProcessID = AProcInfo.ProcID then
+          begin
+            AProcInfo.ParentProcID := PE.th32ParentProcessID;
+            break;
+          end;
+        until (Process32Next(SnapshotHandle, PE) = false);
+    end;
 
   finally
     CloseHandle(ProcessHandle);
+    CloseHandle(SnapshotHandle);
   end;
 end;
 

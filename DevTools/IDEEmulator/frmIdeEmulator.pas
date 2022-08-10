@@ -42,7 +42,7 @@ end;
 function TfrmIdeEmulate.CheckIdeRunning: boolean;
 var
   procMgr: TSEProcessManager;
-  fn, dn, cl: string;
+  fn, dn: string;
   procInfo: TSEProcessInfo;
 begin
   procMgr := TSEProcessManager.Create;
@@ -61,14 +61,13 @@ begin
     if result then
     begin
       LogMsg('ProcID = ' + procInfo.ProcID.ToString);
+      LogMsg('ParentID = ' + procInfo.ParentProcID.ToString);
       LogMsg('ProcPath = ' + procInfo.ImagePath);
       LogMsg('Command Line' + procInfo.CommandLine);
       if procMgr.ProcessIsSecondInstance(procInfo) then
        LogMsg('Second instance')
       else
        LogMsg('First instance');
-      if procMgr.ProcessCommandLine(procInfo.ProcID, cl) then
-        LogMsg('WMI = ' + cl);
     end
     else
       LogMsg('Proc Not found');
