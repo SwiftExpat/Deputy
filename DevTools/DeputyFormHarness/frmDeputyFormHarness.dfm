@@ -18,30 +18,29 @@ object frmDeputyHarness: TfrmDeputyHarness
     Top = 0
     Width = 944
     Height = 368
-    ActivePage = tsProcMgr
+    ActivePage = tsIdeInstance
     Align = alClient
     TabOrder = 0
-    ExplicitHeight = 593
     object tsProcMgr: TTabSheet
       Caption = 'Process Manager'
       object lblProcDir: TLabel
         Left = 24
         Top = 80
-        Width = 145
+        Width = 88
         Height = 15
         Caption = 'ProcessDirectory'
       end
       object lblProcName: TLabel
         Left = 24
         Top = 120
-        Width = 113
+        Width = 75
         Height = 15
         Caption = 'Process Name'
       end
       object valDirName: TLabel
         Left = 160
         Top = 80
-        Width = 721
+        Width = 112
         Height = 15
         Caption = 'C:\...\Studio\22.0\bin'
       end
@@ -80,6 +79,181 @@ object frmDeputyHarness: TfrmDeputyHarness
         OnClick = btnSelectProcClick
       end
     end
+    object tsIdeInstance: TTabSheet
+      Caption = 'Ide Instance Mgr'
+      ImageIndex = 1
+      object GridPanel1: TGridPanel
+        Left = 10
+        Top = 10
+        Width = 640
+        Height = 64
+        BorderStyle = bsSingle
+        ColumnCollection = <
+          item
+            SizeStyle = ssAbsolute
+            Value = 72.000000000000000000
+          end
+          item
+            SizeStyle = ssAbsolute
+            Value = 96.000000000000000000
+          end
+          item
+            SizeStyle = ssAbsolute
+            Value = 96.000000000000000000
+          end
+          item
+            Value = 100.000000000000000000
+          end>
+        ControlCollection = <
+          item
+            Column = 0
+            Control = lblIde1
+            Row = 0
+          end
+          item
+            Column = 1
+            Control = btnStartIde1
+            Row = 0
+          end
+          item
+            Column = 0
+            Control = lblIde2
+            Row = 1
+          end
+          item
+            Column = 1
+            Control = btnStartIde2
+            Row = 1
+          end
+          item
+            Column = 2
+            Control = lblPidIDE1
+            Row = 0
+          end
+          item
+            Column = 2
+            Control = lblPidIDE2
+            Row = 1
+          end
+          item
+            Column = 3
+            Control = editIde1Params
+            Row = 0
+          end
+          item
+            Column = 3
+            Control = editIde2Params
+            Row = 1
+          end>
+        RowCollection = <
+          item
+            Value = 50.000000000000000000
+          end
+          item
+            Value = 50.000000000000000000
+          end>
+        ShowCaption = False
+        TabOrder = 0
+        object lblIde1: TLabel
+          Left = 1
+          Top = 1
+          Width = 72
+          Height = 29
+          Align = alClient
+          Alignment = taCenter
+          Caption = 'IDE Instance 1'
+          Layout = tlCenter
+          ExplicitWidth = 73
+          ExplicitHeight = 15
+        end
+        object btnStartIde1: TButton
+          AlignWithMargins = True
+          Left = 76
+          Top = 4
+          Width = 90
+          Height = 23
+          Align = alClient
+          Caption = 'Start IDE 1'
+          TabOrder = 0
+          OnClick = btnStartIde1Click
+          ExplicitWidth = 66
+        end
+        object lblIde2: TLabel
+          Left = 1
+          Top = 30
+          Width = 72
+          Height = 29
+          Align = alClient
+          Alignment = taCenter
+          Caption = 'IDE Instance 2'
+          Layout = tlCenter
+          ExplicitTop = 21
+          ExplicitWidth = 73
+          ExplicitHeight = 15
+        end
+        object btnStartIde2: TButton
+          AlignWithMargins = True
+          Left = 76
+          Top = 33
+          Width = 90
+          Height = 23
+          Align = alClient
+          Caption = 'Start IDE 2'
+          TabOrder = 1
+          OnClick = btnStartIde2Click
+          ExplicitWidth = 66
+        end
+        object lblPidIDE1: TLabel
+          AlignWithMargins = True
+          Left = 172
+          Top = 4
+          Width = 90
+          Height = 23
+          Align = alClient
+          Caption = 'PID = ######'
+          Layout = tlCenter
+          ExplicitWidth = 74
+          ExplicitHeight = 15
+        end
+        object lblPidIDE2: TLabel
+          AlignWithMargins = True
+          Left = 172
+          Top = 33
+          Width = 90
+          Height = 23
+          Align = alClient
+          Caption = 'PID = ######'
+          Layout = tlCenter
+          ExplicitWidth = 74
+          ExplicitHeight = 15
+        end
+        object editIde1Params: TEdit
+          AlignWithMargins = True
+          Left = 268
+          Top = 4
+          Width = 364
+          Height = 23
+          Align = alClient
+          TabOrder = 2
+          Text = '-np -r SEIEDev -pDelphi'
+          ExplicitLeft = 195
+          ExplicitWidth = 121
+        end
+        object editIde2Params: TEdit
+          AlignWithMargins = True
+          Left = 268
+          Top = 33
+          Width = 364
+          Height = 23
+          Align = alClient
+          TabOrder = 3
+          Text = '-np -r SEIEDev -pDelphi'
+          ExplicitLeft = 104
+          ExplicitTop = 16
+          ExplicitWidth = 121
+        end
+      end
+    end
   end
   object memoProcMgrMessage: TMemo
     Left = 0
@@ -90,7 +264,6 @@ object frmDeputyHarness: TfrmDeputyHarness
     Lines.Strings = (
       'memoProcMgrMessage')
     TabOrder = 1
-    ExplicitTop = 0
   end
   object OpenDialog1: TOpenDialog
     DefaultExt = 'exe'

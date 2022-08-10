@@ -15,10 +15,11 @@ type
     procedure FormCreate(Sender: TObject);
     procedure btnCheckRunningClick(Sender: TObject);
   private
-    FExeName:string;
+    FExeName: string;
+    FBDSID: cardinal;
     function CheckIdeRunning: boolean;
     procedure LogMsg(AMessage: string);
-    function ExeName(ACmdLine:string):string;
+    function ExeName(ACmdLine: string): string;
   public
     { Public declarations }
   end;
@@ -34,30 +35,62 @@ uses SE.ProcMgrUtils;
 
 procedure TfrmIdeEmulate.btnCheckRunningClick(Sender: TObject);
 begin
-    if CheckIdeRunning then
-     LogMsg('IDE running');
+  if CheckIdeRunning then
+    LogMsg('IDE running');
 end;
 
 function TfrmIdeEmulate.CheckIdeRunning: boolean;
-var procMgr : TSEProcessManager;
-fn, dn:string;
+var
+  procMgr: TSEProcessManager;
+  fn, dn, cl: string;
+  procInfo: TSEProcessInfo;
 begin
   procMgr := TSEProcessManager.Create;
-  FExeName := ExeName(cmdLine);
-  LogMsg('Parsed ExeName = '+ FExeName);
-  result := procMgr.ProcFileExists(FExeName, fn, dn);
+  procInfo := TSEProcessInfo.Create;
+
+  try
+    procMgr.OnMessage := LogMsg;
+    FExeName := ExeName(cmdLine);
+    LogMsg('Parsed ExeName = ' + FExeName);
+    result := procMgr.ProcFileExists(FExeName, fn, dn);
+    if result then
+      LogMsg('IDE Found');
+
+    procInfo.ProcID := FBDSID;
+    result := procMgr.procInfo(procInfo);
+    if result then
+    begin
+      LogMsg('ProcID = ' + procInfo.ProcID.ToString);
+      LogMsg('ProcPath = ' + procInfo.ImagePath);
+      LogMsg('Command Line' + procInfo.CommandLine);
+      if procMgr.ProcessIsSecondInstance(procInfo) then
+       LogMsg('Second instance')
+      else
+       LogMsg('First instance');
+      if procMgr.ProcessCommandLine(procInfo.ProcID, cl) then
+        LogMsg('WMI = ' + cl);
+    end
+    else
+      LogMsg('Proc Not found');
+  finally
+    procInfo.Free;
+    procMgr.Free;
+  end;
+
 end;
+
 /// <summary>
-///   Parses exe name from Cmdline sys
+/// Parses exe name from Cmdline sys
 /// </summary>
 /// <remarks>
-///   "C:\Repos\Github\Deputy\DevTools\IDEEmulator\Win32\Debug\idebds.exe" -r keyname -user username -pass pwd
+/// "C:\Repos\Github\Deputy\DevTools\IDEEmulator\Win32\Debug\idebds.exe" -r keyname -user username -pass pwd
 /// </remarks>
-function TfrmIdeEmulate.ExeName(ACmdLine:string): string;
-var q1:integer;
+function TfrmIdeEmulate.ExeName(ACmdLine: string): string;
+var
+  q1: integer;
 begin
-q1:= ACmdLine.IndexOf('"');
-result := ACmdLine.Substring((q1+1), ACmdLine.IndexOf('"',(q1+1))-1);
+  q1 := ACmdLine.IndexOf('"');
+  result := ACmdLine.Substring((q1 + 1), ACmdLine.IndexOf('"', (q1 + 1)) - 1);
 end;
 
 procedure TfrmIdeEmulate.FormCreate(Sender: TObject);
@@ -68,6 +101,8 @@ begin
   LogMsg('started with cmdLine: ' + cmdLine);
   for I := 1 to ParamCount do
     LogMsg(ParamStr(I));
+  FBDSID := GetCurrentProcessID;
+  LogMsg('Procid = ' + FBDSID.ToString);
 end;
 
 procedure TfrmIdeEmulate.LogMsg(AMessage: string);
