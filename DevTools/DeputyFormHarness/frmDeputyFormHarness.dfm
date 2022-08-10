@@ -18,7 +18,7 @@ object frmDeputyHarness: TfrmDeputyHarness
     Top = 0
     Width = 944
     Height = 368
-    ActivePage = tsIdeInstance
+    ActivePage = tsUpdates
     Align = alClient
     TabOrder = 0
     object tsProcMgr: TTabSheet
@@ -176,7 +176,6 @@ object frmDeputyHarness: TfrmDeputyHarness
           Caption = 'Start IDE 1'
           TabOrder = 0
           OnClick = btnStartIde1Click
-          ExplicitWidth = 66
         end
         object lblIde2: TLabel
           Left = 1
@@ -187,7 +186,6 @@ object frmDeputyHarness: TfrmDeputyHarness
           Alignment = taCenter
           Caption = 'IDE Instance 2'
           Layout = tlCenter
-          ExplicitTop = 21
           ExplicitWidth = 73
           ExplicitHeight = 15
         end
@@ -201,7 +199,6 @@ object frmDeputyHarness: TfrmDeputyHarness
           Caption = 'Start IDE 2'
           TabOrder = 1
           OnClick = btnStartIde2Click
-          ExplicitWidth = 66
         end
         object lblPidIDE1: TLabel
           AlignWithMargins = True
@@ -236,8 +233,6 @@ object frmDeputyHarness: TfrmDeputyHarness
           Align = alClient
           TabOrder = 2
           Text = '-np -r SEIEDev -pDelphi'
-          ExplicitLeft = 195
-          ExplicitWidth = 121
         end
         object editIde2Params: TEdit
           AlignWithMargins = True
@@ -248,11 +243,12 @@ object frmDeputyHarness: TfrmDeputyHarness
           Align = alClient
           TabOrder = 3
           Text = '-np -r SEIEDev -pDelphi'
-          ExplicitLeft = 104
-          ExplicitTop = 16
-          ExplicitWidth = 121
         end
       end
+    end
+    object tsUpdates: TTabSheet
+      Caption = 'tsUpdates'
+      ImageIndex = 2
     end
   end
   object memoProcMgrMessage: TMemo

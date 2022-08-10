@@ -10,6 +10,7 @@ object DeputyInstanceManager: TDeputyInstanceManager
   Font.Height = -12
   Font.Name = 'Segoe UI'
   Font.Style = []
+  Position = poMainFormCenter
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   TextHeight = 15
@@ -49,12 +50,11 @@ object DeputyInstanceManager: TDeputyInstanceManager
   end
   object memoLog: TMemo
     Left = 0
-    Top = 320
+    Top = 280
     Width = 618
-    Height = 104
+    Height = 144
     Align = alBottom
-    Lines.Strings = (
-      '')
+    ScrollBars = ssBoth
     TabOrder = 3
   end
 end

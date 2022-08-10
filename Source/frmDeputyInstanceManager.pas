@@ -58,10 +58,10 @@ begin
     if FProcMgr.ProcInfo(FProcInfo) then
     begin
       LogInfo;
-      self.Show;
       if FProcMgr.ProcessIsSecondInstance(FProcInfo, FDupInfo) then
       begin
         LogMsg('Second instance');
+        self.Show;
       end
       else
         LogMsg('First instance');

@@ -32,6 +32,7 @@ type
     lblPidIDE2: TLabel;
     editIde1Params: TEdit;
     editIde2Params: TEdit;
+    tsUpdates: TTabSheet;
     procedure btnProcMgrShowClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);

@@ -8,7 +8,7 @@ uses System.Classes, ToolsAPI, VCL.Dialogs, System.SysUtils, System.TypInfo, Win
   System.IOUtils, Generics.Collections, System.DateUtils, System.JSON, frmDeputyProcMgr, frmDeputyUpdates,
   VCL.Forms, VCL.Menus, System.Win.Registry, ShellApi, VCL.Controls,
   DW.OTA.Wizard, DW.OTA.IDENotifierOTAWizard, DW.OTA.Helpers, DW.Menus.Helpers, DW.OTA.ProjectManagerMenu,
-  DW.OTA.Notifiers, SERTTK.DeputyTypes, SE.ProcMgrUtils;
+  DW.OTA.Notifiers, SERTTK.DeputyTypes, SE.ProcMgrUtils, frmDeputyInstanceManager;
 
 const
   MAJ_VER = 2; // Major version nr.
@@ -72,6 +72,7 @@ type
     FDeputyUpdates: TDeputyUpdates;
     FToolsMenuRootItem: TMenuItem;
     FSettings: TSERTTKDeputySettings;
+    FInstanceManager: TDeputyInstanceManager;
     FRTTKAppUpdate: TSERTTKAppVersionUpdate;
     FWizardInfo: TSERTTKWizardInfo;
     FMenuItems: TDictionary<string, TMenuItem>;
@@ -139,7 +140,7 @@ begin
   inherited;
   FIDEStarted := false;
 {$IF COMPILERVERSION > 32}
-  TOTAHelper.RegisterThemeForms([TDeputyUpdates, TDeputyProcMgr]);
+  TOTAHelper.RegisterThemeForms([TDeputyUpdates, TDeputyProcMgr, TDeputyInstanceManager]);
 {$ENDIF}
   FMenuItems := TDictionary<string, TMenuItem>.Create;
   FDebugNotifier := TSERTTKDeputyDebugNotifier.Create(self);
@@ -182,6 +183,9 @@ begin
   FDeputyUpdates.AssignSettings(FSettings);
   FDeputyUpdates.AssignAppUpdate(FRTTKAppUpdate);
   AssignUpdateMenuItems;
+  FInstanceManager:= TDeputyInstanceManager.Create(Application);
+  TOTAHelper.ApplyTheme(FInstanceManager);
+  FInstanceManager.CheckSecondInstance;
   FDeputyUpdates.ExpertUpdatesRefresh(false);
 end;
 
