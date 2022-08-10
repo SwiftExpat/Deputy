@@ -93,7 +93,6 @@ type
     FMsgProc: TSEProcessManagerMessage;
     FLeakCopied: TSEProcessManagerLeakCopied;
     FWaitPoll: TSEProcessManagerWaitPoll;
-    function TerminateProcessByID(AProcessID: cardinal): boolean;
     procedure LogMsg(const AMsg: string);
   private
     function ImageFileName(const PE: TProcessEntry32): string;
@@ -126,7 +125,7 @@ type
     /// </summary>
     function ProcInfo(var AProcInfo: TSEProcessInfo): boolean;
     function ProcessCommandLine(const APID: cardinal; var ACmdLine: string): boolean;
-    function ProcessIsSecondInstance(const AProcInfo: TSEProcessInfo): boolean;
+    function ProcessIsSecondInstance(const AProcInfo: TSEProcessInfo; var DupInstance: TSEProcessInfo): boolean;
     constructor Create;
     destructor Destroy; override;
     /// <summary>
@@ -137,6 +136,10 @@ type
     /// Terminates cleanup loop and calls terminate process.
     /// </summary>
     procedure CleanupForceTerminate;
+    /// <summary>
+    ///   Calls terminate process for proc ID
+    /// </summary>
+    function TerminateProcessByID(AProcessID: cardinal): boolean;
     procedure AssignProcCleanup(const AProcCleanup: TSEProcessCleanup);
     property Actions: TStringList read FActions;
     property ProcMgrInfo: TSEProcessManagerEnvInfo read FProcMgrInfo write FProcMgrInfo;
@@ -485,14 +488,16 @@ begin;
   end;
 end;
 
-function TSEProcessManager.ProcessIsSecondInstance(const AProcInfo: TSEProcessInfo): boolean;
+function TSEProcessManager.ProcessIsSecondInstance(const AProcInfo: TSEProcessInfo;
+  var DupInstance: TSEProcessInfo): boolean;
 var
   hSnapShot: THANDLE;
   PE: TProcessEntry32;
-  pi: TSEProcessInfo;
 begin
   result := false;
-  pi := TSEProcessInfo.Create;
+  if not Assigned(DupInstance) then
+    DupInstance := TSEProcessInfo.Create;
+
   hSnapShot := CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
   try
     if (hSnapShot <> THANDLE(-1)) then
@@ -505,14 +510,14 @@ begin
           if PE.th32ParentProcessID <> AProcInfo.ParentProcID then
             continue;
 
-          pi.ImagePath := ImageFileName(PE);
-          pi.ProcID := PE.th32ProcessID;
-          if (pi.ProcID <> AProcInfo.ProcID) and (AProcInfo.ImagePath = pi.ImagePath) then
+          DupInstance.ImagePath := ImageFileName(PE);
+          DupInstance.ProcID := PE.th32ProcessID;
+          if (DupInstance.ProcID <> AProcInfo.ProcID) and (AProcInfo.ImagePath = DupInstance.ImagePath) then
           begin
             LogMsg('Matched image path, comparing command lines');
-            if ProcessCommandLine(pi.ProcID, pi.CommandLine) then
+            if ProcessCommandLine(DupInstance.ProcID, DupInstance.CommandLine) then
             begin
-              if pi.CommandLine = AProcInfo.CommandLine then
+              if DupInstance.CommandLine = AProcInfo.CommandLine then
               begin
                 LogMsg('Second instance found');
                 exit(true);
@@ -526,7 +531,6 @@ begin
     end;
   finally
     CloseHandle(hSnapShot);
-    pi.Free;
   end;
 end;
 

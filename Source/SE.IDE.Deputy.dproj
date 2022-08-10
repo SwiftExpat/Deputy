@@ -158,6 +158,10 @@
         </DCCReference>
         <DCCReference Include="SE.UpdateManager.pas"/>
         <DCCReference Include="SE.ProcMgrUtils.pas"/>
+        <DCCReference Include="frmDeputyInstanceManager.pas">
+            <Form>DeputyInstanceManager</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

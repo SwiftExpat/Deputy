@@ -33,4 +33,13 @@ object frmIdeEmulate: TfrmIdeEmulate
     TabOrder = 1
     OnClick = btnCheckRunningClick
   end
+  object btnInstanceManager: TButton
+    Left = 392
+    Top = 64
+    Width = 209
+    Height = 25
+    Caption = 'Instance manager'
+    TabOrder = 2
+    OnClick = btnInstanceManagerClick
+  end
 end

@@ -11,7 +11,8 @@ uses
   frmDeputyProcMgr in 'frmDeputyProcMgr.pas' {DeputyProcMgr},
   frmDeputyUpdates in 'frmDeputyUpdates.pas' {DeputyUpdates},
   SE.UpdateManager in 'SE.UpdateManager.pas',
-  SE.ProcMgrUtils in 'SE.ProcMgrUtils.pas';
+  SE.ProcMgrUtils in 'SE.ProcMgrUtils.pas',
+  frmDeputyInstanceManager in 'frmDeputyInstanceManager.pas' {DeputyInstanceManager};
 
 {$R *.res}
 

@@ -12,8 +12,10 @@ type
   TfrmIdeEmulate = class(TForm)
     Memo1: TMemo;
     btnCheckRunning: TButton;
+    btnInstanceManager: TButton;
     procedure FormCreate(Sender: TObject);
     procedure btnCheckRunningClick(Sender: TObject);
+    procedure btnInstanceManagerClick(Sender: TObject);
   private
     FExeName: string;
     FBDSID: cardinal;
@@ -31,7 +33,7 @@ implementation
 
 {$R *.dfm}
 
-uses SE.ProcMgrUtils;
+uses SE.ProcMgrUtils, frmDeputyInstanceManager;
 
 procedure TfrmIdeEmulate.btnCheckRunningClick(Sender: TObject);
 begin
@@ -39,15 +41,24 @@ begin
     LogMsg('IDE running');
 end;
 
+procedure TfrmIdeEmulate.btnInstanceManagerClick(Sender: TObject);
+var
+  im : TDeputyInstanceManager;
+begin
+       im := TDeputyInstanceManager.Create(self);
+       im.CheckSecondInstance;
+end;
+
 function TfrmIdeEmulate.CheckIdeRunning: boolean;
 var
   procMgr: TSEProcessManager;
   fn, dn: string;
-  procInfo: TSEProcessInfo;
+  procInfo, dupInfo: TSEProcessInfo;
+
 begin
   procMgr := TSEProcessManager.Create;
   procInfo := TSEProcessInfo.Create;
-
+  dupInfo := TSEProcessInfo.Create;
   try
     procMgr.OnMessage := LogMsg;
     FExeName := ExeName(cmdLine);
@@ -64,8 +75,10 @@ begin
       LogMsg('ParentID = ' + procInfo.ParentProcID.ToString);
       LogMsg('ProcPath = ' + procInfo.ImagePath);
       LogMsg('Command Line' + procInfo.CommandLine);
-      if procMgr.ProcessIsSecondInstance(procInfo) then
-       LogMsg('Second instance')
+      if procMgr.ProcessIsSecondInstance(procInfo, dupInfo) then
+      begin
+       LogMsg('Second instance');
+      end
       else
        LogMsg('First instance');
     end
