@@ -6,6 +6,29 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, SE.ProcMgrUtils;
 
+const
+  MAJ_VER = 1; // Major version nr.
+  MIN_VER = 0; // Minor version nr.
+  REL_VER = 0; // Release nr.
+  BLD_VER = 0; // Build nr.
+
+  // Version history
+  // v1.0.0.0 : First Release
+
+  { ******************************************************************** }
+  { written by swiftexpat }
+  { copyright 2022 }
+  { Email : support@swiftexpat.com }
+  { Web : https://swiftexpat.com }
+  { }
+  { The source code is given as is. The author is not responsible }
+  { for any possible damage done due to the use of this code. }
+  { The complete source code remains property of the author and may }
+  { not be distributed, published, given or sold in any form as such. }
+  { No parts of the source code can be included in any other component }
+  { or application without written authorization of the author. }
+  { ******************************************************************** }
+
 type
   TDeputyInstanceManager = class(TForm)
     Label1: TLabel;
@@ -79,6 +102,7 @@ begin
   FProcMgr := TSEProcessManager.Create;
   FProcInfo := TSEProcessInfo.Create;
   FDupInfo := TSEProcessInfo.Create;
+  self.Caption := self.Caption + ' v'+Maj_Ver.ToString + '.'+Min_Ver.ToString + '.'+Rel_Ver.ToString;
 end;
 
 procedure TDeputyInstanceManager.FormDestroy(Sender: TObject);

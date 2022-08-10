@@ -263,7 +263,6 @@ object DeputyProcMgr: TDeputyProcMgr
           Align = alClient
           Caption = 'Show Manager Delay (ms)'
           Layout = tlCenter
-          ExplicitTop = 48
           ExplicitWidth = 138
           ExplicitHeight = 15
         end
