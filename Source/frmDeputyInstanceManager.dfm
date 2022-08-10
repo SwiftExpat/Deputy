@@ -15,36 +15,63 @@ object DeputyInstanceManager: TDeputyInstanceManager
   OnDestroy = FormDestroy
   TextHeight = 15
   object Label1: TLabel
-    Left = 96
-    Top = 32
-    Width = 175
-    Height = 15
-    Caption = 'Two Delphi IDE instances running'
+    Left = 0
+    Top = 0
+    Width = 618
+    Height = 65
+    Align = alTop
+    Alignment = taCenter
+    Caption = '!! 2 Delphi IDE instances !!'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = 3937500
+    Font.Height = -48
+    Font.Name = 'Segoe UI'
+    Font.Style = []
+    ParentFont = False
+    ExplicitWidth = 549
   end
   object btnCloseOriginal: TButton
     Left = 96
     Top = 152
-    Width = 145
-    Height = 25
+    Width = 281
+    Height = 41
     Caption = 'Close Original Instance'
-    TabOrder = 0
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -24
+    Font.Name = 'Segoe UI'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 1
     OnClick = btnCloseOriginalClick
   end
   object btnCloseInstance: TButton
     Left = 96
     Top = 88
-    Width = 145
-    Height = 25
+    Width = 281
+    Height = 41
     Caption = 'Close This Instance'
-    TabOrder = 1
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -24
+    Font.Name = 'Segoe UI'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 0
     OnClick = btnCloseInstanceClick
   end
   object btnHideMessage: TButton
     Left = 96
     Top = 216
-    Width = 145
-    Height = 25
+    Width = 281
+    Height = 41
     Caption = 'Ignore Instance'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -24
+    Font.Name = 'Segoe UI'
+    Font.Style = []
+    ParentFont = False
     TabOrder = 2
     OnClick = btnHideMessageClick
   end
