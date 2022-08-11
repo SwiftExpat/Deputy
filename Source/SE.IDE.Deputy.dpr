@@ -12,7 +12,8 @@ uses
   frmDeputyUpdates in 'frmDeputyUpdates.pas' {DeputyUpdates},
   SE.UpdateManager in 'SE.UpdateManager.pas',
   SE.ProcMgrUtils in 'SE.ProcMgrUtils.pas',
-  frmDeputyInstanceManager in 'frmDeputyInstanceManager.pas' {DeputyInstanceManager};
+  frmDeputyInstanceManager in 'frmDeputyInstanceManager.pas' {DeputyInstanceManager},
+  frmDeputyOptionsInstance in 'frmDeputyOptionsInstance.pas' {frmDeputyOptInstance: TFrame};
 
 {$R *.res}
 
