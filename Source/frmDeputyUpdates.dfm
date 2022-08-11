@@ -17,21 +17,24 @@ object DeputyUpdates: TDeputyUpdates
     Left = 0
     Top = 0
     Width = 618
-    Height = 172
+    Height = 196
     Align = alTop
     Caption = 'gpUpdates'
     ColumnCollection = <
       item
-        Value = 18.974025974025970000
+        SizeStyle = ssAbsolute
+        Value = 96.000000000000000000
       end
       item
-        Value = 32.168831168831170000
+        SizeStyle = ssAbsolute
+        Value = 220.000000000000000000
       end
       item
-        Value = 30.285714285714290000
+        SizeStyle = ssAbsolute
+        Value = 164.000000000000000000
       end
       item
-        Value = 18.571428571428570000
+        Value = 100.000000000000000000
       end>
     ControlCollection = <
       item
@@ -146,30 +149,31 @@ object DeputyUpdates: TDeputyUpdates
       end>
     RowCollection = <
       item
-        Value = 16.847349113286680000
+        SizeStyle = ssAbsolute
+        Value = 24.000000000000000000
       end
       item
-        Value = 16.464092102564930000
+        Value = 16.446296828550970000
       end
       item
-        Value = 16.632262927820000000
+        Value = 16.614285885756040000
       end
       item
-        Value = 16.942616389030450000
+        Value = 16.924303900295690000
       end
       item
-        Value = 16.735897562942610000
+        Value = 16.717808507005190000
       end
       item
-        Value = 16.377781904355330000
+        Value = 33.297304878392110000
       end>
     ShowCaption = False
     TabOrder = 0
     object lblHdrItem: TLabel
       Left = 1
       Top = 1
-      Width = 117
-      Height = 29
+      Width = 96
+      Height = 24
       Align = alClient
       Alignment = taCenter
       Caption = 'Item'
@@ -177,245 +181,286 @@ object DeputyUpdates: TDeputyUpdates
       ExplicitHeight = 15
     end
     object lblHdrVerCurr: TLabel
-      Left = 118
+      Left = 97
       Top = 1
-      Width = 198
-      Height = 29
+      Width = 220
+      Height = 24
       Align = alClient
       Alignment = taCenter
       Caption = 'Current Version'
+      ExplicitLeft = 118
       ExplicitWidth = 81
       ExplicitHeight = 15
     end
     object lblHdrUpdate: TLabel
-      Left = 503
+      Left = 481
       Top = 1
-      Width = 114
-      Height = 29
+      Width = 136
+      Height = 24
       Align = alClient
       Alignment = taCenter
       Caption = 'Update'
+      ExplicitLeft = 503
       ExplicitWidth = 38
       ExplicitHeight = 15
     end
     object lblHdrVerAvail: TLabel
-      Left = 316
+      Left = 317
       Top = 1
-      Width = 187
-      Height = 29
+      Width = 164
+      Height = 24
       Align = alClient
       Alignment = taCenter
       Caption = 'Available Version'
+      ExplicitLeft = 316
       ExplicitWidth = 89
       ExplicitHeight = 15
     end
     object lblDeputy: TLabel
       Left = 1
-      Top = 30
-      Width = 117
+      Top = 25
+      Width = 96
       Height = 28
       Align = alClient
       Alignment = taCenter
       Caption = 'Deputy'
+      ExplicitTop = 30
       ExplicitWidth = 38
       ExplicitHeight = 15
     end
     object lblCaddie: TLabel
       Left = 1
-      Top = 58
-      Width = 117
+      Top = 53
+      Width = 96
       Height = 28
       Align = alClient
       Alignment = taCenter
       Caption = 'Caddie'
+      ExplicitTop = 58
       ExplicitWidth = 37
       ExplicitHeight = 15
     end
     object lblDemoFMX: TLabel
       Left = 1
-      Top = 86
-      Width = 117
+      Top = 81
+      Width = 96
       Height = 29
       Align = alClient
       Alignment = taCenter
       Caption = 'FMX Demo'
+      ExplicitTop = 86
       ExplicitWidth = 59
       ExplicitHeight = 15
     end
     object lblDemoVCL: TLabel
       Left = 1
-      Top = 115
-      Width = 117
+      Top = 110
+      Width = 96
       Height = 28
       Align = alClient
       Alignment = taCenter
       Caption = 'VCL Demo'
+      ExplicitTop = 115
       ExplicitWidth = 56
       ExplicitHeight = 15
     end
     object lblDeputyInst: TLabel
-      Left = 118
-      Top = 30
-      Width = 198
+      Left = 97
+      Top = 25
+      Width = 220
       Height = 28
       Align = alClient
       Alignment = taCenter
       Caption = 'DeputyInst'
+      ExplicitLeft = 118
+      ExplicitTop = 30
       ExplicitWidth = 57
       ExplicitHeight = 15
     end
     object lblDeputyAvail: TLabel
-      Left = 316
-      Top = 30
-      Width = 187
+      Left = 317
+      Top = 25
+      Width = 164
       Height = 28
       Align = alClient
       Alignment = taCenter
       Caption = 'deputyavail'
+      ExplicitLeft = 316
+      ExplicitTop = 30
       ExplicitWidth = 61
       ExplicitHeight = 15
     end
     object btnUpdateDeputy: TButton
       AlignWithMargins = True
-      Left = 506
-      Top = 33
-      Width = 108
+      Left = 484
+      Top = 28
+      Width = 130
       Height = 22
       Align = alClient
       Caption = 'Update Deputy'
       TabOrder = 0
       OnClick = btnUpdateDeputyClick
+      ExplicitLeft = 506
+      ExplicitTop = 33
+      ExplicitWidth = 108
     end
     object lblCaddieInst: TLabel
-      Left = 118
-      Top = 58
-      Width = 198
+      Left = 97
+      Top = 53
+      Width = 220
       Height = 28
       Align = alClient
       Alignment = taCenter
       Caption = 'caddieInst'
+      ExplicitLeft = 118
+      ExplicitTop = 58
       ExplicitWidth = 54
       ExplicitHeight = 15
     end
     object lblCaddieAvail: TLabel
-      Left = 316
-      Top = 58
-      Width = 187
+      Left = 317
+      Top = 53
+      Width = 164
       Height = 28
       Align = alClient
       Alignment = taCenter
       Caption = 'CaddieAvail'
+      ExplicitLeft = 316
+      ExplicitTop = 58
       ExplicitWidth = 63
       ExplicitHeight = 15
     end
     object btnUpdateCaddie: TButton
       AlignWithMargins = True
-      Left = 506
-      Top = 61
-      Width = 108
+      Left = 484
+      Top = 56
+      Width = 130
       Height = 22
       Align = alClient
       Caption = 'Update Caddie'
       TabOrder = 1
       OnClick = btnUpdateCaddieClick
+      ExplicitLeft = 506
+      ExplicitTop = 61
+      ExplicitWidth = 108
     end
     object lblDemoFmxInst: TLabel
-      Left = 118
-      Top = 86
-      Width = 198
+      Left = 97
+      Top = 81
+      Width = 220
       Height = 29
       Align = alClient
       Alignment = taCenter
       Caption = 'fmxInst'
+      ExplicitLeft = 118
+      ExplicitTop = 86
       ExplicitWidth = 40
       ExplicitHeight = 15
     end
     object lblDemoFMXAvail: TLabel
-      Left = 316
-      Top = 86
-      Width = 187
+      Left = 317
+      Top = 81
+      Width = 164
       Height = 29
       Align = alClient
       Alignment = taCenter
       Caption = 'FmxAvail'
+      ExplicitLeft = 316
+      ExplicitTop = 86
       ExplicitWidth = 49
       ExplicitHeight = 15
     end
     object btnUpdateDemoFMX: TButton
       AlignWithMargins = True
-      Left = 506
-      Top = 89
-      Width = 108
+      Left = 484
+      Top = 84
+      Width = 130
       Height = 23
       Align = alClient
       Caption = 'Update FMX Demo'
       TabOrder = 2
       OnClick = btnUpdateDemoFMXClick
+      ExplicitLeft = 506
+      ExplicitTop = 89
+      ExplicitWidth = 108
     end
     object lblDemoVCLInst: TLabel
-      Left = 118
-      Top = 115
-      Width = 198
+      Left = 97
+      Top = 110
+      Width = 220
       Height = 28
       Align = alClient
       Alignment = taCenter
       Caption = 'vclInst'
+      ExplicitLeft = 118
+      ExplicitTop = 115
       ExplicitWidth = 34
       ExplicitHeight = 15
     end
     object lblDemoVCLAvail: TLabel
-      Left = 316
-      Top = 115
-      Width = 187
+      Left = 317
+      Top = 110
+      Width = 164
       Height = 28
       Align = alClient
       Alignment = taCenter
       Caption = 'vclAvail'
+      ExplicitLeft = 316
+      ExplicitTop = 115
       ExplicitWidth = 41
       ExplicitHeight = 15
     end
     object btnUpdateDemoVCL: TButton
       AlignWithMargins = True
-      Left = 506
-      Top = 118
-      Width = 108
+      Left = 484
+      Top = 113
+      Width = 130
       Height = 22
       Align = alClient
       Caption = 'Update VCL Demo'
       TabOrder = 3
       OnClick = btnUpdateDemoVCLClick
+      ExplicitLeft = 506
+      ExplicitTop = 118
+      ExplicitWidth = 108
     end
     object lblHdrUpdateRefresh: TLabel
       Left = 1
-      Top = 143
-      Width = 117
-      Height = 28
+      Top = 138
+      Width = 96
+      Height = 57
       Align = alClient
       Alignment = taCenter
-      Caption = 'Last Update Refresh'
-      ExplicitWidth = 104
-      ExplicitHeight = 15
+      Caption = 'Updates Refreshed'
+      WordWrap = True
+      ExplicitTop = 143
+      ExplicitWidth = 52
+      ExplicitHeight = 30
     end
     object lblUpdateRefresh: TLabel
-      Left = 118
-      Top = 143
-      Width = 198
-      Height = 28
+      Left = 97
+      Top = 138
+      Width = 220
+      Height = 57
       Align = alClient
       Alignment = taCenter
       Caption = '00:00:00'
+      ExplicitLeft = 118
+      ExplicitTop = 143
       ExplicitWidth = 42
       ExplicitHeight = 15
     end
   end
   object memoMessages: TMemo
     Left = 0
-    Top = 172
+    Top = 196
     Width = 618
-    Height = 252
+    Height = 228
     Align = alClient
     Lines.Strings = (
       'Memo1')
     TabOrder = 1
+    ExplicitTop = 172
+    ExplicitHeight = 252
   end
 end
