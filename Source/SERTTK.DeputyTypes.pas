@@ -176,10 +176,14 @@ type
     nm_killprocess_stopcommand = 'StopCommand';
     nm_killprocess_waitpollinterval = 'WaitPollInterval';
     nm_killprocess_showdelay = 'ShowMgrDelay';
+    nm_section_idedetect = 'IdeDetect';
+    nm_idedetect_detectsecond = 'DetectSecond';
     nm_settings_regkey = 'SOFTWARE\SwiftExpat\Deputy';
   strict private
     function KillProcActiveGet: boolean;
     procedure KillProcActiveSet(const Value: boolean);
+    function DetectSecondInstanceGet: boolean;
+    procedure DetectSecondInstanceSet(const Value: boolean);
     function LastUpdateCheckGet: TDateTime;
     procedure LastUpdateCheckSet(const Value: TDateTime);
   private
@@ -204,6 +208,7 @@ type
     property UrlCacheJson: string read UrlCacheJsonGet write UrlCacheJsonSet;
     property WaitPollInterval: integer read WaitPollIntervalGet write WaitPollIntervalSet;
     property ShowWindowDelay: integer read ShowWindowDelayGet write ShowWindowDelaySet;
+    property DetectSecondInstance:boolean read DetectSecondInstanceGet write DetectSecondInstanceSet;
   end;
 
   TSERTTKNagCounter = class
@@ -498,6 +503,16 @@ end;
 procedure TSERTTKDeputySettings.CopyLeakMessageSet(const Value: boolean);
 begin
   self.WriteBool(nm_section_killprocess, nm_killprocess_copyleak, Value);
+end;
+
+function TSERTTKDeputySettings.DetectSecondInstanceGet: boolean;
+begin
+   result := self.ReadBool(nm_section_idedetect, nm_idedetect_detectsecond, false);
+end;
+
+procedure TSERTTKDeputySettings.DetectSecondInstanceSet(const Value: boolean);
+begin
+  self.WriteBool(nm_section_idedetect, nm_idedetect_detectsecond, Value);
 end;
 
 function TSERTTKDeputySettings.KillProcActiveGet: boolean;

@@ -7,6 +7,29 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls, SE.ProcMgrUtils, SERTTK.DeputyTypes,
   Vcl.CategoryButtons, Vcl.ExtCtrls, Generics.Collections, System.Diagnostics, Vcl.Mask, Vcl.Samples.Spin;
 
+const
+  MAJ_VER = 1; // Major version nr.
+  MIN_VER = 0; // Minor version nr.
+  REL_VER = 0; // Release nr.
+  BLD_VER = 0; // Build nr.
+
+  // Version history
+  // v1.0.0.0 : First Release
+
+  { ******************************************************************** }
+  { written by swiftexpat }
+  { copyright 2022 }
+  { Email : support@swiftexpat.com }
+  { Web : https://swiftexpat.com }
+  { }
+  { The source code is given as is. The author is not responsible }
+  { for any possible damage done due to the use of this code. }
+  { The complete source code remains property of the author and may }
+  { not be distributed, published, given or sold in any form as such. }
+  { No parts of the source code can be included in any other component }
+  { or application without written authorization of the author. }
+  { ******************************************************************** }
+
 type
   EDeputyProcMgrCreate = class(Exception);
 
@@ -260,6 +283,7 @@ begin
   FProcMgr.OnMessage := LogMsg;
   FProcMgr.OnLeakCopied := LeakCopied;
   FProcMgr.OnWaitPoll := WaitPoll;
+  self.Caption := self.Caption + ' v'+Maj_Ver.ToString + '.'+Min_Ver.ToString + '.'+Rel_Ver.ToString;
   FixAligns;
 end;
 

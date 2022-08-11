@@ -8,7 +8,7 @@ uses System.Classes, ToolsAPI, VCL.Dialogs, System.SysUtils, System.TypInfo, Win
   System.IOUtils, Generics.Collections, System.DateUtils, System.JSON, frmDeputyProcMgr, frmDeputyUpdates,
   VCL.Forms, VCL.Menus, System.Win.Registry, ShellApi, VCL.Controls,
   DW.OTA.Wizard, DW.OTA.IDENotifierOTAWizard, DW.OTA.Helpers, DW.Menus.Helpers, DW.OTA.ProjectManagerMenu,
-  DW.OTA.Notifiers, SERTTK.DeputyTypes, SE.ProcMgrUtils;
+  DW.OTA.Notifiers, SERTTK.DeputyTypes, SE.ProcMgrUtils, frmDeputyInstanceManager, frmDeputyOptionsInstance;
 
 const
   MAJ_VER = 2; // Major version nr.
@@ -41,6 +41,7 @@ const
   { or application without written authorization of the author. }
   { ******************************************************************** }
 type
+
   TSERTTKDeputyWizard = class;
 
   TSERTTKDeputyDebugNotifier = class(TDebuggerNotifier)
@@ -64,6 +65,7 @@ type
     nm_mi_run_fmxdemo = 'demofmxrunitem';
     nm_mi_show_website = 'showwebsiteitem';
     nm_mi_update_status = 'updatestatusitem';
+    nm_mi_show_options = 'showoptionsitem';
     nm_wizard_id = 'com.swiftexpat.deputy';
     nm_wizard_display = 'RunTime ToolKit - Deputy';
   strict private
@@ -72,11 +74,13 @@ type
     FDeputyUpdates: TDeputyUpdates;
     FToolsMenuRootItem: TMenuItem;
     FSettings: TSERTTKDeputySettings;
+    FInstanceManager: TDeputyInstanceManager;
     FRTTKAppUpdate: TSERTTKAppVersionUpdate;
     FWizardInfo: TSERTTKWizardInfo;
     FMenuItems: TDictionary<string, TMenuItem>;
     FNagCounter: TSERTTKNagCounter;
     FDeputyUtils: TSERTTKDeputyUtils;
+    FIdeOptions: INTAAddInOptions;
     function MenuItemByName(const AItemName: string): TMenuItem;
     procedure OnClickDeputyUpdates(Sender: TObject);
   private
@@ -87,6 +91,7 @@ type
     function FindMenuItemFirstLine(const AMenuItem: TMenuItem): integer;
     procedure MessagesAdd(const AMessage: string);
     procedure OnClickShowWebsite(Sender: TObject);
+    procedure OnClickShowOptions(Sender: TObject);
   protected
     procedure IDENotifierBeforeCompile(const AProject: IOTAProject; const AIsCodeInsight: boolean;
       var ACancel: boolean); override;
@@ -139,7 +144,7 @@ begin
   inherited;
   FIDEStarted := false;
 {$IF COMPILERVERSION > 32}
-  TOTAHelper.RegisterThemeForms([TDeputyUpdates, TDeputyProcMgr]);
+  TOTAHelper.RegisterThemeForms([TDeputyUpdates, TDeputyProcMgr, TDeputyInstanceManager]);
 {$ENDIF}
   FMenuItems := TDictionary<string, TMenuItem>.Create;
   FDebugNotifier := TSERTTKDeputyDebugNotifier.Create(self);
@@ -147,11 +152,17 @@ begin
   FNagCounter := TSERTTKNagCounter.Create(0, 7);
   FSettings := TSERTTKDeputySettings.Create(TSERTTKDeputySettings.nm_settings_regkey);
   InitToolsMenu;
+  FIdeOptions := TSERTTKDeputyIDEOptionsInterface.Create;
+  TSERTTKDeputyIDEOptionsInterface(FIdeOptions).DeputySettings := FSettings;
+  (BorlandIDEServices As INTAEnvironmentOptionsServices).RegisterAddInOptions(FIdeOptions);
 end;
 
 destructor TSERTTKDeputyWizard.Destroy;
 begin
   FDebugNotifier.RemoveNotifier;
+  (BorlandIDEServices As INTAEnvironmentOptionsServices).UnregisterAddInOptions(FIdeOptions);
+  FIdeOptions := nil;
+  //FInstanceManager.Free;
   FSettings.Free;
   FMenuItems.Free;
   FRTTKAppUpdate.Free;
@@ -182,6 +193,12 @@ begin
   FDeputyUpdates.AssignSettings(FSettings);
   FDeputyUpdates.AssignAppUpdate(FRTTKAppUpdate);
   AssignUpdateMenuItems;
+  if FSettings.DetectSecondInstance then
+  begin
+    FInstanceManager := TDeputyInstanceManager.Create(Application);
+    TOTAHelper.ApplyTheme(FInstanceManager);
+    FInstanceManager.CheckSecondInstance;
+  end;
   FDeputyUpdates.ExpertUpdatesRefresh(false);
 end;
 
@@ -296,6 +313,10 @@ begin
   mi.Caption := 'Deputy Updates';
   mi.OnClick := OnClickDeputyUpdates;
   FToolsMenuRootItem.Add(mi);
+  mi := MenuItemByName(nm_mi_show_options);
+  mi.Caption := 'Deputy Options';
+  mi.OnClick := OnClickShowOptions;
+  FToolsMenuRootItem.Add(mi);
 end;
 
 procedure TSERTTKDeputyWizard.IDENotifierBeforeCompile(const AProject: IOTAProject; const AIsCodeInsight: boolean;
@@ -325,6 +346,11 @@ end;
 procedure TSERTTKDeputyWizard.OnClickMiKillProcEnabled(Sender: TObject);
 begin
   FProcMgrForm.ShowSettings;
+end;
+
+procedure TSERTTKDeputyWizard.OnClickShowOptions(Sender: TObject);
+begin
+  (BorlandIDEServices As IOTAServices).GetEnvironmentOptions.EditOptions('', caption_options_label);
 end;
 
 procedure TSERTTKDeputyWizard.OnClickShowWebsite(Sender: TObject);
