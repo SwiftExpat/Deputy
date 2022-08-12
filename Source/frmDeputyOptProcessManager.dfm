@@ -15,8 +15,6 @@ object frmDeputyOptProcMgr: TfrmDeputyOptProcMgr
       'Use these options to configure Deputy process manager functional' +
       'ity '
     TabOrder = 0
-    ExplicitLeft = 0
-    ExplicitTop = 0
     ExplicitWidth = 559
   end
   object GridPanel1: TGridPanel
@@ -60,10 +58,6 @@ object frmDeputyOptProcMgr: TfrmDeputyOptProcMgr
       end>
     ShowCaption = False
     TabOrder = 1
-    ExplicitLeft = 496
-    ExplicitTop = 176
-    ExplicitWidth = 185
-    ExplicitHeight = 41
     object gpOptions: TGridPanel
       AlignWithMargins = True
       Left = 4
@@ -117,9 +111,6 @@ object frmDeputyOptProcMgr: TfrmDeputyOptProcMgr
         end>
       ShowCaption = False
       TabOrder = 0
-      ExplicitLeft = 1
-      ExplicitTop = -76
-      ExplicitWidth = 183
       object rgProcMgrActive: TRadioGroup
         AlignWithMargins = True
         Left = 4
@@ -157,7 +148,6 @@ object frmDeputyOptProcMgr: TfrmDeputyOptProcMgr
         Caption = 'Close Leak Window'
         TabOrder = 2
         OnClick = cbCloseLeakWindowClick
-        ExplicitWidth = 426
       end
       object cbCopyLeakMessage: TCheckBox
         AlignWithMargins = True
@@ -169,7 +159,6 @@ object frmDeputyOptProcMgr: TfrmDeputyOptProcMgr
         Caption = 'Copy Leak Message'
         TabOrder = 3
         OnClick = cbCopyLeakMessageClick
-        ExplicitWidth = 426
       end
     end
     object gpTimeouts: TGridPanel
@@ -256,10 +245,9 @@ object frmDeputyOptProcMgr: TfrmDeputyOptProcMgr
         Alignment = taRightJustify
         Caption = 'WaitPoll Interval (ms)'
         Layout = tlCenter
-        ExplicitLeft = 18
-        ExplicitTop = 52
-        ExplicitWidth = 149
-        ExplicitHeight = 29
+        ExplicitLeft = 77
+        ExplicitWidth = 165
+        ExplicitHeight = 25
       end
       object edtWaitPoll: TSpinEdit
         AlignWithMargins = True
@@ -273,8 +261,6 @@ object frmDeputyOptProcMgr: TfrmDeputyOptProcMgr
         TabOrder = 0
         Value = 25
         OnChange = edtWaitPollChange
-        ExplicitLeft = 325
-        ExplicitHeight = 44
       end
       object lblHdrShowDelay: TLabel
         Left = 2
@@ -285,7 +271,7 @@ object frmDeputyOptProcMgr: TfrmDeputyOptProcMgr
         Alignment = taRightJustify
         Caption = 'Show Manager Delay (ms)'
         Layout = tlCenter
-        ExplicitTop = 49
+        ExplicitLeft = 35
         ExplicitWidth = 207
         ExplicitHeight = 25
       end
@@ -301,9 +287,6 @@ object frmDeputyOptProcMgr: TfrmDeputyOptProcMgr
         TabOrder = 1
         Value = 200
         OnChange = edtShowDelayChange
-        ExplicitLeft = 325
-        ExplicitTop = 87
-        ExplicitHeight = 41
       end
     end
     object Memo1: TMemo
@@ -314,9 +297,6 @@ object frmDeputyOptProcMgr: TfrmDeputyOptProcMgr
       Align = alBottom
       Anchors = []
       TabOrder = 2
-      ExplicitLeft = 0
-      ExplicitTop = 391
-      ExplicitWidth = 762
     end
   end
 end

@@ -165,15 +165,15 @@ begin
   TSERTTKDeputyIDEOptProcMgr(FProcMgrOptions).DeputySettings := FSettings;
   (BorlandIDEServices As INTAEnvironmentOptionsServices).RegisterAddInOptions(FProcMgrOptions);
   // options Updates
-  FUpdateOptions := TSERTTKDeputyIDEOptUpdates.Create;
-  TSERTTKDeputyIDEOptUpdates(FUpdateOptions).DeputySettings := FSettings;
-  (BorlandIDEServices As INTAEnvironmentOptionsServices).RegisterAddInOptions(FUpdateOptions);
+ // FUpdateOptions := TSERTTKDeputyIDEOptUpdates.Create;
+  //TSERTTKDeputyIDEOptUpdates(FUpdateOptions).DeputySettings := FSettings;
+  //(BorlandIDEServices As INTAEnvironmentOptionsServices).RegisterAddInOptions(FUpdateOptions);
 end;
 
 destructor TSERTTKDeputyWizard.Destroy;
 begin
   FDebugNotifier.RemoveNotifier;
-  (BorlandIDEServices As INTAEnvironmentOptionsServices).UnregisterAddInOptions(FUpdateOptions);
+ // (BorlandIDEServices As INTAEnvironmentOptionsServices).UnregisterAddInOptions(FUpdateOptions);
   FUpdateOptions := nil;
   (BorlandIDEServices As INTAEnvironmentOptionsServices).UnregisterAddInOptions(FProcMgrOptions);
   FProcMgrOptions := nil;

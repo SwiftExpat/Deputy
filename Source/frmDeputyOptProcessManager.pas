@@ -105,19 +105,13 @@ end;
 procedure TfrmDeputyOptProcMgr.edtShowDelayChange(Sender: TObject);
 begin
   if (edtShowDelay.Value > edtShowDelay.MinValue) and (edtShowDelay.Value < edtShowDelay.MaxValue) then
-  begin
     FSettings.ShowWindowDelay := edtShowDelay.Value;
-    Memo1.Lines.Add('Setting show window delay to ' + edtShowDelay.Value.ToString)
-  end;
 end;
 
 procedure TfrmDeputyOptProcMgr.edtWaitPollChange(Sender: TObject);
 begin
   if (edtWaitPoll.Value > edtWaitPoll.MinValue) and (edtWaitPoll.Value < edtWaitPoll.MaxValue) then
-  begin
     FSettings.WaitPollInterval := edtWaitPoll.Value;
-    Memo1.Lines.Add('Setting waitpool to ' + edtWaitPoll.Value.ToString)
-  end;
 end;
 
 procedure TfrmDeputyOptProcMgr.FinalizeFrame;
