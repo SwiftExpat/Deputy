@@ -157,6 +157,7 @@ type
     /// </remarks>
     function DeputyWizardUpdatesDirectory(const AVersion: string = ''): string;
     procedure ShowWebsite;
+    procedure ShowUrl(const AUrl: string);
     procedure RunCaddie;
     procedure RunDemoVCL;
     procedure RunDemoFMX;
@@ -208,7 +209,7 @@ type
     property UrlCacheJson: string read UrlCacheJsonGet write UrlCacheJsonSet;
     property WaitPollInterval: integer read WaitPollIntervalGet write WaitPollIntervalSet;
     property ShowWindowDelay: integer read ShowWindowDelayGet write ShowWindowDelaySet;
-    property DetectSecondInstance:boolean read DetectSecondInstanceGet write DetectSecondInstanceSet;
+    property DetectSecondInstance: boolean read DetectSecondInstanceGet write DetectSecondInstanceSet;
   end;
 
   TSERTTKNagCounter = class
@@ -268,7 +269,7 @@ type
     FOnDeputyUpdatesRefreshed: TSERTTKDeputyUpdatesRefreshed;
     procedure LogMessage(AMessage: string);
     procedure InitHttpClient;
-    procedure DistServerAuthEvent(const Sender: TObject; AnAuthTarget: TAuthTargetType; const ARealm, AURL: string;
+    procedure DistServerAuthEvent(const Sender: TObject; AnAuthTarget: TAuthTargetType; const ARealm, AUrl: string;
       var AUserName, APassword: string; var AbortAuth: boolean; var Persistence: TAuthPersistenceType);
     procedure HttpClientException(const Sender: TObject; const AError: Exception);
     procedure HttpDeputyExpertDownload;
@@ -471,16 +472,21 @@ begin
   ShellExecuteEx(@shi);
 end;
 
-procedure TSERTTKDeputyUtils.ShowWebsite;
+procedure TSERTTKDeputyUtils.ShowUrl(const AUrl: string);
 var
   shi: TShellExecuteInfo;
 begin
   shi := Default (TShellExecuteInfo);
   shi.lpVerb := PChar('open');
   shi.cbSize := SizeOf(TShellExecuteInfo);
-  shi.lpFile := PChar(url_website);
+  shi.lpFile := PChar(AUrl);
   shi.nShow := SW_SHOWNORMAL;
   ShellExecuteEx(@shi);
+end;
+
+procedure TSERTTKDeputyUtils.ShowWebsite;
+begin
+  ShowUrl(url_website);
 end;
 
 { TSERTTKDeputySettings }
@@ -507,7 +513,7 @@ end;
 
 function TSERTTKDeputySettings.DetectSecondInstanceGet: boolean;
 begin
-   result := self.ReadBool(nm_section_idedetect, nm_idedetect_detectsecond, false);
+  result := self.ReadBool(nm_section_idedetect, nm_idedetect_detectsecond, false);
 end;
 
 procedure TSERTTKDeputySettings.DetectSecondInstanceSet(const Value: boolean);
@@ -663,7 +669,7 @@ begin
 end;
 
 procedure TSERTTKAppVersionUpdate.DistServerAuthEvent(const Sender: TObject; AnAuthTarget: TAuthTargetType;
-  const ARealm, AURL: string; var AUserName, APassword: string; var AbortAuth: boolean;
+  const ARealm, AUrl: string; var AUserName, APassword: string; var AbortAuth: boolean;
   var Persistence: TAuthPersistenceType);
 begin
   if AnAuthTarget = TAuthTargetType.Server then
