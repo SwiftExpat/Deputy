@@ -174,10 +174,16 @@ type
     nm_killprocess_closeleak = 'CloseLeakWindow';
     nm_killprocess_copyleak = 'CopyLeakWindow';
     nm_killprocess_stopcommand = 'StopCommand';
+    nm_killprocess_waitpollinterval = 'WaitPollInterval';
+    nm_killprocess_showdelay = 'ShowMgrDelay';
+    nm_section_idedetect = 'IdeDetect';
+    nm_idedetect_detectsecond = 'DetectSecond';
     nm_settings_regkey = 'SOFTWARE\SwiftExpat\Deputy';
   strict private
     function KillProcActiveGet: boolean;
     procedure KillProcActiveSet(const Value: boolean);
+    function DetectSecondInstanceGet: boolean;
+    procedure DetectSecondInstanceSet(const Value: boolean);
     function LastUpdateCheckGet: TDateTime;
     procedure LastUpdateCheckSet(const Value: TDateTime);
   private
@@ -189,6 +195,10 @@ type
     procedure CopyLeakMessageSet(const Value: boolean);
     function UrlCacheJsonGet: string;
     procedure UrlCacheJsonSet(const Value: string);
+    function WaitPollIntervalGet: integer;
+    procedure WaitPollIntervalSet(const Value: integer);
+    function ShowWindowDelayGet: integer;
+    procedure ShowWindowDelaySet(const Value: integer);
   public
     property KillProcActive: boolean read KillProcActiveGet write KillProcActiveSet;
     property LastUpdateCheck: TDateTime read LastUpdateCheckGet write LastUpdateCheckSet;
@@ -196,6 +206,9 @@ type
     property CloseLeakWindow: boolean read CloseLeakWindowGet write CloseLeakWindowSet;
     property CopyLeakMessage: boolean read CopyLeakMessageGet write CopyLeakMessageSet;
     property UrlCacheJson: string read UrlCacheJsonGet write UrlCacheJsonSet;
+    property WaitPollInterval: integer read WaitPollIntervalGet write WaitPollIntervalSet;
+    property ShowWindowDelay: integer read ShowWindowDelayGet write ShowWindowDelaySet;
+    property DetectSecondInstance:boolean read DetectSecondInstanceGet write DetectSecondInstanceSet;
   end;
 
   TSERTTKNagCounter = class
@@ -292,9 +305,9 @@ implementation
 
 uses System.IOUtils, WinAPI.ShellAPI, WinAPI.Windows, System.DateUtils, System.Zip,
 {$IFDEF EXPERT}
- DW.OTA.Helpers,
+  DW.OTA.Helpers,
 {$ENDIF}
-System.JSON;
+  System.JSON;
 
 { TSERTTKDeputyUtils }
 
@@ -492,6 +505,16 @@ begin
   self.WriteBool(nm_section_killprocess, nm_killprocess_copyleak, Value);
 end;
 
+function TSERTTKDeputySettings.DetectSecondInstanceGet: boolean;
+begin
+   result := self.ReadBool(nm_section_idedetect, nm_idedetect_detectsecond, false);
+end;
+
+procedure TSERTTKDeputySettings.DetectSecondInstanceSet(const Value: boolean);
+begin
+  self.WriteBool(nm_section_idedetect, nm_idedetect_detectsecond, Value);
+end;
+
 function TSERTTKDeputySettings.KillProcActiveGet: boolean;
 begin
   result := self.ReadBool(nm_section_killprocess, nm_killprocess_enabled, true);
@@ -512,6 +535,16 @@ begin
   self.WriteDateTime(nm_section_updates, nm_updates_lastupdate, Value);
 end;
 
+function TSERTTKDeputySettings.ShowWindowDelayGet: integer;
+begin
+  result := self.ReadInteger(nm_section_killprocess, nm_killprocess_showdelay, 200)
+end;
+
+procedure TSERTTKDeputySettings.ShowWindowDelaySet(const Value: integer);
+begin
+  self.WriteInteger(nm_section_killprocess, nm_killprocess_showdelay, Value);
+end;
+
 function TSERTTKDeputySettings.StopCommandGet: integer;
 begin
   result := self.ReadInteger(nm_section_killprocess, nm_killprocess_stopcommand, 0)
@@ -530,6 +563,16 @@ end;
 procedure TSERTTKDeputySettings.UrlCacheJsonSet(const Value: string);
 begin
   self.WriteString(nm_section_updates, nm_updates_urlcachejson, Value)
+end;
+
+function TSERTTKDeputySettings.WaitPollIntervalGet: integer;
+begin
+  result := self.ReadInteger(nm_section_killprocess, nm_killprocess_waitpollinterval, 50);
+end;
+
+procedure TSERTTKDeputySettings.WaitPollIntervalSet(const Value: integer);
+begin
+  self.WriteInteger(nm_section_killprocess, nm_killprocess_waitpollinterval, Value);
 end;
 
 { TSERTTKNagCounter }
@@ -793,10 +836,10 @@ begin
       procedure
       begin
         LoadDeputyUpdateVersion;
-        //this should clear the download file, it is not really current anymore and needs to be extracted.
-        //it hangs the update process after the dll is updated the first time.
-        //the move on update is problematic if i do not force an extract. change to copy?
-        if ExpertUpdateAvailable then //and not ExpertUpdateDownloaded
+        // this should clear the download file, it is not really current anymore and needs to be extracted.
+        // it hangs the update process after the dll is updated the first time.
+        // the move on update is problematic if i do not force an extract. change to copy?
+        if ExpertUpdateAvailable then // and not ExpertUpdateDownloaded
           HttpDeputyExpertDownload;
         FSettings.LastUpdateCheck := now;
         if Assigned(OnDeputyUpdatesRefreshed) then
@@ -908,7 +951,7 @@ begin // rename dll FWizardInfo.WizardFileName
     if TFile.Exists(DeputyWizardBackupFilename) then
       TFile.Delete(DeputyWizardBackupFilename);
     TFile.Move(FWizardInfo.WizardFileName, DeputyWizardBackupFilename);
-    TFile.Move(DeputyWizardUpdateFilename(fn), ExpertFileLocation);//is this move or copy?
+    TFile.Move(DeputyWizardUpdateFilename(fn), ExpertFileLocation); // is this move or copy?
   except
     on E: Exception do
       LogMessage('Failed Update ' + E.Message);

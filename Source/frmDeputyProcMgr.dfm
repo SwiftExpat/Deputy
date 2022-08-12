@@ -10,6 +10,7 @@ object DeputyProcMgr: TDeputyProcMgr
   Font.Height = -12
   Font.Name = 'Segoe UI'
   Font.Style = []
+  Position = poMainFormCenter
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
@@ -134,8 +135,6 @@ object DeputyProcMgr: TDeputyProcMgr
         Width = 807
         Height = 89
         Align = alBottom
-        Lines.Strings = (
-          'Memo1')
         TabOrder = 1
       end
       object rgProcTermActive: TRadioGroup
@@ -168,13 +167,127 @@ object DeputyProcMgr: TDeputyProcMgr
         TabOrder = 4
         OnClick = cbCopyLeakMessageClick
       end
+      object gpTimeouts: TGridPanel
+        Left = 16
+        Top = 160
+        Width = 257
+        Height = 82
+        BorderWidth = 1
+        BorderStyle = bsSingle
+        ColumnCollection = <
+          item
+            Value = 60.000000000000000000
+          end
+          item
+            Value = 40.000000000000000000
+          end>
+        ControlCollection = <
+          item
+            Column = 0
+            ColumnSpan = 2
+            Control = lblHdrTimeouts
+            Row = 0
+          end
+          item
+            Column = 0
+            Control = lblWaitPollTimeout
+            Row = 1
+          end
+          item
+            Column = 1
+            Control = edtWaitPoll
+            Row = 1
+          end
+          item
+            Column = 0
+            Control = lblHdrShowDelay
+            Row = 2
+          end
+          item
+            Column = 1
+            Control = edtShowDelay
+            Row = 2
+          end>
+        RowCollection = <
+          item
+            Value = 24.606826166973400000
+          end
+          item
+            Value = 38.689978249958170000
+          end
+          item
+            Value = 36.703195583068430000
+          end>
+        ShowCaption = False
+        TabOrder = 5
+        object lblHdrTimeouts: TLabel
+          Left = 2
+          Top = 2
+          Width = 249
+          Height = 18
+          Align = alClient
+          Alignment = taCenter
+          Caption = 'Process Manager Timeouts'
+          ExplicitWidth = 142
+          ExplicitHeight = 15
+        end
+        object lblWaitPollTimeout: TLabel
+          Left = 2
+          Top = 20
+          Width = 149
+          Height = 29
+          Align = alClient
+          Alignment = taCenter
+          Caption = 'WaitPoll Interval (ms)'
+          Layout = tlCenter
+          ExplicitWidth = 113
+          ExplicitHeight = 15
+        end
+        object edtWaitPoll: TSpinEdit
+          AlignWithMargins = True
+          Left = 154
+          Top = 23
+          Width = 71
+          Height = 24
+          MaxValue = 200
+          MinValue = 25
+          TabOrder = 0
+          Value = 25
+          OnChange = edtWaitPollChange
+        end
+        object lblHdrShowDelay: TLabel
+          Left = 2
+          Top = 49
+          Width = 149
+          Height = 27
+          Align = alClient
+          Caption = 'Show Manager Delay (ms)'
+          Layout = tlCenter
+          ExplicitWidth = 138
+          ExplicitHeight = 15
+        end
+        object edtShowDelay: TSpinEdit
+          AlignWithMargins = True
+          Left = 154
+          Top = 52
+          Width = 94
+          Height = 24
+          MaxValue = 1500
+          MinValue = 100
+          TabOrder = 1
+          Value = 200
+          OnChange = edtShowDelayChange
+        end
+      end
     end
   end
   object gpCleanStatus: TGridPanel
     Left = 328
     Top = 240
     Width = 185
-    Height = 64
+    Height = 80
+    BorderWidth = 1
+    BorderStyle = bsSingle
     Caption = 'gpCleanStatus'
     ColumnCollection = <
       item
@@ -186,7 +299,7 @@ object DeputyProcMgr: TDeputyProcMgr
     ControlCollection = <
       item
         Column = 0
-        Control = lblLCHdr
+        Control = lblHdrLoopCount
         Row = 0
       end
       item
@@ -201,7 +314,7 @@ object DeputyProcMgr: TDeputyProcMgr
       end
       item
         Column = 0
-        Control = Label1
+        Control = lblHdrElapsed
         Row = 1
       end
       item
@@ -227,70 +340,78 @@ object DeputyProcMgr: TDeputyProcMgr
     ShowCaption = False
     TabOrder = 2
     Visible = False
-    object lblLCHdr: TLabel
-      Left = 1
-      Top = 1
-      Width = 92
-      Height = 17
+    object lblHdrLoopCount: TLabel
+      Left = 2
+      Top = 2
+      Width = 88
+      Height = 19
       Align = alClient
       Alignment = taRightJustify
       Caption = 'Loop Count ='
-      ExplicitLeft = 19
+      ExplicitLeft = 16
       ExplicitWidth = 74
       ExplicitHeight = 15
     end
     object lblLoopCount: TLabel
-      Left = 93
-      Top = 1
-      Width = 91
-      Height = 17
+      Left = 90
+      Top = 2
+      Width = 89
+      Height = 19
       Align = alClient
       Caption = 'lblLoopCount'
       ExplicitWidth = 73
       ExplicitHeight = 15
     end
     object btnAbortCleanup: TButton
-      Left = 93
-      Top = 37
-      Width = 91
-      Height = 26
+      AlignWithMargins = True
+      Left = 92
+      Top = 45
+      Width = 86
+      Height = 28
+      Margins.Left = 2
+      Margins.Top = 1
+      Margins.Right = 1
+      Margins.Bottom = 1
       Align = alClient
       Caption = 'Abort Cleanup'
       TabOrder = 0
-      Visible = False
       OnClick = btnAbortCleanupClick
     end
-    object Label1: TLabel
-      Left = 1
-      Top = 18
-      Width = 92
-      Height = 19
+    object lblHdrElapsed: TLabel
+      Left = 2
+      Top = 21
+      Width = 88
+      Height = 23
       Align = alClient
       Alignment = taRightJustify
       Caption = 'Elapsed ms = '
-      ExplicitLeft = 20
+      ExplicitLeft = 17
       ExplicitWidth = 73
       ExplicitHeight = 15
     end
     object lblElapsedMS: TLabel
-      Left = 93
-      Top = 18
-      Width = 91
-      Height = 19
+      Left = 90
+      Top = 21
+      Width = 89
+      Height = 23
       Align = alClient
       Caption = '0'
       ExplicitWidth = 6
       ExplicitHeight = 15
     end
     object btnForceTerminate: TButton
-      Left = 1
-      Top = 37
-      Width = 92
-      Height = 26
+      AlignWithMargins = True
+      Left = 3
+      Top = 45
+      Width = 85
+      Height = 28
+      Margins.Left = 1
+      Margins.Top = 1
+      Margins.Right = 2
+      Margins.Bottom = 1
       Align = alClient
       Caption = 'Force Terminate'
       TabOrder = 1
-      Visible = False
       OnClick = btnForceTerminateClick
     end
   end
