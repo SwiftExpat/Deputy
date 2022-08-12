@@ -5,13 +5,16 @@ object frmDeputyOptUpdate: TfrmDeputyOptUpdate
   Height = 480
   TabOrder = 0
   object LinkLabel1: TLinkLabel
-    Left = 0
-    Top = 0
-    Width = 640
+    AlignWithMargins = True
+    Left = 3
+    Top = 3
+    Width = 634
     Height = 29
     Align = alTop
-    Caption = 'Update otpins for Deputy'
+    Caption = 'Update options for Deputy'
     TabOrder = 0
-    ExplicitWidth = 208
+    ExplicitLeft = 0
+    ExplicitTop = 0
+    ExplicitWidth = 219
   end
 end

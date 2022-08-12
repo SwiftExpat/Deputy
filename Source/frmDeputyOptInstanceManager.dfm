@@ -21,15 +21,19 @@ object frmDeputyOptInstMgr: TfrmDeputyOptInstMgr
     ExplicitWidth = 618
   end
   object rgInstanceManager: TRadioGroup
-    Left = 16
-    Top = 59
-    Width = 225
+    Left = 0
+    Top = 56
+    Width = 640
     Height = 105
+    Align = alTop
     Caption = 'Instance Manager'
     Items.Strings = (
       'Disable'
       'Enable')
     TabOrder = 0
     OnClick = rgInstanceManagerClick
+    ExplicitLeft = 16
+    ExplicitTop = 59
+    ExplicitWidth = 225
   end
 end

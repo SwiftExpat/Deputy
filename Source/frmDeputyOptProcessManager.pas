@@ -4,7 +4,8 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, ToolsAPI, SERTTK.DeputyTypes, Vcl.ExtCtrls;
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, ToolsAPI, SERTTK.DeputyTypes, Vcl.ExtCtrls, Vcl.StdCtrls,
+  Vcl.Samples.Spin, SE.ProcMgrUtils;
 
 const
   caption_opt_label_proc_mgr = 'Deputy.Process Manager';
@@ -33,8 +34,29 @@ const
 type
   TfrmDeputyOptProcMgr = class(TFrame)
     LinkLabel1: TLinkLabel;
+    rgProcMgrActive: TRadioGroup;
+    rgProcStopCommand: TRadioGroup;
+    cbCloseLeakWindow: TCheckBox;
+    cbCopyLeakMessage: TCheckBox;
+    gpTimeouts: TGridPanel;
+    lblHdrTimeouts: TLabel;
+    lblWaitPollTimeout: TLabel;
+    edtWaitPoll: TSpinEdit;
+    lblHdrShowDelay: TLabel;
+    edtShowDelay: TSpinEdit;
+    gpOptions: TGridPanel;
+    Memo1: TMemo;
+    GridPanel1: TGridPanel;
+    procedure rgProcMgrActiveClick(Sender: TObject);
+    procedure rgProcStopCommandClick(Sender: TObject);
+    procedure cbCloseLeakWindowClick(Sender: TObject);
+    procedure cbCopyLeakMessageClick(Sender: TObject);
+    procedure edtWaitPollChange(Sender: TObject);
+    procedure edtShowDelayChange(Sender: TObject);
   strict private
     FSettings: TSERTTKDeputySettings;
+    FStopCommand: TSEProcessStopCommand;
+    procedure UpdateSettings;
   public
     property DeputySettings: TSERTTKDeputySettings read FSettings write FSettings;
     procedure InitializeFrame;
@@ -62,6 +84,42 @@ implementation
 {$R *.dfm}
 { TfrmDeputyOptProcMgr }
 
+procedure TfrmDeputyOptProcMgr.cbCloseLeakWindowClick(Sender: TObject);
+begin
+  if cbCloseLeakWindow.Checked then
+    FSettings.CloseLeakWindow := true
+  else
+    FSettings.CloseLeakWindow := false;
+  UpdateSettings;
+end;
+
+procedure TfrmDeputyOptProcMgr.cbCopyLeakMessageClick(Sender: TObject);
+begin
+  if cbCopyLeakMessage.Checked then
+    FSettings.CopyLeakMessage := true
+  else
+    FSettings.CopyLeakMessage := false;
+  UpdateSettings;
+end;
+
+procedure TfrmDeputyOptProcMgr.edtShowDelayChange(Sender: TObject);
+begin
+  if (edtShowDelay.Value > edtShowDelay.MinValue) and (edtShowDelay.Value < edtShowDelay.MaxValue) then
+  begin
+    FSettings.ShowWindowDelay := edtShowDelay.Value;
+    Memo1.Lines.Add('Setting show window delay to ' + edtShowDelay.Value.ToString)
+  end;
+end;
+
+procedure TfrmDeputyOptProcMgr.edtWaitPollChange(Sender: TObject);
+begin
+  if (edtWaitPoll.Value > edtWaitPoll.MinValue) and (edtWaitPoll.Value < edtWaitPoll.MaxValue) then
+  begin
+    FSettings.WaitPollInterval := edtWaitPoll.Value;
+    Memo1.Lines.Add('Setting waitpool to ' + edtWaitPoll.Value.ToString)
+  end;
+end;
+
 procedure TfrmDeputyOptProcMgr.FinalizeFrame;
 begin
 
@@ -69,7 +127,64 @@ end;
 
 procedure TfrmDeputyOptProcMgr.InitializeFrame;
 begin
+  if assigned(FSettings) then
+  begin
+    UpdateSettings;
+    edtWaitPoll.Value := FSettings.WaitPollInterval;
+    edtShowDelay.Value := FSettings.ShowWindowDelay;
+    rgProcMgrActive.OnClick := rgProcMgrActiveClick;
+    rgProcStopCommand.OnClick := rgProcStopCommandClick;
+    cbCloseLeakWindow.OnClick := cbCloseLeakWindowClick;
+    cbCopyLeakMessage.OnClick := cbCopyLeakMessageClick;
+  end;
 
+end;
+
+procedure TfrmDeputyOptProcMgr.rgProcStopCommandClick(Sender: TObject);
+begin
+  FSettings.StopCommand := rgProcStopCommand.ItemIndex;
+  UpdateSettings;
+end;
+
+procedure TfrmDeputyOptProcMgr.rgProcMgrActiveClick(Sender: TObject);
+begin
+  if rgProcMgrActive.ItemIndex = 0 then
+    FSettings.KillProcActive := false
+  else
+    FSettings.KillProcActive := true;
+  UpdateSettings;
+end;
+
+procedure TfrmDeputyOptProcMgr.UpdateSettings;
+begin
+  if FSettings.KillProcActive then
+  begin
+    rgProcMgrActive.ItemIndex := 1;
+    rgProcStopCommand.ItemIndex := FSettings.StopCommand;
+    FStopCommand := TSEProcessStopCommand(FSettings.StopCommand);
+    rgProcStopCommand.Visible := true;
+    case FStopCommand of
+      tseProcStopKill:
+        begin
+          cbCloseLeakWindow.Visible := false;
+          cbCopyLeakMessage.Visible := false;
+        end;
+      tseProcStopClose:
+        begin
+          cbCloseLeakWindow.Checked := FSettings.CloseLeakWindow;
+          cbCopyLeakMessage.Checked := FSettings.CopyLeakMessage;
+          cbCloseLeakWindow.Visible := true;
+          cbCopyLeakMessage.Visible := cbCloseLeakWindow.Checked;
+        end;
+    end;
+  end
+  else
+  begin
+    rgProcMgrActive.ItemIndex := 0;
+    rgProcStopCommand.Visible := false;
+    cbCloseLeakWindow.Visible := false;
+    cbCopyLeakMessage.Visible := false;
+  end;
 end;
 
 { TSERTTKDeputyIDEOptProcMgr }
