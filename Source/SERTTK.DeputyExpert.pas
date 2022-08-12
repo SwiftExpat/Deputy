@@ -8,7 +8,8 @@ uses System.Classes, ToolsAPI, VCL.Dialogs, System.SysUtils, System.TypInfo, Win
   System.IOUtils, Generics.Collections, System.DateUtils, System.JSON, frmDeputyProcMgr, frmDeputyUpdates,
   VCL.Forms, VCL.Menus, System.Win.Registry, ShellApi, VCL.Controls,
   DW.OTA.Wizard, DW.OTA.IDENotifierOTAWizard, DW.OTA.Helpers, DW.Menus.Helpers, DW.OTA.ProjectManagerMenu,
-  DW.OTA.Notifiers, SERTTK.DeputyTypes, SE.ProcMgrUtils, frmDeputyInstanceManager, frmDeputyOptionsInstance;
+  DW.OTA.Notifiers, SERTTK.DeputyTypes, SE.ProcMgrUtils, frmDeputyInstanceManager, frmDeputyOptionsInstance,
+  frmDeputyOptInstanceManager, frmDeputyOptProcessManager, frmDeputyOptUpdates;
 
 const
   MAJ_VER = 2; // Major version nr.
@@ -80,7 +81,7 @@ type
     FMenuItems: TDictionary<string, TMenuItem>;
     FNagCounter: TSERTTKNagCounter;
     FDeputyUtils: TSERTTKDeputyUtils;
-    FIdeOptions: INTAAddInOptions;
+    FIdeOptions, FInstMgrOptions, FProcMgrOptions, FUpdateOptions: INTAAddInOptions;
     function MenuItemByName(const AItemName: string): TMenuItem;
     procedure OnClickDeputyUpdates(Sender: TObject);
   private
@@ -152,17 +153,35 @@ begin
   FNagCounter := TSERTTKNagCounter.Create(0, 7);
   FSettings := TSERTTKDeputySettings.Create(TSERTTKDeputySettings.nm_settings_regkey);
   InitToolsMenu;
+  //options main menu
   FIdeOptions := TSERTTKDeputyIDEOptionsInterface.Create;
   TSERTTKDeputyIDEOptionsInterface(FIdeOptions).DeputySettings := FSettings;
   (BorlandIDEServices As INTAEnvironmentOptionsServices).RegisterAddInOptions(FIdeOptions);
+  //options instance manager
+  FInstMgrOptions := TSERTTKDeputyIDEOptInstMgr.Create;
+  TSERTTKDeputyIDEOptInstMgr(FInstMgrOptions).DeputySettings := FSettings;
+  (BorlandIDEServices As INTAEnvironmentOptionsServices).RegisterAddInOptions(FInstMgrOptions);
+  //options process manager
+  FProcMgrOptions:= TSERTTKDeputyIDEOptProcMgr.Create;
+  TSERTTKDeputyIDEOptProcMgr(FProcMgrOptions).DeputySettings := FSettings;
+  (BorlandIDEServices As INTAEnvironmentOptionsServices).RegisterAddInOptions(FProcMgrOptions);
+  //options Updates
+   FUpdateOptions   := TSERTTKDeputyIDEOptUpdates.Create;
+  TSERTTKDeputyIDEOptUpdates(FUpdateOptions).DeputySettings := FSettings;
+  (BorlandIDEServices As INTAEnvironmentOptionsServices).RegisterAddInOptions(FUpdateOptions);
 end;
 
 destructor TSERTTKDeputyWizard.Destroy;
 begin
   FDebugNotifier.RemoveNotifier;
+  (BorlandIDEServices As INTAEnvironmentOptionsServices).UnregisterAddInOptions(FUpdateOptions);
+  FUpdateOptions := nil;
+  (BorlandIDEServices As INTAEnvironmentOptionsServices).UnregisterAddInOptions(FProcMgrOptions);
+  FProcMgrOptions := nil;
+  (BorlandIDEServices As INTAEnvironmentOptionsServices).UnregisterAddInOptions(FInstMgrOptions);
+  FInstMgrOptions := nil;
   (BorlandIDEServices As INTAEnvironmentOptionsServices).UnregisterAddInOptions(FIdeOptions);
   FIdeOptions := nil;
-  //FInstanceManager.Free;
   FSettings.Free;
   FMenuItems.Free;
   FRTTKAppUpdate.Free;

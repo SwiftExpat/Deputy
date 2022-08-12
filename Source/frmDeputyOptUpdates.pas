@@ -1,13 +1,13 @@
-unit frmDeputyOptionsInstance;
+unit frmDeputyOptUpdates;
 
 interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, ToolsAPI, SERTTK.DeputyTypes;
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, ToolsAPI, SERTTK.DeputyTypes, Vcl.Dialogs, Vcl.ExtCtrls;
 
 const
-  caption_options_label = 'Deputy';
+  caption_opt_label_updates = 'Deputy.Updates';
   MAJ_VER = 1; // Major version nr.
   MIN_VER = 0; // Minor version nr.
   REL_VER = 0; // Release nr.
@@ -31,14 +31,9 @@ const
   { ******************************************************************** }
 
 type
-
-  TfrmDeputyOptInstance = class(TFrame)
-    Label1: TLabel;
+  TfrmDeputyOptUpdate = class(TFrame)
     LinkLabel1: TLinkLabel;
-    gpInstOptions: TGridPanel;
-    procedure LinkLabel1LinkClick(Sender: TObject; const Link: string; LinkType: TSysLinkType);
-
-  private
+  strict private
     FSettings: TSERTTKDeputySettings;
   public
     property DeputySettings: TSERTTKDeputySettings read FSettings write FSettings;
@@ -46,11 +41,10 @@ type
     procedure FinalizeFrame;
   end;
 
-  TSERTTKDeputyIDEOptionsInterface = Class(TInterfacedObject, INTAAddInOptions)
+  TSERTTKDeputyIDEOptUpdates = Class(TInterfacedObject, INTAAddInOptions)
   Strict Private
-    FFrame: TfrmDeputyOptInstance;
+    FFrame: TfrmDeputyOptUpdate;
     FSettings: TSERTTKDeputySettings;
-  Strict Protected
   Public
     property DeputySettings: TSERTTKDeputySettings read FSettings write FSettings;
     Procedure DialogClosed(Accepted: Boolean);
@@ -66,75 +60,63 @@ type
 implementation
 
 {$R *.dfm}
-{ TfrmDeputyOptInstance }
+{ TfrmDeputyOptUpdate }
 
-procedure TfrmDeputyOptInstance.FinalizeFrame;
+procedure TfrmDeputyOptUpdate.FinalizeFrame;
 begin
 
 end;
 
-procedure TfrmDeputyOptInstance.InitializeFrame;
+procedure TfrmDeputyOptUpdate.InitializeFrame;
 begin
 
 end;
 
-procedure TfrmDeputyOptInstance.LinkLabel1LinkClick(Sender: TObject; const Link: string; LinkType: TSysLinkType);
-var
-  du: TSERTTKDeputyUtils;
-begin
-  if LinkType = TSysLinkType.sltURL then
-  begin
-    du := TSERTTKDeputyUtils.Create;
-    du.ShowUrl(Link);
-    du.Free;
-  end;
-end;
+{ TSERTTKDeputyIDEOptUpdates }
 
-{ TSERTTKDeputyIDEOptionsInterface }
-
-procedure TSERTTKDeputyIDEOptionsInterface.DialogClosed(Accepted: Boolean);
+procedure TSERTTKDeputyIDEOptUpdates.DialogClosed(Accepted: Boolean);
 begin
   if Accepted then
     FFrame.FinalizeFrame;
 end;
 
-procedure TSERTTKDeputyIDEOptionsInterface.FrameCreated(AFrame: TCustomFrame);
+procedure TSERTTKDeputyIDEOptUpdates.FrameCreated(AFrame: TCustomFrame);
 begin
-  If AFrame Is TfrmDeputyOptInstance Then
+  If AFrame Is TfrmDeputyOptUpdate Then
   Begin
-    FFrame := AFrame As TfrmDeputyOptInstance;
+    FFrame := AFrame As TfrmDeputyOptUpdate;
     FFrame.DeputySettings := DeputySettings;
     FFrame.InitializeFrame;
   End;
 end;
 
-function TSERTTKDeputyIDEOptionsInterface.GetArea: String;
-begin // return empty to place under third party
+function TSERTTKDeputyIDEOptUpdates.GetArea: String;
+begin
   result := '';
 end;
 
-function TSERTTKDeputyIDEOptionsInterface.GetCaption: String;
+function TSERTTKDeputyIDEOptUpdates.GetCaption: String;
 begin
-  result := caption_options_label;
+  result := caption_opt_label_updates;
 end;
 
-function TSERTTKDeputyIDEOptionsInterface.GetFrameClass: TCustomFrameClass;
+function TSERTTKDeputyIDEOptUpdates.GetFrameClass: TCustomFrameClass;
 begin
-  result := TfrmDeputyOptInstance;
+  result := TfrmDeputyOptUpdate;
 end;
 
-function TSERTTKDeputyIDEOptionsInterface.GetHelpContext: Integer;
+function TSERTTKDeputyIDEOptUpdates.GetHelpContext: Integer;
 begin
   result := 0;
 end;
 
-function TSERTTKDeputyIDEOptionsInterface.IncludeInIDEInsight: Boolean;
+function TSERTTKDeputyIDEOptUpdates.IncludeInIDEInsight: Boolean;
 begin
   result := true;
 end;
 
-function TSERTTKDeputyIDEOptionsInterface.ValidateContents: Boolean;
-begin // called when OK is selected
+function TSERTTKDeputyIDEOptUpdates.ValidateContents: Boolean;
+begin
   result := true;
 end;
 

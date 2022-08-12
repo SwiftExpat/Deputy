@@ -1,13 +1,13 @@
-unit frmDeputyOptionsInstance;
+unit frmDeputyOptProcessManager;
 
 interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, ToolsAPI, SERTTK.DeputyTypes;
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, ToolsAPI, SERTTK.DeputyTypes, Vcl.ExtCtrls;
 
 const
-  caption_options_label = 'Deputy';
+  caption_opt_label_proc_mgr = 'Deputy.Process Manager';
   MAJ_VER = 1; // Major version nr.
   MIN_VER = 0; // Minor version nr.
   REL_VER = 0; // Release nr.
@@ -31,14 +31,9 @@ const
   { ******************************************************************** }
 
 type
-
-  TfrmDeputyOptInstance = class(TFrame)
-    Label1: TLabel;
+  TfrmDeputyOptProcMgr = class(TFrame)
     LinkLabel1: TLinkLabel;
-    gpInstOptions: TGridPanel;
-    procedure LinkLabel1LinkClick(Sender: TObject; const Link: string; LinkType: TSysLinkType);
-
-  private
+  strict private
     FSettings: TSERTTKDeputySettings;
   public
     property DeputySettings: TSERTTKDeputySettings read FSettings write FSettings;
@@ -46,11 +41,10 @@ type
     procedure FinalizeFrame;
   end;
 
-  TSERTTKDeputyIDEOptionsInterface = Class(TInterfacedObject, INTAAddInOptions)
+  TSERTTKDeputyIDEOptProcMgr = Class(TInterfacedObject, INTAAddInOptions)
   Strict Private
-    FFrame: TfrmDeputyOptInstance;
+    FFrame: TfrmDeputyOptProcMgr;
     FSettings: TSERTTKDeputySettings;
-  Strict Protected
   Public
     property DeputySettings: TSERTTKDeputySettings read FSettings write FSettings;
     Procedure DialogClosed(Accepted: Boolean);
@@ -66,75 +60,63 @@ type
 implementation
 
 {$R *.dfm}
-{ TfrmDeputyOptInstance }
+{ TfrmDeputyOptProcMgr }
 
-procedure TfrmDeputyOptInstance.FinalizeFrame;
+procedure TfrmDeputyOptProcMgr.FinalizeFrame;
 begin
 
 end;
 
-procedure TfrmDeputyOptInstance.InitializeFrame;
+procedure TfrmDeputyOptProcMgr.InitializeFrame;
 begin
 
 end;
 
-procedure TfrmDeputyOptInstance.LinkLabel1LinkClick(Sender: TObject; const Link: string; LinkType: TSysLinkType);
-var
-  du: TSERTTKDeputyUtils;
-begin
-  if LinkType = TSysLinkType.sltURL then
-  begin
-    du := TSERTTKDeputyUtils.Create;
-    du.ShowUrl(Link);
-    du.Free;
-  end;
-end;
+{ TSERTTKDeputyIDEOptProcMgr }
 
-{ TSERTTKDeputyIDEOptionsInterface }
-
-procedure TSERTTKDeputyIDEOptionsInterface.DialogClosed(Accepted: Boolean);
+procedure TSERTTKDeputyIDEOptProcMgr.DialogClosed(Accepted: Boolean);
 begin
   if Accepted then
     FFrame.FinalizeFrame;
 end;
 
-procedure TSERTTKDeputyIDEOptionsInterface.FrameCreated(AFrame: TCustomFrame);
+procedure TSERTTKDeputyIDEOptProcMgr.FrameCreated(AFrame: TCustomFrame);
 begin
-  If AFrame Is TfrmDeputyOptInstance Then
+  If AFrame Is TfrmDeputyOptProcMgr Then
   Begin
-    FFrame := AFrame As TfrmDeputyOptInstance;
+    FFrame := AFrame As TfrmDeputyOptProcMgr;
     FFrame.DeputySettings := DeputySettings;
     FFrame.InitializeFrame;
   End;
 end;
 
-function TSERTTKDeputyIDEOptionsInterface.GetArea: String;
-begin // return empty to place under third party
+function TSERTTKDeputyIDEOptProcMgr.GetArea: String;
+begin
   result := '';
 end;
 
-function TSERTTKDeputyIDEOptionsInterface.GetCaption: String;
+function TSERTTKDeputyIDEOptProcMgr.GetCaption: String;
 begin
-  result := caption_options_label;
+  result := caption_opt_label_proc_mgr;
 end;
 
-function TSERTTKDeputyIDEOptionsInterface.GetFrameClass: TCustomFrameClass;
+function TSERTTKDeputyIDEOptProcMgr.GetFrameClass: TCustomFrameClass;
 begin
-  result := TfrmDeputyOptInstance;
+  result := TfrmDeputyOptProcMgr;
 end;
 
-function TSERTTKDeputyIDEOptionsInterface.GetHelpContext: Integer;
+function TSERTTKDeputyIDEOptProcMgr.GetHelpContext: Integer;
 begin
   result := 0;
 end;
 
-function TSERTTKDeputyIDEOptionsInterface.IncludeInIDEInsight: Boolean;
+function TSERTTKDeputyIDEOptProcMgr.IncludeInIDEInsight: Boolean;
 begin
   result := true;
 end;
 
-function TSERTTKDeputyIDEOptionsInterface.ValidateContents: Boolean;
-begin // called when OK is selected
+function TSERTTKDeputyIDEOptProcMgr.ValidateContents: Boolean;
+begin
   result := true;
 end;
 

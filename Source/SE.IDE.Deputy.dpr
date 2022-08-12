@@ -13,7 +13,10 @@ uses
   SE.UpdateManager in 'SE.UpdateManager.pas',
   SE.ProcMgrUtils in 'SE.ProcMgrUtils.pas',
   frmDeputyInstanceManager in 'frmDeputyInstanceManager.pas' {DeputyInstanceManager},
-  frmDeputyOptionsInstance in 'frmDeputyOptionsInstance.pas' {frmDeputyOptInstance: TFrame};
+  frmDeputyOptionsInstance in 'frmDeputyOptionsInstance.pas' {frmDeputyOptInstance: TFrame},
+  frmDeputyOptInstanceManager in 'frmDeputyOptInstanceManager.pas' {frmDeputyOptInstMgr: TFrame},
+  frmDeputyOptUpdates in 'frmDeputyOptUpdates.pas' {frmDeputyOptUpdate: TFrame},
+  frmDeputyOptProcessManager in 'frmDeputyOptProcessManager.pas' {frmDeputyOptProcMgr: TFrame};
 
 {$R *.res}
 
