@@ -2,20 +2,15 @@ unit SERTTK.DeputyExpert;
 
 interface
 
-implementation
-
-uses System.Classes, ToolsAPI, VCL.Dialogs, System.SysUtils, System.TypInfo, Winapi.Windows, Winapi.TlHelp32,
-  System.IOUtils, Generics.Collections, System.DateUtils, System.JSON, frmDeputyProcMgr, frmDeputyUpdates,
-  VCL.Forms, VCL.Menus, System.Win.Registry, ShellApi, VCL.Controls,
-  DW.OTA.Wizard, DW.OTA.IDENotifierOTAWizard, DW.OTA.Helpers, DW.Menus.Helpers, DW.OTA.ProjectManagerMenu,
-  DW.OTA.Notifiers, SERTTK.DeputyTypes, SE.ProcMgrUtils, frmDeputyInstanceManager, frmDeputyOptionsInstance,
-  frmDeputyOptInstanceManager, frmDeputyOptProcessManager, frmDeputyOptUpdates;
-
 const
   MAJ_VER = 2; // Major version nr.
-  MIN_VER = 5; // Minor version nr.
+  MIN_VER = 6; // Minor version nr.
   REL_VER = 1; // Release nr.
   BLD_VER = 0; // Build nr.
+  KASTRI_COMMIT = 'fa453cd';
+  KASTRI_URL = 'https://github.com/DelphiWorlds/Kastri/commit/fa453cd2afaa47739f01133a5f22cf4dc391fc84';
+  TOTAL_COMMIT = '2ec8360';
+  TOTAL_URL = 'https://github.com/DelphiWorlds/TOTAL/commit/2ec8360328bab72b0ade817f1ffd168210f2098e';
 
   { Built with TOTAL & KASTRI versions:
     KASTRI : fa453cd : https://github.com/DelphiWorlds/Kastri/commit/fa453cd2afaa47739f01133a5f22cf4dc391fc84
@@ -27,6 +22,7 @@ const
   // v2.5.0.0 : This version implments forms to display progress
   // v2.5.1.0 : New Nag counter
   // v2.5.3.0 : Version release GPL
+  // v2.6.1.0 : Instance manager and options screens
 
   { ******************************************************************** }
   { written by swiftexpat }
@@ -41,6 +37,16 @@ const
   { No parts of the source code can be included in any other component }
   { or application without written authorization of the author. }
   { ******************************************************************** }
+
+implementation
+
+uses System.Classes, ToolsAPI, VCL.Dialogs, System.SysUtils, System.TypInfo, Winapi.Windows, Winapi.TlHelp32,
+  System.IOUtils, Generics.Collections, System.DateUtils, System.JSON, frmDeputyProcMgr, frmDeputyUpdates,
+  VCL.Forms, VCL.Menus, System.Win.Registry, ShellApi, VCL.Controls,
+  DW.OTA.Wizard, DW.OTA.IDENotifierOTAWizard, DW.OTA.Helpers, DW.Menus.Helpers, DW.OTA.ProjectManagerMenu,
+  DW.OTA.Notifiers, SERTTK.DeputyTypes, SE.ProcMgrUtils, frmDeputyInstanceManager, frmDeputyOptionsInstance,
+  frmDeputyOptInstanceManager, frmDeputyOptProcessManager, frmDeputyOptUpdates;
+
 type
 
   TSERTTKDeputyWizard = class;
@@ -165,15 +171,15 @@ begin
   TSERTTKDeputyIDEOptProcMgr(FProcMgrOptions).DeputySettings := FSettings;
   (BorlandIDEServices As INTAEnvironmentOptionsServices).RegisterAddInOptions(FProcMgrOptions);
   // options Updates
- // FUpdateOptions := TSERTTKDeputyIDEOptUpdates.Create;
-  //TSERTTKDeputyIDEOptUpdates(FUpdateOptions).DeputySettings := FSettings;
-  //(BorlandIDEServices As INTAEnvironmentOptionsServices).RegisterAddInOptions(FUpdateOptions);
+  // FUpdateOptions := TSERTTKDeputyIDEOptUpdates.Create;
+  // TSERTTKDeputyIDEOptUpdates(FUpdateOptions).DeputySettings := FSettings;
+  // (BorlandIDEServices As INTAEnvironmentOptionsServices).RegisterAddInOptions(FUpdateOptions);
 end;
 
 destructor TSERTTKDeputyWizard.Destroy;
 begin
   FDebugNotifier.RemoveNotifier;
- // (BorlandIDEServices As INTAEnvironmentOptionsServices).UnregisterAddInOptions(FUpdateOptions);
+  // (BorlandIDEServices As INTAEnvironmentOptionsServices).UnregisterAddInOptions(FUpdateOptions);
   FUpdateOptions := nil;
   (BorlandIDEServices As INTAEnvironmentOptionsServices).UnregisterAddInOptions(FProcMgrOptions);
   FProcMgrOptions := nil;

@@ -12,10 +12,10 @@ object frmDeputyOptProcMgr: TfrmDeputyOptProcMgr
     Height = 29
     Align = alTop
     Caption = 
-      'Use these options to configure Deputy process manager functional' +
-      'ity '
+      'Process Manager configuration options , hover to show the hint e' +
+      'xplainations.'
     TabOrder = 0
-    ExplicitWidth = 559
+    ExplicitWidth = 621
   end
   object GridPanel1: TGridPanel
     Left = 0
@@ -117,6 +117,7 @@ object frmDeputyOptProcMgr: TfrmDeputyOptProcMgr
         Top = 4
         Width = 158
         Height = 109
+        Hint = 'Disables Process Manager for compile and debug'
         Align = alClient
         Caption = 'Process Manager'
         Items.Strings = (
@@ -130,6 +131,9 @@ object frmDeputyOptProcMgr: TfrmDeputyOptProcMgr
         Top = 4
         Width = 158
         Height = 109
+        Hint = 
+          'Terminate uses process terminate and close sends a wm_close mess' +
+          'age'
         Align = alClient
         Caption = 'Terminate Action'
         Items.Strings = (
@@ -137,6 +141,7 @@ object frmDeputyOptProcMgr: TfrmDeputyOptProcMgr
           'Close')
         TabOrder = 1
         OnClick = rgProcStopCommandClick
+        ExplicitTop = 5
       end
       object cbCloseLeakWindow: TCheckBox
         AlignWithMargins = True
@@ -144,6 +149,7 @@ object frmDeputyOptProcMgr: TfrmDeputyOptProcMgr
         Top = 4
         Width = 418
         Height = 52
+        Hint = 'Close possible memory leak window'
         Align = alClient
         Caption = 'Close Leak Window'
         TabOrder = 2
@@ -155,6 +161,7 @@ object frmDeputyOptProcMgr: TfrmDeputyOptProcMgr
         Top = 62
         Width = 418
         Height = 51
+        Hint = 'Copy memory leak message to history'
         Align = alClient
         Caption = 'Copy Leak Message'
         TabOrder = 3
@@ -241,6 +248,7 @@ object frmDeputyOptProcMgr: TfrmDeputyOptProcMgr
         Top = 34
         Width = 240
         Height = 42
+        Hint = 'Controls loop time waiting for the process to close'
         Align = alClient
         Alignment = taRightJustify
         Caption = 'WaitPoll Interval (ms)'
@@ -267,6 +275,7 @@ object frmDeputyOptProcMgr: TfrmDeputyOptProcMgr
         Top = 76
         Width = 240
         Height = 42
+        Hint = 'Controls delay for showing the Process Manger window.'
         Align = alClient
         Alignment = taRightJustify
         Caption = 'Show Manager Delay (ms)'

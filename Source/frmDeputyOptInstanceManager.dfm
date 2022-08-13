@@ -10,21 +10,20 @@ object frmDeputyOptInstMgr: TfrmDeputyOptInstMgr
     Left = 3
     Top = 3
     Width = 634
-    Height = 50
+    Height = 25
     Align = alTop
     Caption = 
-      'This setting controls Deputy ability to look for a second instan' +
-      'ce of the IDE at startup.'
+      'Control Deputy'#39's ability to detect a second instance of the IDE ' +
+      'at startup.'
     WordWrap = True
-    ExplicitLeft = 0
-    ExplicitTop = 0
-    ExplicitWidth = 618
+    ExplicitWidth = 576
   end
   object rgInstanceManager: TRadioGroup
     Left = 0
-    Top = 56
+    Top = 31
     Width = 640
     Height = 105
+    Hint = 'Disable prevents the Instance Manager in the IDE started event'
     Align = alTop
     Caption = 'Instance Manager'
     Items.Strings = (
@@ -32,8 +31,6 @@ object frmDeputyOptInstMgr: TfrmDeputyOptInstMgr
       'Enable')
     TabOrder = 0
     OnClick = rgInstanceManagerClick
-    ExplicitLeft = 16
-    ExplicitTop = 59
-    ExplicitWidth = 225
+    ExplicitTop = 56
   end
 end

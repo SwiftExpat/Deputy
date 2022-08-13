@@ -33,13 +33,15 @@ const
 type
 
   TfrmDeputyOptInstance = class(TFrame)
-    Label1: TLabel;
-    LinkLabel1: TLinkLabel;
+    lblHeader: TLabel;
+    llDocumentation: TLinkLabel;
     gpInstOptions: TGridPanel;
-    procedure LinkLabel1LinkClick(Sender: TObject; const Link: string; LinkType: TSysLinkType);
-
+    llOpenSourceAcknowledge: TLinkLabel;
+    pnlOpenSource: TPanel;
+    llOpenSourceCommit: TLinkLabel;
   private
     FSettings: TSERTTKDeputySettings;
+    procedure LinkClick(Sender: TObject; const Link: string; LinkType: TSysLinkType);
   public
     property DeputySettings: TSERTTKDeputySettings read FSettings write FSettings;
     procedure InitializeFrame;
@@ -66,6 +68,8 @@ type
 implementation
 
 {$R *.dfm}
+
+uses SERTTK.DeputyExpert;
 { TfrmDeputyOptInstance }
 
 procedure TfrmDeputyOptInstance.FinalizeFrame;
@@ -75,10 +79,14 @@ end;
 
 procedure TfrmDeputyOptInstance.InitializeFrame;
 begin
-
+  llOpenSourceCommit.Caption := 'Built with Total commit <a href="' + TOTAL_URL + '">' + TOTAL_COMMIT + '</a>' +
+    ' and Kastri commit <a href="' + Kastri_URL + '">' + Kastri_COMMIT + '</a>';
+  llOpenSourceCommit.OnLinkClick := LinkClick;
+  llOpenSourceAcknowledge.OnLinkClick := LinkClick;
+  llDocumentation.OnLinkClick := LinkClick;
 end;
 
-procedure TfrmDeputyOptInstance.LinkLabel1LinkClick(Sender: TObject; const Link: string; LinkType: TSysLinkType);
+procedure TfrmDeputyOptInstance.LinkClick(Sender: TObject; const Link: string; LinkType: TSysLinkType);
 var
   du: TSERTTKDeputyUtils;
 begin

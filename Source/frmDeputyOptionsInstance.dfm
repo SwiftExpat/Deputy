@@ -5,7 +5,7 @@ object frmDeputyOptInstance: TfrmDeputyOptInstance
   Height = 480
   Align = alClient
   TabOrder = 0
-  object Label1: TLabel
+  object lblHeader: TLabel
     AlignWithMargins = True
     Left = 3
     Top = 3
@@ -29,8 +29,13 @@ object frmDeputyOptInstance: TfrmDeputyOptInstance
     ControlCollection = <
       item
         Column = 0
-        Control = LinkLabel1
+        Control = llDocumentation
         Row = 0
+      end
+      item
+        Column = 0
+        Control = pnlOpenSource
+        Row = 1
       end>
     RowCollection = <
       item
@@ -41,19 +46,51 @@ object frmDeputyOptInstance: TfrmDeputyOptInstance
       end>
     ShowCaption = False
     TabOrder = 0
-    object LinkLabel1: TLinkLabel
+    object llDocumentation: TLinkLabel
       Left = 1
       Top = 1
       Width = 638
-      Height = 224
-      Align = alClient
+      Height = 29
+      Align = alTop
       Caption = 
         'Documentation <a href="http://swiftexpat.com/deputy">Deputy Home' +
         'page</a> .'
       TabOrder = 0
-      OnLinkClick = LinkLabel1LinkClick
       ExplicitWidth = 293
-      ExplicitHeight = 29
+    end
+    object pnlOpenSource: TPanel
+      Left = 1
+      Top = 225
+      Width = 638
+      Height = 223
+      Align = alClient
+      Caption = 'pnlOpenSource'
+      ShowCaption = False
+      TabOrder = 1
+      object llOpenSourceAcknowledge: TLinkLabel
+        AlignWithMargins = True
+        Left = 4
+        Top = 4
+        Width = 630
+        Height = 29
+        Align = alTop
+        Caption = 
+          'Deputy uses <a href="https://github.com/DelphiWorlds/TOTAL">TOTA' +
+          'L</a>, a framework for experts, and <a href="https://github.com/' +
+          'DelphiWorlds/Kastri">Kastri</a> .'
+        TabOrder = 0
+        ExplicitWidth = 450
+      end
+      object llOpenSourceCommit: TLinkLabel
+        Left = 1
+        Top = 36
+        Width = 636
+        Height = 29
+        Align = alTop
+        Caption = 'llOpenSourceCommit'
+        TabOrder = 1
+        ExplicitWidth = 174
+      end
     end
   end
 end
