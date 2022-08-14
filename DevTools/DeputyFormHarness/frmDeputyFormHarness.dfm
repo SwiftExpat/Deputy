@@ -18,7 +18,7 @@ object frmDeputyHarness: TfrmDeputyHarness
     Top = 0
     Width = 944
     Height = 368
-    ActivePage = tsUpdates
+    ActivePage = tsProcMgr
     Align = alClient
     TabOrder = 0
     object tsProcMgr: TTabSheet
@@ -61,8 +61,8 @@ object frmDeputyHarness: TfrmDeputyHarness
         OnClick = btnProcMgrShowClick
       end
       object bntProcTest: TButton
-        Left = 248
-        Top = 168
+        Left = 24
+        Top = 256
         Width = 145
         Height = 25
         Caption = 'Test Proc Mgr'
@@ -77,6 +77,15 @@ object frmDeputyHarness: TfrmDeputyHarness
         Caption = 'Select Process'
         TabOrder = 2
         OnClick = btnSelectProcClick
+      end
+      object btnStartProc: TButton
+        Left = 232
+        Top = 152
+        Width = 145
+        Height = 25
+        Caption = 'Start Leak Process'
+        TabOrder = 3
+        OnClick = btnStartProcClick
       end
     end
     object tsIdeInstance: TTabSheet

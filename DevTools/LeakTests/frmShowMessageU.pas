@@ -4,7 +4,9 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Generics.Collections;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Generics.Collections, FireDAC.Stan.Intf, FireDAC.Stan.Option,
+  FireDAC.Stan.Param, FireDAC.Stan.Error, FireDAC.DatS, FireDAC.Phys.Intf, FireDAC.DApt.Intf, Data.DB,
+  FireDAC.Comp.DataSet, FireDAC.Comp.Client;
 
 type
 
@@ -27,11 +29,16 @@ type
     leakstring: string;
   end;
 
-  TForm1 = class(TForm)
+  TLeakLoopTester = class(TForm)
     Button1: TButton;
     Button2: TButton;
+    btnLoop: TButton;
+    memTable: TFDMemTable;
+    memTableLeakName: TStringField;
+    Memo1: TMemo;
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
+    procedure btnLoopClick(Sender: TObject);
   private
     { Private declarations }
     FLeakRoot: TLeakParent;
@@ -40,13 +47,31 @@ type
   end;
 
 var
-  Form1: TForm1;
+  LeakLoopTester: TLeakLoopTester;
 
 implementation
 
 {$R *.dfm}
 
-procedure TForm1.Button1Click(Sender: TObject);
+procedure TLeakLoopTester.btnLoopClick(Sender: TObject);
+var
+  l: TLeaker;
+begin
+  memTable.Open;
+  memTable.Append;
+  memTable.FieldbyName('LeakName').AsString := 'leaky';
+  memTable.Post;
+  memTable.First;
+  while not memTable.Eof do
+  begin
+    l := TLeaker.Create;
+    l.leakstring := memTable.FieldbyName('LeakName').AsString;
+    memo1.Lines.Add(l.leakstring);
+  end;
+
+end;
+
+procedure TLeakLoopTester.Button1Click(Sender: TObject);
 var
   lk: TLeaker;
 begin
@@ -82,7 +107,7 @@ begin
 
 end;
 
-procedure TForm1.Button2Click(Sender: TObject);
+procedure TLeakLoopTester.Button2Click(Sender: TObject);
 begin
   FLeakRoot := TLeakParent.Create
 end;

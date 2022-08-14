@@ -43,8 +43,6 @@ object DeputyProcMgr: TDeputyProcMgr
         Width = 807
         Height = 488
         Align = alClient
-        Lines.Strings = (
-          'memoLeak')
         ScrollBars = ssBoth
         TabOrder = 0
       end
@@ -108,8 +106,6 @@ object DeputyProcMgr: TDeputyProcMgr
         Width = 807
         Height = 465
         Align = alClient
-        Lines.Strings = (
-          'memoLeakHist')
         ScrollBars = ssBoth
         TabOrder = 1
       end

@@ -104,7 +104,7 @@ type
     /// </remarks>
     function DebugLaunch(const AProcFullPath: string): Boolean;
     procedure AssignSettings(ASettings: TSERTTKDeputySettings);
-    // function IDECancel: Boolean;
+    procedure ShowManager;
   end;
 
   TDeputyProcMgrFactory = class
@@ -283,6 +283,12 @@ begin
       memoLeakHist.Lines.Add('No Leak found ' + Item.Index.ToString);
     memoLeakHist.Tag := Item.Index;
   end;
+end;
+
+procedure TDeputyProcMgr.ShowManager;
+begin
+  self.Show;
+  pcWorkarea.ActivePage := tsStatus;
 end;
 
 procedure TDeputyProcMgr.StartCleanupStatus;

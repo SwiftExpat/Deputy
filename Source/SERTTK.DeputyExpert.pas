@@ -66,7 +66,7 @@ type
     nm_tools_menu = 'SE Deputy';
     nm_tools_menuitem = 'miSEDeputyRoot';
     nm_message_group = 'SE Deputy';
-    nm_mi_killprocnabled = 'killprocitem';
+    nm_mi_procmgr = 'procmgritem';
     nm_mi_run_caddie = 'caddierunitem';
     nm_mi_run_vcldemo = 'demovclrunitem';
     nm_mi_run_fmxdemo = 'demofmxrunitem';
@@ -90,6 +90,7 @@ type
     FIdeOptions, FInstMgrOptions, FProcMgrOptions, FUpdateOptions: INTAAddInOptions;
     function MenuItemByName(const AItemName: string): TMenuItem;
     procedure OnClickDeputyUpdates(Sender: TObject);
+    procedure OnClickMiProcessManager(Sender: TObject);
   private
     FDebugNotifier: ITOTALNotifier;
     procedure InitToolsMenu;
@@ -316,28 +317,31 @@ begin
     FToolsMenuRootItem.Caption := nm_tools_menu;
     LToolsMenuItem.Insert(FindMenuItemFirstLine(LToolsMenuItem), FToolsMenuRootItem);
   end;
+  mi := MenuItemByName(nm_mi_procmgr);
+  mi.OnClick := OnClickMiProcessManager;
+  mi.Caption := 'Process Manager';
+  FToolsMenuRootItem.Add(mi);
   mi := MenuItemByName(nm_mi_show_options);
   mi.Caption := 'Deputy Options';
   mi.OnClick := OnClickShowOptions;
   FToolsMenuRootItem.Add(mi);
-  mic := MenuItemByName(nm_mi_run_caddie);
-  mic.Caption := 'Refreshing Caddie';
-  FToolsMenuRootItem.Add(mic);
+  mi := MenuItemByName(nm_mi_update_status);
+  mi.Caption := 'Deputy Updates';
+  mi.OnClick := OnClickDeputyUpdates;
+  FToolsMenuRootItem.Add(mi);
   mi := MenuItemByName(nm_mi_show_website);
   mi.Caption := 'RTTK Website';
   mi.OnClick := OnClickShowWebsite;
   FToolsMenuRootItem.Add(mi);
+  mic := MenuItemByName(nm_mi_run_caddie);
+  mic.Caption := 'Refreshing Caddie';
+  FToolsMenuRootItem.Add(mic);
   miv := MenuItemByName(nm_mi_run_vcldemo);
   miv.Caption := 'Refreshing Demo VCL';
   FToolsMenuRootItem.Add(miv);
   mif := MenuItemByName(nm_mi_run_fmxdemo);
   mif.Caption := 'Refreshing Demo FMX';
   FToolsMenuRootItem.Add(mif);
-  mi := MenuItemByName(nm_mi_update_status);
-  mi.Caption := 'Deputy Updates';
-  mi.OnClick := OnClickDeputyUpdates;
-  FToolsMenuRootItem.Add(mi);
-
 end;
 
 procedure TSERTTKDeputyWizard.IDENotifierBeforeCompile(const AProject: IOTAProject; const AIsCodeInsight: boolean;
@@ -362,6 +366,11 @@ procedure TSERTTKDeputyWizard.OnClickDeputyUpdates(Sender: TObject);
 begin
   FDeputyUpdates.ExpertUpdatesRefresh(false);
   FDeputyUpdates.Show;
+end;
+
+procedure TSERTTKDeputyWizard.OnClickMiProcessManager(Sender: TObject);
+begin
+   FProcMgrForm.ShowManager;
 end;
 
 procedure TSERTTKDeputyWizard.OnClickShowOptions(Sender: TObject);

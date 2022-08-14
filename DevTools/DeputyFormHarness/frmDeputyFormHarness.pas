@@ -33,6 +33,7 @@ type
     editIde1Params: TEdit;
     editIde2Params: TEdit;
     tsUpdates: TTabSheet;
+    btnStartProc: TButton;
     procedure btnProcMgrShowClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -40,11 +41,12 @@ type
     procedure btnSelectProcClick(Sender: TObject);
     procedure btnStartIde1Click(Sender: TObject);
     procedure btnStartIde2Click(Sender: TObject);
+    procedure btnStartProcClick(Sender: TObject);
 
   private
     // FProcMgr: TSEProcessManager;
     FSettings: TSERTTKDeputySettings;
-    FToolsDir : string;
+    FToolsDir: string;
     procedure SetToolsDir;
     procedure LogMsg(AMessage: string);
   public
@@ -66,6 +68,7 @@ const
   ide_emulator = 'idebds.exe';
   ide_emulatordir = 'IDEEmulator\Win32\Debug';
   harness_dir = 'DeputyFormHarness\Win32\Debug';
+  leakapp_dir = 'LeakTests\Win32\Debug';
 
 procedure TfrmDeputyHarness.bntProcTestClick(Sender: TObject);
 var
@@ -95,12 +98,12 @@ procedure TfrmDeputyHarness.btnSelectProcClick(Sender: TObject);
 var
   rslt: boolean;
 begin
-OpenDialog1.InitialDir :=  valDirName.Caption;
+  OpenDialog1.InitialDir := valDirName.Caption;
 
   rslt := OpenDialog1.Execute;
   if rslt then
   begin
-    LogMsg('Change file to: '+OpenDialog1.FileName);
+    LogMsg('Change file to: ' + OpenDialog1.FileName);
     valProcName.Caption := TPath.GetFileName(OpenDialog1.FileName);
     valDirName.Caption := TPath.GetDirectoryName(OpenDialog1.FileName);
   end
@@ -108,22 +111,26 @@ OpenDialog1.InitialDir :=  valDirName.Caption;
     LogMsg('Abort File choose');
 end;
 
-
-
 procedure TfrmDeputyHarness.btnStartIde1Click(Sender: TObject);
 var
   edir: string;
 begin
-  edir := TPath.Combine( FToolsDir, ide_emulatordir);
-  //logMsg('edir= ' + Edir);
-  ShellExecute(0, PChar('open'), PChar(AnsiQuotedStr(ide_emulator, Char(34))), PChar(editIde1Params.Text), PChar(eDir),
+  edir := TPath.Combine(FToolsDir, ide_emulatordir);
+  // logMsg('edir= ' + Edir);
+  ShellExecute(0, PChar('open'), PChar(AnsiQuotedStr(ide_emulator, Char(34))), PChar(editIde1Params.Text), PChar(edir),
     SW_NORMAL);
 end;
 
 procedure TfrmDeputyHarness.btnStartIde2Click(Sender: TObject);
 begin
-  ShellExecute(0, PChar('open'), PChar(AnsiQuotedStr(ide_emulator, Char(34))), PChar(editIde2Params.Text), PChar( TPath.Combine( FToolsDir, ide_emulatordir)),
-    SW_NORMAL);
+  ShellExecute(0, PChar('open'), PChar(AnsiQuotedStr(ide_emulator, Char(34))), PChar(editIde2Params.Text),
+    PChar(TPath.Combine(FToolsDir, ide_emulatordir)), SW_NORMAL);
+end;
+
+procedure TfrmDeputyHarness.btnStartProcClick(Sender: TObject);
+begin
+  ShellExecute(0, PChar('open'), PChar(AnsiQuotedStr(proc_name, Char(34))), PChar(''),
+    PChar(TPath.Combine(FToolsDir, leakapp_dir)), SW_NORMAL);
 end;
 
 procedure TfrmDeputyHarness.FormCreate(Sender: TObject);
@@ -131,7 +138,7 @@ begin
   FSettings := TSERTTKDeputySettings.Create(TSERTTKDeputySettings.nm_settings_regkey);
   valProcName.Caption := proc_name;
   valDirName.Caption := proc_dir;
-   SetToolsDir;
+  SetToolsDir;
 end;
 
 procedure TfrmDeputyHarness.FormDestroy(Sender: TObject);
@@ -147,7 +154,7 @@ end;
 procedure TfrmDeputyHarness.SetToolsDir;
 var
   q1: integer;
-  rl :string;
+  rl: string;
 begin
   rl := cmdLine;
   q1 := rl.IndexOf('"');
