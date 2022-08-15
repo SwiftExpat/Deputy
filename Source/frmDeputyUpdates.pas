@@ -101,6 +101,9 @@ var
 
 implementation
 
+const
+ fmt_datetime = 'mmm-dd-yyyy hh:nn:ss';
+
 {$R *.dfm}
 { TDeputyUpdates }
 
@@ -174,7 +177,7 @@ begin
       if FDeputyUtils.CaddieAppExists then
       begin
         FMiCaddie.Caption := 'Run Caddie';
-        lblCaddieInst.Caption := FormatDateTime('dd-mm-yyyy hh:nn:ss',ACacheEntry.LastModifiedDTS);
+        lblCaddieInst.Caption := FormatDateTime(fmt_datetime,ACacheEntry.LastModifiedDTS);
       end;
       btnUpdateCaddie.Caption := 'Run Caddie or refresh';
       UpdateLastRefresh;
@@ -189,7 +192,7 @@ begin
       if FDeputyUtils.DemoFMXExists then
       begin
         FMiDemoFMX.Caption := 'Run Demo FMX';
-        lblDemoFmxInst.Caption := ACacheEntry.LastModified;
+        lblDemoFmxInst.Caption := FormatDateTime(fmt_datetime,ACacheEntry.LastModifiedDTS);
       end;
       btnUpdateDemoFMX.Caption := 'Run Demo FMX or refresh';
       UpdateLastRefresh;
@@ -204,7 +207,7 @@ begin
       if FDeputyUtils.DemoVCLExists then
       begin
         FMiDemoVCL.Caption := 'Run DemoVCL';
-        lblDemoVCLInst.Caption := ACacheEntry.LastModified;
+        lblDemoVCLInst.Caption := FormatDateTime(fmt_datetime,ACacheEntry.LastModifiedDTS);
       end;
       btnUpdateDemoVCL.Caption := 'Run Demo VCL or refresh';
       UpdateLastRefresh;
@@ -287,7 +290,7 @@ begin
   ce.ExtractPath := FDeputyUtils.RttkAppFolder;
   ce.ExtractZip := true;
   ce.OnRequestMessage := LogMessage;
-  lblCaddieInst.Caption := ce.LastModified;
+  lblCaddieInst.Caption := FormatDateTime(fmt_datetime,ce.LastModifiedDTS);
   ce.RefreshCache;
 end;
 
@@ -301,7 +304,7 @@ begin
   ce.ExtractPath := FDeputyUtils.RttkAppFolder;
   ce.ExtractZip := true;
   ce.OnRequestMessage := LogMessage;
-  lblDemoFmxInst.Caption := ce.LastModified;
+  lblDemoFmxInst.Caption := FormatDateTime(fmt_datetime,ce.LastModifiedDTS);;
   ce.RefreshCache;
 end;
 
@@ -315,7 +318,7 @@ begin
   ce.ExtractPath := FDeputyUtils.RttkAppFolder;
   ce.ExtractZip := true;
   ce.OnRequestMessage := LogMessage;
-  lblDemoVCLInst.Caption := ce.LastModified;
+  lblDemoVCLInst.Caption := FormatDateTime(fmt_datetime,ce.LastModifiedDTS);;
   ce.RefreshCache;
 end;
 
@@ -329,7 +332,7 @@ begin
   TThread.Synchronize(nil,
     procedure
     begin
-      lblUpdateRefresh.Caption := FormatDateTime('mmm/dd/yyyy hh:nn:ss', now);
+      lblUpdateRefresh.Caption := FormatDateTime(fmt_datetime, now);
       SaveCacheMgr;
     end);
 end;
