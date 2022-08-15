@@ -33,7 +33,7 @@ const
 
 type
   TfrmDeputyOptProcMgr = class(TFrame)
-    LinkLabel1: TLinkLabel;
+    llHeader: TLinkLabel;
     rgProcMgrActive: TRadioGroup;
     rgProcStopCommand: TRadioGroup;
     cbCloseLeakWindow: TCheckBox;
@@ -45,8 +45,8 @@ type
     lblHdrShowDelay: TLabel;
     edtShowDelay: TSpinEdit;
     gpOptions: TGridPanel;
-    Memo1: TMemo;
-    GridPanel1: TGridPanel;
+    memoMessage: TMemo;
+    gpMainLayout: TGridPanel;
     procedure rgProcMgrActiveClick(Sender: TObject);
     procedure rgProcStopCommandClick(Sender: TObject);
     procedure cbCloseLeakWindowClick(Sender: TObject);

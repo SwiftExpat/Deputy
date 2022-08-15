@@ -174,7 +174,7 @@ begin
       if FDeputyUtils.CaddieAppExists then
       begin
         FMiCaddie.Caption := 'Run Caddie';
-        lblCaddieInst.Caption := ACacheEntry.LastModified;
+        lblCaddieInst.Caption := FormatDateTime('dd-mm-yyyy hh:nn:ss',ACacheEntry.LastModifiedDTS);
       end;
       btnUpdateCaddie.Caption := 'Run Caddie or refresh';
       UpdateLastRefresh;

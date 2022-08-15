@@ -21,8 +21,8 @@ uses System.Classes, System.SysUtils, Winapi.Windows, Winapi.TlHelp32;
 
 type
 
-  TSEProcessMgrException = class(exception);
-  TSEProcessSnapshotFailed = class(TSEProcessMgrException);
+  ESEProcessMgrException = class(exception);
+  ESEProcessSnapshotFailed = class(ESEProcessMgrException);
 
   TSEProcessStopCommand = (tseProcStopKill, tseProcStopClose);
 
@@ -453,7 +453,7 @@ begin
         LogMsg('Process not found');
       result := true;
     except
-      on E: TSEProcessSnapshotFailed do // if the snapshot fails, let the IDE do what it did before
+      on E: ESEProcessSnapshotFailed do // if the snapshot fails, let the IDE do what it did before
         exit(true);
       on E: exception do // if the snapshot fails, let the IDE do what it did before
       begin
@@ -648,7 +648,7 @@ begin
       on E: exception do
       begin
         LogMsg('failed snapshot' + E.Message);
-        raise TSEProcessSnapshotFailed.Create('failed snapshot' + E.Message);
+        raise ESEProcessSnapshotFailed.Create('failed snapshot' + E.Message);
       end;
     end;
   finally

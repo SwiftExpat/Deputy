@@ -188,7 +188,6 @@ object DeputyUpdates: TDeputyUpdates
       Align = alClient
       Alignment = taCenter
       Caption = 'Current Version'
-      ExplicitLeft = 118
       ExplicitWidth = 81
       ExplicitHeight = 15
     end
@@ -200,7 +199,6 @@ object DeputyUpdates: TDeputyUpdates
       Align = alClient
       Alignment = taCenter
       Caption = 'Update'
-      ExplicitLeft = 503
       ExplicitWidth = 38
       ExplicitHeight = 15
     end
@@ -212,7 +210,6 @@ object DeputyUpdates: TDeputyUpdates
       Align = alClient
       Alignment = taCenter
       Caption = 'Available Version'
-      ExplicitLeft = 316
       ExplicitWidth = 89
       ExplicitHeight = 15
     end
@@ -224,7 +221,6 @@ object DeputyUpdates: TDeputyUpdates
       Align = alClient
       Alignment = taCenter
       Caption = 'Deputy'
-      ExplicitTop = 30
       ExplicitWidth = 38
       ExplicitHeight = 15
     end
@@ -236,7 +232,6 @@ object DeputyUpdates: TDeputyUpdates
       Align = alClient
       Alignment = taCenter
       Caption = 'Caddie'
-      ExplicitTop = 58
       ExplicitWidth = 37
       ExplicitHeight = 15
     end
@@ -248,7 +243,6 @@ object DeputyUpdates: TDeputyUpdates
       Align = alClient
       Alignment = taCenter
       Caption = 'FMX Demo'
-      ExplicitTop = 86
       ExplicitWidth = 59
       ExplicitHeight = 15
     end
@@ -260,7 +254,6 @@ object DeputyUpdates: TDeputyUpdates
       Align = alClient
       Alignment = taCenter
       Caption = 'VCL Demo'
-      ExplicitTop = 115
       ExplicitWidth = 56
       ExplicitHeight = 15
     end
@@ -272,8 +265,6 @@ object DeputyUpdates: TDeputyUpdates
       Align = alClient
       Alignment = taCenter
       Caption = 'DeputyInst'
-      ExplicitLeft = 118
-      ExplicitTop = 30
       ExplicitWidth = 57
       ExplicitHeight = 15
     end
@@ -285,8 +276,6 @@ object DeputyUpdates: TDeputyUpdates
       Align = alClient
       Alignment = taCenter
       Caption = 'deputyavail'
-      ExplicitLeft = 316
-      ExplicitTop = 30
       ExplicitWidth = 61
       ExplicitHeight = 15
     end
@@ -300,9 +289,6 @@ object DeputyUpdates: TDeputyUpdates
       Caption = 'Update Deputy'
       TabOrder = 0
       OnClick = btnUpdateDeputyClick
-      ExplicitLeft = 506
-      ExplicitTop = 33
-      ExplicitWidth = 108
     end
     object lblCaddieInst: TLabel
       Left = 97
@@ -312,8 +298,6 @@ object DeputyUpdates: TDeputyUpdates
       Align = alClient
       Alignment = taCenter
       Caption = 'caddieInst'
-      ExplicitLeft = 118
-      ExplicitTop = 58
       ExplicitWidth = 54
       ExplicitHeight = 15
     end
@@ -325,8 +309,6 @@ object DeputyUpdates: TDeputyUpdates
       Align = alClient
       Alignment = taCenter
       Caption = 'CaddieAvail'
-      ExplicitLeft = 316
-      ExplicitTop = 58
       ExplicitWidth = 63
       ExplicitHeight = 15
     end
@@ -340,9 +322,6 @@ object DeputyUpdates: TDeputyUpdates
       Caption = 'Update Caddie'
       TabOrder = 1
       OnClick = btnUpdateCaddieClick
-      ExplicitLeft = 506
-      ExplicitTop = 61
-      ExplicitWidth = 108
     end
     object lblDemoFmxInst: TLabel
       Left = 97
@@ -352,8 +331,6 @@ object DeputyUpdates: TDeputyUpdates
       Align = alClient
       Alignment = taCenter
       Caption = 'fmxInst'
-      ExplicitLeft = 118
-      ExplicitTop = 86
       ExplicitWidth = 40
       ExplicitHeight = 15
     end
@@ -365,8 +342,6 @@ object DeputyUpdates: TDeputyUpdates
       Align = alClient
       Alignment = taCenter
       Caption = 'FmxAvail'
-      ExplicitLeft = 316
-      ExplicitTop = 86
       ExplicitWidth = 49
       ExplicitHeight = 15
     end
@@ -380,9 +355,6 @@ object DeputyUpdates: TDeputyUpdates
       Caption = 'Update FMX Demo'
       TabOrder = 2
       OnClick = btnUpdateDemoFMXClick
-      ExplicitLeft = 506
-      ExplicitTop = 89
-      ExplicitWidth = 108
     end
     object lblDemoVCLInst: TLabel
       Left = 97
@@ -392,8 +364,6 @@ object DeputyUpdates: TDeputyUpdates
       Align = alClient
       Alignment = taCenter
       Caption = 'vclInst'
-      ExplicitLeft = 118
-      ExplicitTop = 115
       ExplicitWidth = 34
       ExplicitHeight = 15
     end
@@ -405,8 +375,6 @@ object DeputyUpdates: TDeputyUpdates
       Align = alClient
       Alignment = taCenter
       Caption = 'vclAvail'
-      ExplicitLeft = 316
-      ExplicitTop = 115
       ExplicitWidth = 41
       ExplicitHeight = 15
     end
@@ -420,9 +388,6 @@ object DeputyUpdates: TDeputyUpdates
       Caption = 'Update VCL Demo'
       TabOrder = 3
       OnClick = btnUpdateDemoVCLClick
-      ExplicitLeft = 506
-      ExplicitTop = 118
-      ExplicitWidth = 108
     end
     object lblHdrUpdateRefresh: TLabel
       Left = 1
@@ -433,7 +398,6 @@ object DeputyUpdates: TDeputyUpdates
       Alignment = taCenter
       Caption = 'Updates Refreshed'
       WordWrap = True
-      ExplicitTop = 143
       ExplicitWidth = 52
       ExplicitHeight = 30
     end
@@ -445,8 +409,6 @@ object DeputyUpdates: TDeputyUpdates
       Align = alClient
       Alignment = taCenter
       Caption = '00:00:00'
-      ExplicitLeft = 118
-      ExplicitTop = 143
       ExplicitWidth = 42
       ExplicitHeight = 15
     end
@@ -460,7 +422,5 @@ object DeputyUpdates: TDeputyUpdates
     Lines.Strings = (
       'Memo1')
     TabOrder = 1
-    ExplicitTop = 172
-    ExplicitHeight = 252
   end
 end

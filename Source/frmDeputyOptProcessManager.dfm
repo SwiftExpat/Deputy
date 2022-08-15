@@ -4,7 +4,7 @@ object frmDeputyOptProcMgr: TfrmDeputyOptProcMgr
   Width = 762
   Height = 480
   TabOrder = 0
-  object LinkLabel1: TLinkLabel
+  object llHeader: TLinkLabel
     AlignWithMargins = True
     Left = 3
     Top = 3
@@ -17,13 +17,13 @@ object frmDeputyOptProcMgr: TfrmDeputyOptProcMgr
     TabOrder = 0
     ExplicitWidth = 621
   end
-  object GridPanel1: TGridPanel
+  object gpMainLayout: TGridPanel
     Left = 0
     Top = 35
     Width = 762
     Height = 445
     Align = alClient
-    Caption = 'GridPanel1'
+    Caption = 'gpMainLayout'
     ColumnCollection = <
       item
         Value = 100.000000000000000000
@@ -41,7 +41,7 @@ object frmDeputyOptProcMgr: TfrmDeputyOptProcMgr
       end
       item
         Column = 0
-        Control = Memo1
+        Control = memoMessage
         Row = 2
       end>
     RowCollection = <
@@ -141,7 +141,6 @@ object frmDeputyOptProcMgr: TfrmDeputyOptProcMgr
           'Close')
         TabOrder = 1
         OnClick = rgProcStopCommandClick
-        ExplicitTop = 5
       end
       object cbCloseLeakWindow: TCheckBox
         AlignWithMargins = True
@@ -298,7 +297,7 @@ object frmDeputyOptProcMgr: TfrmDeputyOptProcMgr
         OnChange = edtShowDelayChange
       end
     end
-    object Memo1: TMemo
+    object memoMessage: TMemo
       Left = 1
       Top = 355
       Width = 760

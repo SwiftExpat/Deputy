@@ -261,16 +261,32 @@ end;
 function TSEUrlCacheEntry.LastModifiedDTSGet: TDateTime;
 var
   year, month, day, hour, minute, second: integer;
+  ml: TStringlist;
+  splits, timesplit : TArray<string>;
 begin
-  FMREW.BeginRead;
-  year := StrToInt(dt_lastmod_default);
-  month := StrToInt(dt_lastmod_default);
-  day := StrToInt(dt_lastmod_default);
-  hour := StrToInt(dt_lastmod_default);
-  minute := StrToInt(dt_lastmod_default);
-  second := StrToInt(dt_lastmod_default);
+  ml := TStringlist.Create(TDuplicates.dupError, false, true);
+  ml.Add('Jan');
+  ml.Add('Feb');
+  ml.Add('Mar');
+  ml.Add('Apr');
+  ml.Add('May');
+  ml.Add('Jun');
+  ml.Add('Jul');
+  ml.Add('Aug');
+  ml.Add('Sep');
+  ml.Add('Oct');
+  ml.Add('Nov');
+  ml.Add('Dec');
+  splits := LastModified.Split([' ']);
+  year := StrToInt(splits[3]);
+  month :=   ml.IndexOf(splits[2])+1;
+  day := StrToInt(splits[1]);
+  timesplit := splits[4].Split([':']);
+  hour := StrToInt(timesplit[0]);
+  minute := StrToInt(timesplit[1]);
+  second := StrToInt(timesplit[2]);
   result := EncodeDateTime(year, month, day, hour, minute, second, 0);
-  FMREW.EndRead;
+  //mod the timezone
 end;
 
 function TSEUrlCacheEntry.LastModifiedGet: string;

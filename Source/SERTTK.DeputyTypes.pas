@@ -181,12 +181,16 @@ type
     nm_idedetect_detectsecond = 'DetectSecond';
     nm_settings_regkey = 'SOFTWARE\SwiftExpat\Deputy';
   strict private
-    function KillProcActiveGet: boolean;
-    procedure KillProcActiveSet(const Value: boolean);
     function DetectSecondInstanceGet: boolean;
     procedure DetectSecondInstanceSet(const Value: boolean);
+    function KillProcActiveGet: boolean;
+    procedure KillProcActiveSet(const Value: boolean);
     function LastUpdateCheckGet: TDateTime;
     procedure LastUpdateCheckSet(const Value: TDateTime);
+    function ShowWindowDelayGet: integer;
+    procedure ShowWindowDelaySet(const Value: integer);
+    function WaitPollIntervalGet: integer;
+    procedure WaitPollIntervalSet(const Value: integer);
   private
     function StopCommandGet: integer;
     procedure StopCommandSet(const Value: integer);
@@ -196,10 +200,6 @@ type
     procedure CopyLeakMessageSet(const Value: boolean);
     function UrlCacheJsonGet: string;
     procedure UrlCacheJsonSet(const Value: string);
-    function WaitPollIntervalGet: integer;
-    procedure WaitPollIntervalSet(const Value: integer);
-    function ShowWindowDelayGet: integer;
-    procedure ShowWindowDelaySet(const Value: integer);
   public
     property KillProcActive: boolean read KillProcActiveGet write KillProcActiveSet;
     property LastUpdateCheck: TDateTime read LastUpdateCheckGet write LastUpdateCheckSet;
@@ -207,9 +207,9 @@ type
     property CloseLeakWindow: boolean read CloseLeakWindowGet write CloseLeakWindowSet;
     property CopyLeakMessage: boolean read CopyLeakMessageGet write CopyLeakMessageSet;
     property UrlCacheJson: string read UrlCacheJsonGet write UrlCacheJsonSet;
-    property WaitPollInterval: integer read WaitPollIntervalGet write WaitPollIntervalSet;
-    property ShowWindowDelay: integer read ShowWindowDelayGet write ShowWindowDelaySet;
     property DetectSecondInstance: boolean read DetectSecondInstanceGet write DetectSecondInstanceSet;
+    property ShowWindowDelay: integer read ShowWindowDelayGet write ShowWindowDelaySet;
+    property WaitPollInterval: integer read WaitPollIntervalGet write WaitPollIntervalSet;
   end;
 
   TSERTTKNagCounter = class

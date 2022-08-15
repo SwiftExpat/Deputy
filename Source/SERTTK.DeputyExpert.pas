@@ -91,6 +91,7 @@ type
     function MenuItemByName(const AItemName: string): TMenuItem;
     procedure OnClickDeputyUpdates(Sender: TObject);
     procedure OnClickMiProcessManager(Sender: TObject);
+    procedure OnClickShowOptions(Sender: TObject);
   private
     FDebugNotifier: ITOTALNotifier;
     procedure InitToolsMenu;
@@ -98,7 +99,6 @@ type
     function FindMenuItemFirstLine(const AMenuItem: TMenuItem): integer;
     procedure MessagesAdd(const AMessage: string);
     procedure OnClickShowWebsite(Sender: TObject);
-    procedure OnClickShowOptions(Sender: TObject);
   protected
     procedure IDENotifierBeforeCompile(const AProject: IOTAProject; const AIsCodeInsight: boolean;
       var ACancel: boolean); override;
@@ -156,7 +156,7 @@ begin
   FMenuItems := TDictionary<string, TMenuItem>.Create;
   FDebugNotifier := TSERTTKDeputyDebugNotifier.Create(self);
   FRTTKAppUpdate := TSERTTKAppVersionUpdate.Create;
-  FNagCounter := TSERTTKNagCounter.Create(0, 7);
+  FNagCounter := TSERTTKNagCounter.Create(3, 7);
   FSettings := TSERTTKDeputySettings.Create(TSERTTKDeputySettings.nm_settings_regkey);
   InitToolsMenu;
   // options main menu
@@ -347,7 +347,7 @@ end;
 procedure TSERTTKDeputyWizard.IDENotifierBeforeCompile(const AProject: IOTAProject; const AIsCodeInsight: boolean;
   var ACancel: boolean);
 begin
-  TOTAHelper.ClearMessageGroup(nm_message_group);
+  // TOTAHelper.ClearMessageGroup(nm_message_group);
   if FSettings.KillProcActive and (AIsCodeInsight = false) then
   begin
     ACancel := FProcMgrForm.CompileContinue(AProject.ProjectOptions.TargetName);
@@ -370,7 +370,7 @@ end;
 
 procedure TSERTTKDeputyWizard.OnClickMiProcessManager(Sender: TObject);
 begin
-   FProcMgrForm.ShowManager;
+  FProcMgrForm.ShowManager;
 end;
 
 procedure TSERTTKDeputyWizard.OnClickShowOptions(Sender: TObject);
