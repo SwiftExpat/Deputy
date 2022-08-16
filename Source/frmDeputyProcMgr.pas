@@ -9,12 +9,13 @@ uses
 
 const
   MAJ_VER = 1; // Major version nr.
-  MIN_VER = 0; // Minor version nr.
+  MIN_VER = 1; // Minor version nr.
   REL_VER = 0; // Release nr.
   BLD_VER = 0; // Build nr.
 
   // Version history
   // v1.0.0.0 : First Release
+  // v1.1.0.0 : Moved Settings to dedicated frame on options
 
   { ******************************************************************** }
   { written by swiftexpat }
@@ -38,7 +39,6 @@ type
     sbMain: TStatusBar;
     lbMgrStatus: TListBox;
     pcWorkarea: TPageControl;
-    tsSettings: TTabSheet;
     tsStatus: TTabSheet;
     btnAbortCleanup: TButton;
     btnForceTerminate: TButton;
@@ -51,17 +51,6 @@ type
     tsHistory: TTabSheet;
     lvHist: TListView;
     memoLeakHist: TMemo;
-    rgProcStopCommand: TRadioGroup;
-    Memo1: TMemo;
-    rgProcTermActive: TRadioGroup;
-    cbCloseLeakWindow: TCheckBox;
-    cbCopyLeakMessage: TCheckBox;
-    gpTimeouts: TGridPanel;
-    lblHdrTimeouts: TLabel;
-    lblWaitPollTimeout: TLabel;
-    edtWaitPoll: TSpinEdit;
-    lblHdrShowDelay: TLabel;
-    edtShowDelay: TSpinEdit;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -71,12 +60,6 @@ type
     procedure FormShow(Sender: TObject);
     procedure lvHistInfoTip(Sender: TObject; Item: TListItem; var InfoTip: string);
     procedure lvHistSelectItem(Sender: TObject; Item: TListItem; Selected: Boolean);
-    procedure rgProcStopCommandClick(Sender: TObject);
-    procedure rgProcTermActiveClick(Sender: TObject);
-    procedure cbCloseLeakWindowClick(Sender: TObject);
-    procedure cbCopyLeakMessageClick(Sender: TObject);
-    procedure edtWaitPollChange(Sender: TObject);
-    procedure edtShowDelayChange(Sender: TObject);
   strict private
     FProcCleanup: TSEProcessCleanup;
     // FProcMgrInfo: TSEProcessManagerEnvInfo;
@@ -91,11 +74,6 @@ type
     procedure StatusBarUpdateMessage(AMsg: string);
     procedure StartCleanupStatus;
     procedure StopCleanupStatus;
-    procedure UpdateSettings;
-    /// <remarks>
-    ///   10.2 does not like some alignment properties in the DFM
-    /// </remarks>
-    procedure FixAligns;
   private
     procedure LogMsg(AMessage: string);
     procedure LeakCopied(AMessage: string; APID: cardinal);
@@ -126,8 +104,7 @@ type
     /// </remarks>
     function DebugLaunch(const AProcFullPath: string): Boolean;
     procedure AssignSettings(ASettings: TSERTTKDeputySettings);
-    procedure ShowSettings;
-    // function IDECancel: Boolean;
+    procedure ShowManager;
   end;
 
   TDeputyProcMgrFactory = class
@@ -148,8 +125,9 @@ function TDeputyProcMgr.AddCleanup(const AProcName, AProcDirectory: string): TSE
 var
   tli: TListItem;
 begin
+  FStopCommand := TSEProcessStopCommand(FSettings.StopCommand);
   result := TSEProcessCleanup.Create(AProcName, AProcDirectory, FStopCommand);
-  result.OptionsSet(FStopCommand, cbCloseLeakWindow.Checked, cbCopyLeakMessage.Checked);
+  result.OptionsSet(FStopCommand, FSettings.CloseLeakWindow, FSettings.CopyLeakMessage);
   FCleanups.Add(result);
   tli := TListItem.Create(lvHist.Items);
   lvHist.Items.AddItem(tli, 0);
@@ -162,10 +140,7 @@ end;
 procedure TDeputyProcMgr.AssignSettings(ASettings: TSERTTKDeputySettings);
 begin
   FSettings := ASettings;
-  UpdateSettings;
-  edtWaitPoll.Value := FSettings.WaitPollInterval;
   FProcMgr.ProcMgrInfo.WaitPollms := FSettings.WaitPollInterval;
-  edtShowDelay.Value := FSettings.ShowWindowDelay;
 end;
 
 procedure TDeputyProcMgr.btnAbortCleanupClick(Sender: TObject);
@@ -176,24 +151,6 @@ end;
 procedure TDeputyProcMgr.btnForceTerminateClick(Sender: TObject);
 begin
   FProcMgr.CleanupForceTerminate;
-end;
-
-procedure TDeputyProcMgr.cbCloseLeakWindowClick(Sender: TObject);
-begin
-  if cbCloseLeakWindow.Checked then
-    FSettings.CloseLeakWindow := true
-  else
-    FSettings.CloseLeakWindow := false;
-  UpdateSettings;
-end;
-
-procedure TDeputyProcMgr.cbCopyLeakMessageClick(Sender: TObject);
-begin
-  if cbCopyLeakMessage.Checked then
-    FSettings.CopyLeakMessage := true
-  else
-    FSettings.CopyLeakMessage := false;
-  UpdateSettings;
 end;
 
 function TDeputyProcMgr.ClearProcess(const AProcName: string; const AProcDirectory: string): Boolean;
@@ -243,24 +200,6 @@ begin
   result := true;
 end;
 
-procedure TDeputyProcMgr.edtShowDelayChange(Sender: TObject);
-begin
-  if (edtShowDelay.Value > edtShowDelay.MinValue) and (edtShowDelay.Value < edtShowDelay.MaxValue) then
-  begin
-    FSettings.ShowWindowDelay := edtShowDelay.Value;
-    Memo1.Lines.Add('Setting show window delay to ' + edtShowDelay.Value.ToString)
-  end;
-end;
-
-procedure TDeputyProcMgr.edtWaitPollChange(Sender: TObject);
-begin
-  if (edtWaitPoll.Value > edtWaitPoll.MinValue) and (edtWaitPoll.Value < edtWaitPoll.MaxValue) then
-  begin
-    FSettings.WaitPollInterval := edtWaitPoll.Value;
-    Memo1.Lines.Add('Setting waitpool to ' + edtWaitPoll.Value.ToString)
-  end;
-end;
-
 procedure TDeputyProcMgr.ClearLog;
 begin
   lbMgrStatus.Clear;
@@ -284,13 +223,6 @@ begin
   FProcMgr.OnLeakCopied := LeakCopied;
   FProcMgr.OnWaitPoll := WaitPoll;
   self.Caption := self.Caption + ' v'+Maj_Ver.ToString + '.'+Min_Ver.ToString + '.'+Rel_Ver.ToString;
-  FixAligns;
-end;
-
-procedure TDeputyProcMgr.FixAligns;
-begin
-  edtWaitPoll.Align := TAlign.alClient;
-  edtShowDelay.Align := TAlign.alClient;
 end;
 
 procedure TDeputyProcMgr.FormDestroy(Sender: TObject);
@@ -353,25 +285,10 @@ begin
   end;
 end;
 
-procedure TDeputyProcMgr.rgProcStopCommandClick(Sender: TObject);
-begin
-  FSettings.StopCommand := rgProcStopCommand.ItemIndex;
-  UpdateSettings;
-end;
-
-procedure TDeputyProcMgr.rgProcTermActiveClick(Sender: TObject);
-begin
-  if rgProcTermActive.ItemIndex = 0 then
-    FSettings.KillProcActive := true
-  else
-    FSettings.KillProcActive := false;
-  UpdateSettings;
-end;
-
-procedure TDeputyProcMgr.ShowSettings;
+procedure TDeputyProcMgr.ShowManager;
 begin
   self.Show;
-  pcWorkarea.ActivePage := tsSettings;
+  pcWorkarea.ActivePage := tsStatus;
 end;
 
 procedure TDeputyProcMgr.StartCleanupStatus;
@@ -413,42 +330,10 @@ begin
   memoLeakHist.Tag := -1;
 end;
 
-procedure TDeputyProcMgr.UpdateSettings;
-begin
-  if FSettings.KillProcActive then
-  begin
-    rgProcTermActive.ItemIndex := 0;
-    rgProcStopCommand.ItemIndex := FSettings.StopCommand;
-    FStopCommand := TSEProcessStopCommand(FSettings.StopCommand);
-    rgProcStopCommand.Visible := true;
-    case FStopCommand of
-      tseProcStopKill:
-        begin
-          cbCloseLeakWindow.Visible := false;
-          cbCopyLeakMessage.Visible := false;
-        end;
-      tseProcStopClose:
-        begin
-          cbCloseLeakWindow.Checked := FSettings.CloseLeakWindow;
-          cbCopyLeakMessage.Checked := FSettings.CopyLeakMessage;
-          cbCloseLeakWindow.Visible := true;
-          cbCopyLeakMessage.Visible := cbCloseLeakWindow.Checked;
-        end;
-    end;
-  end
-  else
-  begin
-    rgProcTermActive.ItemIndex := 1;
-    rgProcStopCommand.Visible := false;
-    cbCloseLeakWindow.Visible := false;
-    cbCopyLeakMessage.Visible := false;
-  end;
-end;
-
 procedure TDeputyProcMgr.WaitPoll(APollCount: integer; ALoopTime: integer);
 begin
   lblLoopCount.Caption := APollCount.ToString;
-  if (APollCount > 1) and (ALoopTime > edtShowDelay.Value) then
+  if (APollCount > 1) and (ALoopTime > FSettings.ShowWindowDelay) then
     self.Show;
   // else
   // memo1.Lines.Add('Delay show, loop= ' + APollCount.ToString + ' time= '+ ALoopTime.ToString);

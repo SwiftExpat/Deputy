@@ -32,7 +32,7 @@ object DeputyProcMgr: TDeputyProcMgr
     Top = 0
     Width = 815
     Height = 615
-    ActivePage = tsSettings
+    ActivePage = tsStatus
     Align = alClient
     TabOrder = 1
     object tsStatus: TTabSheet
@@ -43,8 +43,6 @@ object DeputyProcMgr: TDeputyProcMgr
         Width = 807
         Height = 488
         Align = alClient
-        Lines.Strings = (
-          'memoLeak')
         ScrollBars = ssBoth
         TabOrder = 0
       end
@@ -108,176 +106,8 @@ object DeputyProcMgr: TDeputyProcMgr
         Width = 807
         Height = 465
         Align = alClient
-        Lines.Strings = (
-          'memoLeakHist')
         ScrollBars = ssBoth
         TabOrder = 1
-      end
-    end
-    object tsSettings: TTabSheet
-      Caption = 'Settings'
-      ImageIndex = 2
-      object rgProcStopCommand: TRadioGroup
-        Left = 232
-        Top = 32
-        Width = 185
-        Height = 105
-        Caption = 'Terminate Action'
-        Items.Strings = (
-          'Terminate'
-          'Close')
-        TabOrder = 0
-        OnClick = rgProcStopCommandClick
-      end
-      object Memo1: TMemo
-        Left = 0
-        Top = 496
-        Width = 807
-        Height = 89
-        Align = alBottom
-        TabOrder = 1
-      end
-      object rgProcTermActive: TRadioGroup
-        Left = 16
-        Top = 32
-        Width = 185
-        Height = 105
-        Caption = 'Proc Terminate'
-        Items.Strings = (
-          'Enabled'
-          'Disabled')
-        TabOrder = 2
-        OnClick = rgProcTermActiveClick
-      end
-      object cbCloseLeakWindow: TCheckBox
-        Left = 448
-        Top = 56
-        Width = 179
-        Height = 17
-        Caption = 'Close Leak Window'
-        TabOrder = 3
-        OnClick = cbCloseLeakWindowClick
-      end
-      object cbCopyLeakMessage: TCheckBox
-        Left = 448
-        Top = 108
-        Width = 145
-        Height = 17
-        Caption = 'Copy Leak Message'
-        TabOrder = 4
-        OnClick = cbCopyLeakMessageClick
-      end
-      object gpTimeouts: TGridPanel
-        Left = 16
-        Top = 160
-        Width = 257
-        Height = 82
-        BorderWidth = 1
-        BorderStyle = bsSingle
-        ColumnCollection = <
-          item
-            Value = 60.000000000000000000
-          end
-          item
-            Value = 40.000000000000000000
-          end>
-        ControlCollection = <
-          item
-            Column = 0
-            ColumnSpan = 2
-            Control = lblHdrTimeouts
-            Row = 0
-          end
-          item
-            Column = 0
-            Control = lblWaitPollTimeout
-            Row = 1
-          end
-          item
-            Column = 1
-            Control = edtWaitPoll
-            Row = 1
-          end
-          item
-            Column = 0
-            Control = lblHdrShowDelay
-            Row = 2
-          end
-          item
-            Column = 1
-            Control = edtShowDelay
-            Row = 2
-          end>
-        RowCollection = <
-          item
-            Value = 24.606826166973400000
-          end
-          item
-            Value = 38.689978249958170000
-          end
-          item
-            Value = 36.703195583068430000
-          end>
-        ShowCaption = False
-        TabOrder = 5
-        object lblHdrTimeouts: TLabel
-          Left = 2
-          Top = 2
-          Width = 249
-          Height = 18
-          Align = alClient
-          Alignment = taCenter
-          Caption = 'Process Manager Timeouts'
-          ExplicitWidth = 142
-          ExplicitHeight = 15
-        end
-        object lblWaitPollTimeout: TLabel
-          Left = 2
-          Top = 20
-          Width = 149
-          Height = 29
-          Align = alClient
-          Alignment = taCenter
-          Caption = 'WaitPoll Interval (ms)'
-          Layout = tlCenter
-          ExplicitWidth = 113
-          ExplicitHeight = 15
-        end
-        object edtWaitPoll: TSpinEdit
-          AlignWithMargins = True
-          Left = 154
-          Top = 23
-          Width = 71
-          Height = 24
-          MaxValue = 200
-          MinValue = 25
-          TabOrder = 0
-          Value = 25
-          OnChange = edtWaitPollChange
-        end
-        object lblHdrShowDelay: TLabel
-          Left = 2
-          Top = 49
-          Width = 149
-          Height = 27
-          Align = alClient
-          Caption = 'Show Manager Delay (ms)'
-          Layout = tlCenter
-          ExplicitWidth = 138
-          ExplicitHeight = 15
-        end
-        object edtShowDelay: TSpinEdit
-          AlignWithMargins = True
-          Left = 154
-          Top = 52
-          Width = 94
-          Height = 24
-          MaxValue = 1500
-          MinValue = 100
-          TabOrder = 1
-          Value = 200
-          OnChange = edtShowDelayChange
-        end
       end
     end
   end

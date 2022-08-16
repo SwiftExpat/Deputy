@@ -7,15 +7,41 @@ uses
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, ToolsAPI, SERTTK.DeputyTypes;
 
 const
-  caption_options_label = 'Deputy Options';
+  caption_options_label = 'Deputy';
+  MAJ_VER = 1; // Major version nr.
+  MIN_VER = 0; // Minor version nr.
+  REL_VER = 0; // Release nr.
+  BLD_VER = 0; // Build nr.
+
+  // Version history
+  // v1.0.0.0 : First Release
+
+  { ******************************************************************** }
+  { written by swiftexpat }
+  { copyright 2022 }
+  { Email : support@swiftexpat.com }
+  { Web : https://swiftexpat.com }
+  { }
+  { The source code is given as is. The author is not responsible }
+  { for any possible damage done due to the use of this code. }
+  { The complete source code remains property of the author and may }
+  { not be distributed, published, given or sold in any form as such. }
+  { No parts of the source code can be included in any other component }
+  { or application without written authorization of the author. }
+  { ******************************************************************** }
 
 type
 
   TfrmDeputyOptInstance = class(TFrame)
-    rgInstanceManager: TRadioGroup;
-    procedure rgInstanceManagerClick(Sender: TObject);
+    lblHeader: TLabel;
+    llDocumentation: TLinkLabel;
+    gpInstOptions: TGridPanel;
+    llOpenSourceAcknowledge: TLinkLabel;
+    pnlOpenSource: TPanel;
+    llOpenSourceCommit: TLinkLabel;
   private
     FSettings: TSERTTKDeputySettings;
+    procedure LinkClick(Sender: TObject; const Link: string; LinkType: TSysLinkType);
   public
     property DeputySettings: TSERTTKDeputySettings read FSettings write FSettings;
     procedure InitializeFrame;
@@ -42,6 +68,8 @@ type
 implementation
 
 {$R *.dfm}
+
+uses SERTTK.DeputyExpert;
 { TfrmDeputyOptInstance }
 
 procedure TfrmDeputyOptInstance.FinalizeFrame;
@@ -51,21 +79,23 @@ end;
 
 procedure TfrmDeputyOptInstance.InitializeFrame;
 begin
-  if Assigned(FSettings) then
-  begin
-    if FSettings.DetectSecondInstance then
-      rgInstanceManager.ItemIndex := 1
-    else
-      rgInstanceManager.ItemIndex := 0
-  end;
+  llOpenSourceCommit.Caption := 'Built with Total commit <a href="' + TOTAL_URL + '">' + TOTAL_COMMIT + '</a>' +
+    ' and Kastri commit <a href="' + Kastri_URL + '">' + Kastri_COMMIT + '</a>';
+  llOpenSourceCommit.OnLinkClick := LinkClick;
+  llOpenSourceAcknowledge.OnLinkClick := LinkClick;
+  llDocumentation.OnLinkClick := LinkClick;
 end;
 
-procedure TfrmDeputyOptInstance.rgInstanceManagerClick(Sender: TObject);
+procedure TfrmDeputyOptInstance.LinkClick(Sender: TObject; const Link: string; LinkType: TSysLinkType);
+var
+  du: TSERTTKDeputyUtils;
 begin
-  if rgInstanceManager.ItemIndex = 0 then
-    FSettings.DetectSecondInstance := false
-  else
-    FSettings.DetectSecondInstance := true;
+  if LinkType = TSysLinkType.sltURL then
+  begin
+    du := TSERTTKDeputyUtils.Create;
+    du.ShowUrl(Link);
+    du.Free;
+  end;
 end;
 
 { TSERTTKDeputyIDEOptionsInterface }

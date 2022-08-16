@@ -2,19 +2,15 @@ unit SERTTK.DeputyExpert;
 
 interface
 
-implementation
-
-uses System.Classes, ToolsAPI, VCL.Dialogs, System.SysUtils, System.TypInfo, Winapi.Windows, Winapi.TlHelp32,
-  System.IOUtils, Generics.Collections, System.DateUtils, System.JSON, frmDeputyProcMgr, frmDeputyUpdates,
-  VCL.Forms, VCL.Menus, System.Win.Registry, ShellApi, VCL.Controls,
-  DW.OTA.Wizard, DW.OTA.IDENotifierOTAWizard, DW.OTA.Helpers, DW.Menus.Helpers, DW.OTA.ProjectManagerMenu,
-  DW.OTA.Notifiers, SERTTK.DeputyTypes, SE.ProcMgrUtils, frmDeputyInstanceManager, frmDeputyOptionsInstance;
-
 const
   MAJ_VER = 2; // Major version nr.
-  MIN_VER = 5; // Minor version nr.
+  MIN_VER = 6; // Minor version nr.
   REL_VER = 1; // Release nr.
   BLD_VER = 0; // Build nr.
+  KASTRI_COMMIT = 'fa453cd';
+  KASTRI_URL = 'https://github.com/DelphiWorlds/Kastri/commit/fa453cd2afaa47739f01133a5f22cf4dc391fc84';
+  TOTAL_COMMIT = '2ec8360';
+  TOTAL_URL = 'https://github.com/DelphiWorlds/TOTAL/commit/2ec8360328bab72b0ade817f1ffd168210f2098e';
 
   { Built with TOTAL & KASTRI versions:
     KASTRI : fa453cd : https://github.com/DelphiWorlds/Kastri/commit/fa453cd2afaa47739f01133a5f22cf4dc391fc84
@@ -26,6 +22,7 @@ const
   // v2.5.0.0 : This version implments forms to display progress
   // v2.5.1.0 : New Nag counter
   // v2.5.3.0 : Version release GPL
+  // v2.6.1.0 : Instance manager and options screens
 
   { ******************************************************************** }
   { written by swiftexpat }
@@ -40,6 +37,16 @@ const
   { No parts of the source code can be included in any other component }
   { or application without written authorization of the author. }
   { ******************************************************************** }
+
+implementation
+
+uses System.Classes, ToolsAPI, VCL.Dialogs, System.SysUtils, System.TypInfo, Winapi.Windows, Winapi.TlHelp32,
+  System.IOUtils, Generics.Collections, System.DateUtils, System.JSON, frmDeputyProcMgr, frmDeputyUpdates,
+  VCL.Forms, VCL.Menus, System.Win.Registry, ShellApi, VCL.Controls,
+  DW.OTA.Wizard, DW.OTA.IDENotifierOTAWizard, DW.OTA.Helpers, DW.Menus.Helpers, DW.OTA.ProjectManagerMenu,
+  DW.OTA.Notifiers, SERTTK.DeputyTypes, SE.ProcMgrUtils, frmDeputyInstanceManager, frmDeputyOptionsInstance,
+  frmDeputyOptInstanceManager, frmDeputyOptProcessManager, frmDeputyOptUpdates;
+
 type
 
   TSERTTKDeputyWizard = class;
@@ -59,7 +66,7 @@ type
     nm_tools_menu = 'SE Deputy';
     nm_tools_menuitem = 'miSEDeputyRoot';
     nm_message_group = 'SE Deputy';
-    nm_mi_killprocnabled = 'killprocitem';
+    nm_mi_procmgr = 'procmgritem';
     nm_mi_run_caddie = 'caddierunitem';
     nm_mi_run_vcldemo = 'demovclrunitem';
     nm_mi_run_fmxdemo = 'demofmxrunitem';
@@ -80,18 +87,18 @@ type
     FMenuItems: TDictionary<string, TMenuItem>;
     FNagCounter: TSERTTKNagCounter;
     FDeputyUtils: TSERTTKDeputyUtils;
-    FIdeOptions: INTAAddInOptions;
+    FIdeOptions, FInstMgrOptions, FProcMgrOptions, FUpdateOptions: INTAAddInOptions;
     function MenuItemByName(const AItemName: string): TMenuItem;
     procedure OnClickDeputyUpdates(Sender: TObject);
+    procedure OnClickMiProcessManager(Sender: TObject);
+    procedure OnClickShowOptions(Sender: TObject);
   private
     FDebugNotifier: ITOTALNotifier;
     procedure InitToolsMenu;
     procedure AssignUpdateMenuItems;
-    procedure OnClickMiKillProcEnabled(Sender: TObject);
     function FindMenuItemFirstLine(const AMenuItem: TMenuItem): integer;
     procedure MessagesAdd(const AMessage: string);
     procedure OnClickShowWebsite(Sender: TObject);
-    procedure OnClickShowOptions(Sender: TObject);
   protected
     procedure IDENotifierBeforeCompile(const AProject: IOTAProject; const AIsCodeInsight: boolean;
       var ACancel: boolean); override;
@@ -149,20 +156,38 @@ begin
   FMenuItems := TDictionary<string, TMenuItem>.Create;
   FDebugNotifier := TSERTTKDeputyDebugNotifier.Create(self);
   FRTTKAppUpdate := TSERTTKAppVersionUpdate.Create;
-  FNagCounter := TSERTTKNagCounter.Create(0, 7);
+  FNagCounter := TSERTTKNagCounter.Create(3, 7);
   FSettings := TSERTTKDeputySettings.Create(TSERTTKDeputySettings.nm_settings_regkey);
   InitToolsMenu;
+  // options main menu
   FIdeOptions := TSERTTKDeputyIDEOptionsInterface.Create;
   TSERTTKDeputyIDEOptionsInterface(FIdeOptions).DeputySettings := FSettings;
   (BorlandIDEServices As INTAEnvironmentOptionsServices).RegisterAddInOptions(FIdeOptions);
+  // options instance manager
+  FInstMgrOptions := TSERTTKDeputyIDEOptInstMgr.Create;
+  TSERTTKDeputyIDEOptInstMgr(FInstMgrOptions).DeputySettings := FSettings;
+  (BorlandIDEServices As INTAEnvironmentOptionsServices).RegisterAddInOptions(FInstMgrOptions);
+  // options process manager
+  FProcMgrOptions := TSERTTKDeputyIDEOptProcMgr.Create;
+  TSERTTKDeputyIDEOptProcMgr(FProcMgrOptions).DeputySettings := FSettings;
+  (BorlandIDEServices As INTAEnvironmentOptionsServices).RegisterAddInOptions(FProcMgrOptions);
+  // options Updates
+  // FUpdateOptions := TSERTTKDeputyIDEOptUpdates.Create;
+  // TSERTTKDeputyIDEOptUpdates(FUpdateOptions).DeputySettings := FSettings;
+  // (BorlandIDEServices As INTAEnvironmentOptionsServices).RegisterAddInOptions(FUpdateOptions);
 end;
 
 destructor TSERTTKDeputyWizard.Destroy;
 begin
   FDebugNotifier.RemoveNotifier;
+  // (BorlandIDEServices As INTAEnvironmentOptionsServices).UnregisterAddInOptions(FUpdateOptions);
+  FUpdateOptions := nil;
+  (BorlandIDEServices As INTAEnvironmentOptionsServices).UnregisterAddInOptions(FProcMgrOptions);
+  FProcMgrOptions := nil;
+  (BorlandIDEServices As INTAEnvironmentOptionsServices).UnregisterAddInOptions(FInstMgrOptions);
+  FInstMgrOptions := nil;
   (BorlandIDEServices As INTAEnvironmentOptionsServices).UnregisterAddInOptions(FIdeOptions);
   FIdeOptions := nil;
-  //FInstanceManager.Free;
   FSettings.Free;
   FMenuItems.Free;
   FRTTKAppUpdate.Free;
@@ -292,37 +317,37 @@ begin
     FToolsMenuRootItem.Caption := nm_tools_menu;
     LToolsMenuItem.Insert(FindMenuItemFirstLine(LToolsMenuItem), FToolsMenuRootItem);
   end;
-  mi := MenuItemByName(nm_mi_killprocnabled);
-  mi.OnClick := OnClickMiKillProcEnabled;
+  mi := MenuItemByName(nm_mi_procmgr);
+  mi.OnClick := OnClickMiProcessManager;
   mi.Caption := 'Process Manager';
   FToolsMenuRootItem.Add(mi);
-  mic := MenuItemByName(nm_mi_run_caddie);
-  mic.Caption := 'Refreshing Caddie';
-  FToolsMenuRootItem.Add(mic);
+  mi := MenuItemByName(nm_mi_show_options);
+  mi.Caption := 'Deputy Options';
+  mi.OnClick := OnClickShowOptions;
+  FToolsMenuRootItem.Add(mi);
+  mi := MenuItemByName(nm_mi_update_status);
+  mi.Caption := 'Deputy Updates';
+  mi.OnClick := OnClickDeputyUpdates;
+  FToolsMenuRootItem.Add(mi);
   mi := MenuItemByName(nm_mi_show_website);
   mi.Caption := 'RTTK Website';
   mi.OnClick := OnClickShowWebsite;
   FToolsMenuRootItem.Add(mi);
+  mic := MenuItemByName(nm_mi_run_caddie);
+  mic.Caption := 'Refreshing Caddie';
+  FToolsMenuRootItem.Add(mic);
   miv := MenuItemByName(nm_mi_run_vcldemo);
   miv.Caption := 'Refreshing Demo VCL';
   FToolsMenuRootItem.Add(miv);
   mif := MenuItemByName(nm_mi_run_fmxdemo);
   mif.Caption := 'Refreshing Demo FMX';
   FToolsMenuRootItem.Add(mif);
-  mi := MenuItemByName(nm_mi_update_status);
-  mi.Caption := 'Deputy Updates';
-  mi.OnClick := OnClickDeputyUpdates;
-  FToolsMenuRootItem.Add(mi);
-  mi := MenuItemByName(nm_mi_show_options);
-  mi.Caption := 'Deputy Options';
-  mi.OnClick := OnClickShowOptions;
-  FToolsMenuRootItem.Add(mi);
 end;
 
 procedure TSERTTKDeputyWizard.IDENotifierBeforeCompile(const AProject: IOTAProject; const AIsCodeInsight: boolean;
   var ACancel: boolean);
 begin
-  TOTAHelper.ClearMessageGroup(nm_message_group);
+  // TOTAHelper.ClearMessageGroup(nm_message_group);
   if FSettings.KillProcActive and (AIsCodeInsight = false) then
   begin
     ACancel := FProcMgrForm.CompileContinue(AProject.ProjectOptions.TargetName);
@@ -343,9 +368,9 @@ begin
   FDeputyUpdates.Show;
 end;
 
-procedure TSERTTKDeputyWizard.OnClickMiKillProcEnabled(Sender: TObject);
+procedure TSERTTKDeputyWizard.OnClickMiProcessManager(Sender: TObject);
 begin
-  FProcMgrForm.ShowSettings;
+  FProcMgrForm.ShowManager;
 end;
 
 procedure TSERTTKDeputyWizard.OnClickShowOptions(Sender: TObject);

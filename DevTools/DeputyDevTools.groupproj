@@ -15,9 +15,6 @@
         <Projects Include="DeputyFormHarness\DeputyFormHarness.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="ProcTreeVCL\ProcTreeVCL.dproj">
-            <Dependencies/>
-        </Projects>
         <Projects Include="IDEEmulator\idebds.dproj">
             <Dependencies/>
         </Projects>
@@ -65,15 +62,6 @@
     <Target Name="DeputyFormHarness:Make">
         <MSBuild Projects="DeputyFormHarness\DeputyFormHarness.dproj" Targets="Make"/>
     </Target>
-    <Target Name="ProcTreeVCL">
-        <MSBuild Projects="ProcTreeVCL\ProcTreeVCL.dproj"/>
-    </Target>
-    <Target Name="ProcTreeVCL:Clean">
-        <MSBuild Projects="ProcTreeVCL\ProcTreeVCL.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="ProcTreeVCL:Make">
-        <MSBuild Projects="ProcTreeVCL\ProcTreeVCL.dproj" Targets="Make"/>
-    </Target>
     <Target Name="idebds">
         <MSBuild Projects="IDEEmulator\idebds.dproj"/>
     </Target>
@@ -84,13 +72,13 @@
         <MSBuild Projects="IDEEmulator\idebds.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="SE_IDE_Deputy;hdr304http;ShowLeakMessage;DeputyFormHarness;ProcTreeVCL;idebds"/>
+        <CallTarget Targets="SE_IDE_Deputy;hdr304http;ShowLeakMessage;DeputyFormHarness;idebds"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="SE_IDE_Deputy:Clean;hdr304http:Clean;ShowLeakMessage:Clean;DeputyFormHarness:Clean;ProcTreeVCL:Clean;idebds:Clean"/>
+        <CallTarget Targets="SE_IDE_Deputy:Clean;hdr304http:Clean;ShowLeakMessage:Clean;DeputyFormHarness:Clean;idebds:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="SE_IDE_Deputy:Make;hdr304http:Make;ShowLeakMessage:Make;DeputyFormHarness:Make;ProcTreeVCL:Make;idebds:Make"/>
+        <CallTarget Targets="SE_IDE_Deputy:Make;hdr304http:Make;ShowLeakMessage:Make;DeputyFormHarness:Make;idebds:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>
