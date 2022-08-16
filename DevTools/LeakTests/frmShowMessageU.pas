@@ -66,9 +66,9 @@ begin
   begin
     l := TLeaker.Create;
     l.leakstring := memTable.FieldbyName('LeakName').AsString;
-    memo1.Lines.Add(l.leakstring);
+    Memo1.Lines.Add(l.leakstring);
+    //memTable.Next;
   end;
-
 end;
 
 procedure TLeakLoopTester.Button1Click(Sender: TObject);
@@ -77,7 +77,7 @@ var
 begin
   lk := TLeaker.Create;
   lk.leakstring := 'long string';
-  ShowMessage('This is a body message');
+  //ShowMessage('This is a body message');
 end;
 
 { TLeakParent }
