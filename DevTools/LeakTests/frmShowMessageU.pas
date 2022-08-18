@@ -80,6 +80,10 @@ begin
   //ShowMessage('This is a body message');
 end;
 
+procedure TLeakLoopTester.Button2Click(Sender: TObject);
+begin
+  FLeakRoot := TLeakParent.Create
+end;
 { TLeakParent }
 
 constructor TLeakParent.Create;
@@ -105,11 +109,6 @@ begin
   for i := 0 to 5000 do
     FLeakDict.Add(pfx_key + i.ToString, pfx_val + i.ToString)
 
-end;
-
-procedure TLeakLoopTester.Button2Click(Sender: TObject);
-begin
-  FLeakRoot := TLeakParent.Create
 end;
 
 end.
