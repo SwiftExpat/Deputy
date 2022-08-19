@@ -66,9 +66,9 @@ begin
   begin
     l := TLeaker.Create;
     l.leakstring := memTable.FieldbyName('LeakName').AsString;
-    memo1.Lines.Add(l.leakstring);
+    Memo1.Lines.Add(l.leakstring);
+    //memTable.Next;
   end;
-
 end;
 
 procedure TLeakLoopTester.Button1Click(Sender: TObject);
@@ -77,9 +77,13 @@ var
 begin
   lk := TLeaker.Create;
   lk.leakstring := 'long string';
-  ShowMessage('This is a body message');
+  //ShowMessage('This is a body message');
 end;
 
+procedure TLeakLoopTester.Button2Click(Sender: TObject);
+begin
+  FLeakRoot := TLeakParent.Create
+end;
 { TLeakParent }
 
 constructor TLeakParent.Create;
@@ -105,11 +109,6 @@ begin
   for i := 0 to 5000 do
     FLeakDict.Add(pfx_key + i.ToString, pfx_val + i.ToString)
 
-end;
-
-procedure TLeakLoopTester.Button2Click(Sender: TObject);
-begin
-  FLeakRoot := TLeakParent.Create
 end;
 
 end.

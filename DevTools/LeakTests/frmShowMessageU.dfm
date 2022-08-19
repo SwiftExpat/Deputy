@@ -47,9 +47,6 @@ object LeakLoopTester: TLeakLoopTester
     Lines.Strings = (
       'Memo1')
     TabOrder = 3
-    ExplicitLeft = 232
-    ExplicitTop = 200
-    ExplicitWidth = 185
   end
   object memTable: TFDMemTable
     FetchOptions.AssignedValues = [evMode]
