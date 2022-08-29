@@ -11,7 +11,7 @@ Deputy is dual-licensed. Options are:
 
 ## Install Expert
 
-https://swiftexpat.com/docs/doku.php?id=rttk:deputy:install
+[Install / Uninstall instructions](https://github.com/SwiftExpat/Deputy/wiki/Deputy-Install---UnInstall)
 
 ## Process Manager
 
@@ -19,7 +19,7 @@ Process Manager will montior compile and debug actions in the Delphi IDE and ter
 
 > Series 2.6 Release details
 
-[![Release 2.6](https://img.youtube.com/vi/j7EdJcQSELY/hqdefault.jpg)](https://youtu.be/j7EdJcQSELY)  
+[![Release 2.6 Process Manager](https://img.youtube.com/vi/j7EdJcQSELY/hqdefault.jpg)](https://youtu.be/j7EdJcQSELY)  
 
 ### Process Identification Logic
 
@@ -38,6 +38,6 @@ Instance Manager prevents multiple versions of the Delphi IDE from running at th
 
 > Series 2.6 Release details
 
-[![Release 2.6](https://img.youtube.com/vi/xIgnnfIDA2k/hqdefault.jpg)](https://youtu.be/xIgnnfIDA2k)
+[![Release 2.6 Instance Manager](https://img.youtube.com/vi/xIgnnfIDA2k/hqdefault.jpg)](https://youtu.be/xIgnnfIDA2k)
 
 ![Powered By Delphi](https://i1.wp.com/blogs.embarcadero.com/wp-content/uploads/2021/01/Powered-by-Delphi-white-175px-7388078.png?resize=175%2C82&ssl=1)  [Powered by Delphi](https://www.embarcadero.com/products/delphi)
