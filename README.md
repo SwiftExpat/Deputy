@@ -1,5 +1,5 @@
 ![Top language](https://img.shields.io/github/languages/top/SwiftExpat/Deputy)
-[![GitHub release](https://img.shields.io/github/release/SwiftExpat/Deputy)](https://github.com/SwiftExpat/Deputy/release)
+[![GitHub release](https://img.shields.io/github/release/SwiftExpat/Deputy)](https://github.com/SwiftExpat/Deputy/releases)
 [![GitHub issues](https://img.shields.io/github/issues/SwiftExpat/Deputy)](https://github.com/SwiftExpat/Deputy/issues)
 [![GitHub PR](https://img.shields.io/github/issues-pr/SwiftExpat/Deputy)](https://github.com/SwiftExpat/Deputy/pulls)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/SwiftExpat/Deputy)
